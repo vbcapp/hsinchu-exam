@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-TW">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>VibeCoding 歡迎報到與數據同意頁面</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans+TC:wght@400;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9f506",
+                        "background-light": "#f8f8f5",
+                        "background-dark": "#23220f",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "Noto Sans TC", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: "Space Grotesk", "Noto Sans TC", sans-serif;
+            min-height: 100dvh;
+        }
+        .neo-shadow {
+            box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 1);
+        }
+        .neo-shadow-sm {
+            box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+        }
+        .neo-shadow-active:active {
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+            transform: translate(4px, 4px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-start p-6">
+    <header class="w-full max-w-md flex flex-col items-center mb-6 pt-4">
+        <div
+            class="flex items-center justify-center bg-white dark:bg-black border-[3px] border-black p-4 neo-shadow w-20 h-20 mb-4 rounded-xl">
+            <span class="material-symbols-outlined text-4xl font-bold">code_blocks</span>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tighter text-black dark:text-white uppercase mb-4">VibeCoding</h1>
+        <p class="text-center text-black dark:text-zinc-200 font-bold leading-relaxed px-2">
+            👋 歡迎使用 專有名詞、專業術語 學習卡！輸入你的暱稱並選擇想學的主題，讓體驗更個人化
+        </p>
+    </header>
+
+    <main class="w-full max-w-md space-y-6 pb-12">
+        <section>
+            <input
+                class="w-full bg-white text-black border-[3px] border-black p-4 text-lg font-bold neo-shadow focus:ring-0 focus:outline-none placeholder:text-zinc-500 rounded-xl"
+                id="nickname" placeholder="請輸入你的姓名或暱稱：" type="text" />
+        </section>
+
+        <section class="bg-white dark:bg-zinc-900 border-[3px] border-black p-6 neo-shadow rounded-xl">
+            <div class="flex items-center gap-2 mb-6 border-b-[3px] border-black pb-4">
+                <span class="text-2xl">📊</span>
+                <h2 class="text-xl font-bold text-black dark:text-white">學習數據收集說明</h2>
+            </div>
+
+            <div class="space-y-4 mb-8">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-black dark:text-white font-bold">person</span>
+                    <p class="text-zinc-700 dark:text-zinc-300 font-bold">暱稱和更新時間</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-black dark:text-white font-bold">devices</span>
+                    <p class="text-zinc-700 dark:text-zinc-300 font-bold">裝置類型和瀏覽器資訊</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-black dark:text-white font-bold">fullscreen</span>
+                    <p class="text-zinc-700 dark:text-zinc-300 font-bold">螢幕解析度</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-black dark:text-white font-bold">location_on</span>
+                    <p class="text-zinc-700 dark:text-zinc-300 font-bold">地區資訊</p>
+                </div>
+            </div>
+
+            <div class="bg-primary/10 border-2 border-dashed border-black/30 dark:border-white/30 p-4 rounded-lg mb-8">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-black dark:text-white text-sm">lock</span>
+                    <p class="text-xs font-bold text-black dark:text-white">
+                        所有資料僅用於改善服務，不會用於商業用途
+                    </p>
+                </div>
+            </div>
+
+            <label class="flex items-center gap-4 cursor-pointer group pt-4 border-t-[3px] border-black">
+                <div class="relative">
+                    <input
+                        class="h-7 w-7 appearance-none border-[3px] border-black bg-white checked:bg-primary transition-colors cursor-pointer rounded-lg peer"
+                        type="checkbox" id="consent" />
+                    <div
+                        class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 peer-checked:opacity-100 text-black">
+                        <span class="material-symbols-outlined font-black text-xl">check</span>
+                    </div>
+                </div>
+                <span class="text-black dark:text-white font-bold leading-snug">
+                    我同意收集上述資料以改善學習體驗
+                </span>
+            </label>
+        </section>
+
+        <div class="pt-4 flex flex-col items-center">
+            <button
+                class="w-full bg-primary text-black border-[3px] border-black py-4 px-8 text-xl font-bold uppercase neo-shadow neo-shadow-active rounded-xl flex items-center justify-center gap-2"
+                onclick="handleStart()">
+                <span>開始使用</span>
+                <span class="material-symbols-outlined font-black">arrow_forward</span>
+            </button>
+            <p class="mt-6 text-xs text-zinc-500 dark:text-zinc-400 font-bold">
+                VIBECODING Flashcard App v1.2.0
+            </p>
+        </div>
+    </main>
+
+    <div class="fixed top-10 left-10 -z-10 opacity-10 dark:opacity-5 pointer-events-none">
+        <div class="w-32 h-32 border-4 border-black dark:border-white rotate-12"></div>
+    </div>
+    <div class="fixed bottom-10 right-10 -z-10 opacity-10 dark:opacity-5 pointer-events-none">
+        <div class="w-24 h-24 bg-primary border-4 border-black -rotate-12 neo-shadow"></div>
+    </div>
+
+    <script>
+        function handleStart() {
+            const nickname = document.getElementById('nickname').value.trim();
+            const consent = document.getElementById('consent').checked;
+
+            if (!nickname) {
+                alert('請輸入你的姓名或暱稱！');
+                return;
+            }
+
+            if (!consent) {
+                alert('請勾選同意收集資料以繼續使用！');
+                return;
+            }
+
+            // 儲存暱稱到 localStorage
+            localStorage.setItem('userNickname', nickname);
+            localStorage.setItem('userConsent', 'true');
+            localStorage.setItem('loginTime', new Date().toISOString());
+
+            // 導向首頁
+            window.location.href = 'index.html';
+        }
+
+        // 檢查是否已經登入過
+        window.addEventListener('DOMContentLoaded', function () {
+            const nickname = localStorage.getItem('userNickname');
+            const consent = localStorage.getItem('userConsent');
+
+            // 如果已經登入過且同意，可以選擇自動跳轉或預填
+            if (nickname && consent === 'true') {
+                document.getElementById('nickname').value = nickname;
+                document.getElementById('consent').checked = true;
+            }
+        });
+    </script>
+</body>
+
+</html>
