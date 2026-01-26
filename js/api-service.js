@@ -38,6 +38,86 @@ class ApiService {
     // ==================== 認證相關 ====================
 
     /**
+     * 使用 Email/密碼 註冊或登入
+     */
+    async authWithEmailPassword(email, password, nickname) {
+        try {
+            // 1. 嘗試註冊
+            console.log('嘗試註冊...', email);
+            const signUpResult = await this.supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        username: nickname
+                    }
+                }
+            });
+
+            if (signUpResult.error) {
+                // 如果是 "User already registered" (Supabase 通常回傳 400 或 422)，則嘗試登入
+                // 注意：Supabase 安全性設定有時會隱藏此錯誤，但我們嘗試登入即可
+                console.log('註冊回應:', signUpResult.error.message);
+
+                // 嘗試登入
+                console.log('嘗試登入...');
+                const signInResult = await this.supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (signInResult.error) throw signInResult.error;
+
+                // 登入成功，更新當前使用者
+                this.currentUser = signInResult.data.user;
+                return { success: true, user: this.currentUser, isNewUser: false };
+            }
+
+            // 註冊成功
+            if (signUpResult.data.user) {
+                // 情境 A: 真的註冊成功且有 Session (Auto Confirm off)
+                if (signUpResult.data.session) {
+                    console.log('註冊成功，建立 Profile...');
+                    this.currentUser = signUpResult.data.user;
+                    await this._createUserProfile(this.currentUser.id, nickname, email);
+                    return { success: true, user: this.currentUser, isNewUser: true };
+                }
+
+                // 情境 B: 回傳了 User 但沒有 Session。
+                // 這有兩種可能：
+                // 1. 需要 Email 驗證 (Confirm Email on)
+                // 2. 使用者已存在 (Prevent Email Enumeration on) -> Supabase 會假裝註冊成功但不給 Session
+
+                // 我們嘗試直接登入看看，如果登入成功代表是情境 2
+                console.log('註冊回應無 Session，嘗試登入以確認是否為已存在使用者...');
+                const signInResult = await this.supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (signInResult.data.session) {
+                    console.log('登入成功！(使用者已存在)');
+                    this.currentUser = signInResult.data.user;
+                    return { success: true, user: this.currentUser, isNewUser: false };
+                }
+
+                // 如果登入失敗，那真的很可能是 Email 尚未驗證 (情境 1)
+                // 或是密碼錯誤 (但理論上我們要用剛剛註冊的密碼登入，所以不太可能)
+                if (signInResult.error && signInResult.error.message.includes('Email not confirmed')) {
+                    return { success: false, error: { message: '請前往信箱點擊驗證連結，然後重新登入' } };
+                }
+
+                return { success: false, error: { message: '註冊成功，但請檢查您的信箱以完成驗證' } };
+            }
+
+            return { success: false, error: { message: '未知錯誤' } };
+
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 快速註冊/登入 (使用暱稱自動產生帳號)
      */
     async quickLogin(nickname) {

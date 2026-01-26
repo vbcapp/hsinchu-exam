@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>VibeCoding 歡迎報到與數據同意頁面</title>
+    <title>VibeCoding 數據收集說明頁面</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans+TC:wght@400;700&amp;display=swap"
@@ -53,7 +53,28 @@
     </style>
     <style>
         body {
-            min-height: max(884px, 100dvh);
+            min-height: max(700px, 100dvh);
+        }
+
+        /* Collapsible transition */
+        .collapsible-content {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .collapsible-content.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .arrow-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .arrow-icon.open {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -62,7 +83,7 @@
     <header class="w-full max-w-md flex flex-col items-center mb-6 pt-4">
         <div
             class="flex items-center justify-center bg-white dark:bg-black border-[3px] border-black p-4 neo-shadow w-20 h-20 mb-4 rounded-xl">
-            <span class="material-symbols-outlined text-4xl font-bold">code_blocks</span>
+            <span class="material-symbols-outlined text-4xl font-bold text-black dark:text-white">code_blocks</span>
         </div>
         <h1 class="text-3xl font-bold tracking-tighter text-black dark:text-white uppercase mb-4">VibeCoding</h1>
         <p class="text-center text-black dark:text-zinc-200 font-bold leading-relaxed px-2">
@@ -70,20 +91,36 @@
         </p>
     </header>
 
-    <main class="w-full max-w-md space-y-6 pb-12">
+    <main class="w-full max-w-md space-y-4 pb-12">
         <section>
             <input
                 class="w-full bg-white text-black border-[3px] border-black p-4 text-lg font-bold neo-shadow focus:ring-0 focus:outline-none placeholder:text-zinc-500 rounded-xl"
                 id="nickname" placeholder="請輸入你的姓名或暱稱：" type="text" />
         </section>
+        <section>
+            <input
+                class="w-full bg-white text-black border-[3px] border-black p-4 text-lg font-bold neo-shadow focus:ring-0 focus:outline-none placeholder:text-zinc-500 rounded-xl"
+                id="email" placeholder="請輸入電子郵件" type="email" />
+        </section>
+        <section>
+            <input
+                class="w-full bg-white text-black border-[3px] border-black p-4 text-lg font-bold neo-shadow focus:ring-0 focus:outline-none placeholder:text-zinc-500 rounded-xl"
+                id="password" placeholder="請輸入密碼" type="password" />
+        </section>
 
-        <section class="bg-white dark:bg-zinc-900 border-[3px] border-black p-6 neo-shadow rounded-xl">
-            <div class="flex items-center gap-2 mb-6 border-b-[3px] border-black pb-4">
-                <span class="text-2xl">📊</span>
-                <h2 class="text-xl font-bold text-black dark:text-white">學習數據收集說明</h2>
+        <section class="bg-white dark:bg-zinc-900 border-[3px] border-black p-6 neo-shadow rounded-xl !mt-6">
+            <div class="flex items-center justify-between mb-6" onclick="toggleDetails()">
+                <div class="flex items-center gap-2">
+                    <!-- Icon added for better look matching previous design if needed, or just text -->
+                    <span class="text-2xl">📊</span>
+                    <h2 class="text-xl font-bold text-black dark:text-white">學習數據收集說明</h2>
+                </div>
+                <span id="details-arrow"
+                    class="material-symbols-outlined text-black dark:text-white font-bold cursor-pointer arrow-icon">keyboard_arrow_down</span>
             </div>
 
-            <div class="space-y-4 mb-8">
+            <!-- Collapsible Details -->
+            <div id="data-details" class="collapsible-content space-y-4 mb-4">
                 <div class="flex items-start gap-3">
                     <span class="material-symbols-outlined text-black dark:text-white font-bold">person</span>
                     <p class="text-zinc-700 dark:text-zinc-300 font-bold">暱稱和更新時間</p>
@@ -100,22 +137,23 @@
                     <span class="material-symbols-outlined text-black dark:text-white font-bold">location_on</span>
                     <p class="text-zinc-700 dark:text-zinc-300 font-bold">地區資訊</p>
                 </div>
-            </div>
 
-            <div class="bg-primary/10 border-2 border-dashed border-black/30 dark:border-white/30 p-4 rounded-lg mb-8">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-black dark:text-white text-sm">lock</span>
-                    <p class="text-xs font-bold text-black dark:text-white">
-                        所有資料僅用於改善服務，不會用於商業用途
-                    </p>
+                <div
+                    class="bg-primary/10 border-2 border-dashed border-black/30 dark:border-white/30 p-4 rounded-lg mt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-black dark:text-white text-sm">lock</span>
+                        <p class="text-xs font-bold text-black dark:text-white">
+                            所有資料僅用於改善服務，不會用於商業用途
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <label class="flex items-center gap-4 cursor-pointer group pt-4 border-t-[3px] border-black">
-                <div class="relative">
-                    <input
+            <label class="flex items-start gap-4 cursor-pointer group border-t-[3px] border-black pt-4">
+                <div class="relative flex-shrink-0 mt-1">
+                    <input id="consent"
                         class="h-7 w-7 appearance-none border-[3px] border-black bg-white checked:bg-primary transition-colors cursor-pointer rounded-lg peer"
-                        type="checkbox" id="consent" />
+                        type="checkbox" />
                     <div
                         class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 peer-checked:opacity-100 text-black">
                         <span class="material-symbols-outlined font-black text-xl">check</span>
@@ -128,9 +166,8 @@
         </section>
 
         <div class="pt-4 flex flex-col items-center">
-            <button
-                class="w-full bg-primary text-black border-[3px] border-black py-4 px-8 text-xl font-bold uppercase neo-shadow neo-shadow-active rounded-xl flex items-center justify-center gap-2"
-                onclick="handleStart()">
+            <button onclick="handleStart()"
+                class="w-full bg-primary text-black border-[3px] border-black py-4 px-8 text-xl font-bold uppercase neo-shadow neo-shadow-active rounded-xl flex items-center justify-center gap-2">
                 <span>開始使用</span>
                 <span class="material-symbols-outlined font-black">arrow_forward</span>
             </button>
@@ -147,10 +184,31 @@
         <div class="w-24 h-24 bg-primary border-4 border-black -rotate-12 neo-shadow"></div>
     </div>
 
+    <!-- ==================== Supabase 整合 ==================== -->
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 專案配置與 API Service -->
+    <script src="config.js"></script>
+    <script src="js/api-service.js"></script>
+    <script src="js/init.js"></script>
+
     <script>
-        function handleStart() {
+        // Toggle Details Function
+        function toggleDetails() {
+            const content = document.getElementById('data-details');
+            const arrow = document.getElementById('details-arrow');
+
+            content.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+        async function handleStart() {
             const nickname = document.getElementById('nickname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
             const consent = document.getElementById('consent').checked;
+            const btn = document.querySelector('button');
 
             if (!nickname) {
                 alert('請輸入你的姓名或暱稱！');
@@ -162,13 +220,54 @@
                 return;
             }
 
-            // 儲存暱稱到 localStorage
-            localStorage.setItem('userNickname', nickname);
-            localStorage.setItem('userConsent', 'true');
-            localStorage.setItem('loginTime', new Date().toISOString());
+            // 更新按鈕狀態
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> <span>處理中...</span>';
+            btn.disabled = true;
 
-            // 導向首頁
-            window.location.href = 'index.html';
+            try {
+                // 初始化 API
+                await apiService.initialize();
+                let result;
+
+                // 判斷使用哪種登入方式
+                if (email && password) {
+                    // 使用 Email/密碼 登入/註冊
+                    console.log('使用 Email 登入/註冊:', email);
+                    result = await apiService.authWithEmailPassword(email, password, nickname);
+                } else {
+                    // 如果沒有輸入 Email/密碼，仍然使用快速登入 (匿名/自動產生)
+                    // 為了方便體驗，如果欄位留空則使用舊邏輯
+                    console.log('使用快速登入 (未提供 Email/密碼)');
+                    result = await apiService.quickLogin(nickname);
+                }
+
+                if (result.success) {
+                    // 儲存本地狀態
+                    localStorage.setItem('userNickname', nickname);
+                    localStorage.setItem('userConsent', 'true');
+                    localStorage.setItem('loginTime', new Date().toISOString());
+
+                    console.log('登入成功:', result.user);
+
+                    // 導向首頁
+                    window.location.href = 'index.html';
+                } else {
+                    throw new Error(result.error.message || '登入失敗');
+                }
+            } catch (error) {
+                console.error('登入錯誤:', error);
+
+                // 更友善的錯誤訊息
+                let msg = error.message;
+                if (msg.includes('Password should be')) msg = '密碼長度至少需要 6 個字元';
+                if (msg.includes('Invalid email')) msg = 'Email 格式不正確';
+
+                alert('登入失敗：' + msg);
+
+                // 恢復按鈕
+                btn.innerHTML = '<span>開始使用</span> <span class="material-symbols-outlined font-black">arrow_forward</span>';
+                btn.disabled = false;
+            }
         }
 
         // 檢查是否已經登入過
@@ -176,23 +275,15 @@
             const nickname = localStorage.getItem('userNickname');
             const consent = localStorage.getItem('userConsent');
 
-            // 如果已經登入過且同意，可以選擇自動跳轉或預填
-            if (nickname && consent === 'true') {
+            // 預填暱稱如果不為空
+            if (nickname) {
                 document.getElementById('nickname').value = nickname;
+            }
+            if (consent === 'true') {
                 document.getElementById('consent').checked = true;
             }
         });
     </script>
-
-    <!-- ==================== Supabase 整合 ==================== -->
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- 專案配置與 API Service -->
-    <script src="config.js"></script>
-    <script src="js/api-service.js"></script>
-    <script src="js/init.js"></script>
-
 </body>
 
 </html>
