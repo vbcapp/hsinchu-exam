@@ -6,10 +6,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>VibeCoding 簡約首頁列表</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
@@ -53,17 +51,16 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-    </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
+        a.material-symbols-outlined {
+            text-decoration: none;
+            display: inline-block;
         }
     </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark text-[#1a1a1a] dark:text-white min-h-screen pb-32">
+<body class="bg-zinc-100 dark:bg-background-dark text-[#1a1a1a] dark:text-white min-h-screen pb-32">
     <header
-        class="sticky top-0 z-50 bg-background-light dark:bg-background-dark border-b-2 border-black px-4 py-4 flex items-center justify-between">
+        class="sticky top-0 z-50 bg-zinc-100 dark:bg-background-dark border-b-2 border-black px-4 py-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
             <div class="bg-primary neo-border p-1 flex items-center justify-center">
                 <span class="material-symbols-outlined text-black font-bold">terminal</span>
@@ -90,7 +87,7 @@
                 <div class="text-[12px] font-bold text-primary italic pr-1">95/100</div>
             </div>
             <div class="w-full h-2 border border-zinc-600 bg-zinc-900 overflow-hidden">
-                <div class="h-full bg-primary" style="width: 60%;"></div>
+                <div class="h-full bg-primary" style="width: 95%;"></div>
             </div>
             <div class="text-[10px] font-bold text-white tracking-widest uppercase opacity-80">NEXT LEVEL: 200 XP</div>
         </div>
@@ -113,19 +110,19 @@
                 <span class="material-symbols-outlined">tune</span>
             </button>
         </div>
-        <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            <button
-                class="flex-none px-4 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">不熟悉卡</button>
-            <button
-                class="flex-none px-5 py-2 neo-border-thick bg-primary font-black text-xs neo-shadow-sm">Lv.1</button>
-            <button
-                class="flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.2</button>
-            <button
-                class="flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.3</button>
-            <button
-                class="flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.4</button>
-            <button
-                class="flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.5</button>
+        <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="filter-buttons">
+            <button data-filter="unfamiliar"
+                class="filter-btn flex-none px-4 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">不熟悉卡</button>
+            <button data-filter="lv1"
+                class="filter-btn flex-none px-5 py-2 neo-border-thick bg-primary font-black text-xs neo-shadow-sm active">Lv.1</button>
+            <button data-filter="lv2"
+                class="filter-btn flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.2</button>
+            <button data-filter="lv3"
+                class="filter-btn flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.3</button>
+            <button data-filter="lv4"
+                class="filter-btn flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.4</button>
+            <button data-filter="lv5"
+                class="filter-btn flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.5</button>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <a href="card.html"
@@ -138,7 +135,7 @@
                     <p class="text-[10px] leading-tight opacity-70 line-clamp-2">應用程式介面。定義不同組件互動規範。</p>
                 </div>
                 <div class="flex justify-end gap-2 mt-2">
-                    <span
+                    <span data-edit="true"
                         class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
                     <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
                 </div>
@@ -153,7 +150,7 @@
                     <p class="text-[10px] leading-tight opacity-70 line-clamp-2">文件物件模型。HTML 文件的結構化表示。</p>
                 </div>
                 <div class="flex justify-end gap-2 mt-2">
-                    <span
+                    <span data-edit="true"
                         class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
                     <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
                 </div>
@@ -168,7 +165,7 @@
                     <p class="text-[10px] leading-tight opacity-70 line-clamp-2">閉包。函式及其引用的周圍環境組合。</p>
                 </div>
                 <div class="flex justify-end gap-2 mt-2">
-                    <span
+                    <span data-edit="true"
                         class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
                     <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
                 </div>
@@ -183,7 +180,7 @@
                     <p class="text-[10px] leading-tight opacity-70 line-clamp-2">用於構建使用者介面的 JavaScript 庫。</p>
                 </div>
                 <div class="flex justify-end gap-2 mt-2">
-                    <span
+                    <span data-edit="true"
                         class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
                     <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
                 </div>
@@ -208,6 +205,45 @@
             <span class="text-xs font-bold text-black dark:text-white">個人</span>
         </a>
     </nav>
+
+    <script>
+        // 篩選按鈕點擊功能
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // 移除所有按鈕的 active 狀態
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('active', 'bg-primary', 'font-black');
+                        btn.classList.add('bg-white', 'dark:bg-zinc-800', 'font-bold');
+                    });
+
+                    // 為當前點擊的按鈕添加 active 狀態
+                    this.classList.add('active', 'bg-primary', 'font-black');
+                    this.classList.remove('bg-white', 'dark:bg-zinc-800', 'font-bold');
+
+                    // 這裡可以添加篩選卡片的邏輯
+                    const filterValue = this.getAttribute('data-filter');
+                    console.log('選擇的篩選器:', filterValue);
+                    // 未來可以根據 filterValue 來篩選顯示的卡片
+                });
+            });
+        });
+
+        // 編輯按鈕點擊功能
+        document.addEventListener('DOMContentLoaded', function () {
+            const editButtons = document.querySelectorAll('[data-edit="true"]');
+
+            editButtons.forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    window.location.href = 'edit.html';
+                });
+            });
+        });
+    </script>
 
 </body>
 
