@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>測驗結果</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Noto+Sans+TC:wght@400;500;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FACC15",
+                        secondary: "#FB7185",
+                        "background-light": "#FFFFFF",
+                        "background-dark": "#121212",
+                        "accent-orange": "#F97316",
+                        "electric-green": "#22C55E",
+                        "correct-green": "#F0FDF4",
+                        "correct-border": "#22C55E",
+                        "incorrect-red": "#FEF2F2",
+                        "incorrect-border": "#EF4444",
+                        "neo-indigo": "#3730A3",
+                        "note-yellow": "#FEFCE8"
+                    },
+                    fontFamily: {
+                        display: ["Lexend", "Noto Sans TC", "sans-serif"],
+                        sans: ["Lexend", "Noto Sans TC", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                    },
+                    boxShadow: {
+                        'neo': '4px 4px 0px 0px #3730A3',
+                        'neo-lg': '8px 8px 0px 0px #3730A3',
+                        'neo-yellow': '4px 4px 0px 0px #CA8A04',
+                        'correct-glow': '0 0 15px rgba(34, 197, 94, 0.2)',
+                        'incorrect-glow': '0 0 15px rgba(239, 68, 68, 0.2)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Lexend', 'Noto Sans TC', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #ffffff;
+            background-image: radial-gradient(#00000015 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+
+        .dark body {
+            background-color: #121212;
+            background-image: radial-gradient(#ffffff10 1px, transparent 0);
+        }
+
+        .neo-border {
+            border: 3px solid #000000;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 0px;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="text-black dark:text-white min-h-screen flex flex-col overflow-x-hidden">
+    <header class="pt-8 px-6 pb-4 flex flex-col shrink-0">
+        <div class="flex items-center w-full mb-6 relative">
+            <a href="index.html"
+                class="w-11 h-11 flex items-center justify-center bg-white dark:bg-zinc-800 neo-border rounded-full shadow-neo active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all z-10 shrink-0">
+                <span class="material-symbols-outlined text-2xl font-bold">home</span>
+            </a>
+            <div class="absolute inset-x-0 flex justify-center pointer-events-none">
+                <div
+                    class="bg-primary text-black px-4 py-1.5 neo-border flex items-center gap-1.5 rounded-full shadow-neo-yellow font-black text-sm uppercase tracking-tight pointer-events-auto">
+                    <span class="material-symbols-outlined text-base">emoji_events</span>
+                    測驗結果
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-y-auto px-6 py-4 flex flex-col items-center justify-center space-y-8">
+        <!-- 分數卡片 -->
+        <div
+            class="w-full bg-white dark:bg-zinc-900 neo-border rounded-2xl shadow-neo overflow-hidden transform hover:scale-[1.02] transition-transform">
+            <div class="h-4 bg-primary border-b-[3px] border-black"></div>
+            <div class="p-8 text-center space-y-4">
+                <p class="text-zinc-500 dark:text-zinc-400 font-bold text-lg uppercase tracking-wide">你的得分</p>
+                <div class="flex items-baseline justify-center gap-2">
+                    <span id="score-text" class="text-7xl font-black text-neo-indigo dark:text-primary">0</span>
+                    <span class="text-4xl font-bold text-zinc-400">/</span>
+                    <span id="total-text" class="text-4xl font-bold text-zinc-400">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 評語 -->
+        <div id="message-container"
+            class="w-full text-center space-y-4 p-6 bg-note-yellow dark:bg-zinc-800/50 neo-border rounded-2xl shadow-neo-yellow">
+            <span id="result-emoji" class="text-6xl animate-bounce inline-block">🎉</span>
+            <h2 id="result-title" class="text-3xl font-black text-zinc-900 dark:text-white leading-tight">
+                太棒了！
+            </h2>
+            <p id="result-desc" class="text-zinc-700 dark:text-zinc-300 font-medium">
+                你已經完全掌握了這些知識！
+            </p>
+        </div>
+
+        <!-- 詳細結果列表 (可選) -->
+        <div class="w-full space-y-3">
+            <h3 class="font-black text-lg px-2">答題狀況</h3>
+            <div id="results-list" class="grid grid-cols-3 gap-3">
+                <!-- 由 JS 生成 -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="px-6 pb-10 pt-4 shrink-0 bg-transparent space-y-4">
+        <button onclick="window.location.href='test.html'"
+            class="group w-full bg-primary text-black neo-border rounded-2xl py-4 font-black text-xl shadow-neo-lg hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_#3730A3] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined font-black">refresh</span>
+            <span>再測一次</span>
+        </button>
+
+        <button onclick="window.location.href='index.html'"
+            class="group w-full bg-white dark:bg-zinc-800 text-black dark:text-white neo-border rounded-2xl py-4 font-black text-xl shadow-neo hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
+            <span>回到首頁</span>
+        </button>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const resultData = localStorage.getItem('quizResults');
+
+            if (!resultData) {
+                // 如果沒有結果資料，導回首頁或測驗頁
+                window.location.href = 'test.html';
+                return;
+            }
+
+            const data = JSON.parse(resultData);
+            const { correctCount, totalQuestions, isPerfect, results } = data;
+
+            // 更新分數
+            document.getElementById('score-text').textContent = correctCount;
+            document.getElementById('total-text').textContent = totalQuestions;
+
+            // 更新評語
+            const emojiEl = document.getElementById('result-emoji');
+            const titleEl = document.getElementById('result-title');
+            const descEl = document.getElementById('result-desc');
+            const messageContainer = document.getElementById('message-container');
+
+            if (isPerfect) {
+                emojiEl.textContent = '🏆';
+                titleEl.textContent = '完美通關！';
+                descEl.textContent = '你是 API 大師！所有題目都答對了！';
+                messageContainer.classList.add('bg-correct-green', 'border-correct-border');
+                messageContainer.classList.remove('bg-note-yellow');
+            } else if (correctCount > 0) {
+                emojiEl.textContent = '💪';
+                titleEl.textContent = '做得不錯！';
+                descEl.textContent = `答對了 ${correctCount} 題，再接再厲！`;
+            } else {
+                emojiEl.textContent = '📚';
+                titleEl.textContent = '繼續加油！';
+                descEl.textContent = '別灰心，複習一下再挑戰一次！';
+                messageContainer.classList.add('bg-incorrect-red', 'border-incorrect-border');
+                messageContainer.classList.remove('bg-note-yellow', 'shadow-neo-yellow');
+                messageContainer.classList.add('shadow-neo');
+            }
+
+            // 生成結果圖示
+            const listContainer = document.getElementById('results-list');
+            listContainer.innerHTML = results.map((isCorrect, index) => `
+                <div class="aspect-square neo-border rounded-xl flex flex-col items-center justify-center gap-1 ${isCorrect ? 'bg-correct-green border-correct-border' : 'bg-incorrect-red border-incorrect-border'}">
+                    <span class="text-xs font-black opacity-50">Q${index + 1}</span>
+                    <span class="material-symbols-outlined text-2xl font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}">
+                        ${isCorrect ? 'check' : 'close'}
+                    </span>
+                </div>
+            `).join('');
+        });
+    </script>
+</body>
+
+</html>
