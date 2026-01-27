@@ -96,11 +96,11 @@
                 <div class="flex-1 flex flex-col gap-1 sm:gap-2">
                     <div class="flex justify-between items-end px-1">
                         <p class="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider">XP Points</p>
-                        <p class="text-[8px] sm:text-[10px] font-bold">750 / 1000</p>
+                        <p id="header-xp-text" class="text-[8px] sm:text-[10px] font-bold">- / -</p>
                     </div>
                     <div
                         class="rounded-full border-3 border-black dark:border-white/40 bg-white dark:bg-black overflow-hidden h-3 sm:h-4">
-                        <div class="h-full bg-primary" style="width: 75%;"></div>
+                        <div id="header-xp-bar" class="h-full bg-primary" style="width: 0%;"></div>
                     </div>
                 </div>
                 <div class="relative flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 shrink-0">
@@ -206,8 +206,31 @@
     <script>
         let currentCard = null;
 
+        // 從 sessionStorage 讀取快取
+        function getCachedCard(cardId) {
+            const cached = sessionStorage.getItem(`card_${cardId}`);
+            return cached ? JSON.parse(cached) : null;
+        }
+
+        // 從快取載入使用者資料
+        function loadUserFromCache() {
+            const cached = sessionStorage.getItem('userData');
+            if (cached) {
+                const userData = JSON.parse(cached);
+                const xpText = document.getElementById('header-xp-text');
+                if (xpText) xpText.textContent = `${userData.current_xp || 0} / ${userData.next_level_xp || 100}`;
+
+                const xpBar = document.getElementById('header-xp-bar');
+                if (xpBar) {
+                    const percentage = ((userData.current_xp || 0) / (userData.next_level_xp || 100)) * 100;
+                    xpBar.style.width = `${Math.min(percentage, 100)}%`;
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async function () {
-            await apiService.initialize();
+            // 立即從快取載入使用者資料
+            loadUserFromCache();
 
             // 從 URL 取得卡片 ID
             const urlParams = new URLSearchParams(window.location.search);
@@ -219,7 +242,15 @@
                 return;
             }
 
-            // 載入卡片
+            // 先檢查快取，立即顯示
+            const cachedCard = getCachedCard(cardId);
+            if (cachedCard) {
+                currentCard = cachedCard;
+                renderCard(cachedCard);
+            }
+
+            // 初始化 API 並載入最新資料
+            await apiService.initialize();
             await loadCard(cardId);
         });
 
@@ -236,8 +267,11 @@
 
             if (result.success && result.data.card) {
                 currentCard = result.data.card;
+                // 更新快取
+                sessionStorage.setItem(`card_${cardId}`, JSON.stringify(currentCard));
                 renderCard(currentCard);
-            } else {
+            } else if (!currentCard) {
+                // 只有在沒有快取資料時才顯示錯誤
                 alert('載入卡片失敗');
                 window.location.href = 'index.html';
             }

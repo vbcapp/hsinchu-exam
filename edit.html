@@ -168,9 +168,13 @@
         let currentCard = null;
         let cardId = null;
 
-        document.addEventListener('DOMContentLoaded', async function () {
-            await apiService.initialize();
+        // 從 sessionStorage 讀取快取
+        function getCachedCard(id) {
+            const cached = sessionStorage.getItem(`card_${id}`);
+            return cached ? JSON.parse(cached) : null;
+        }
 
+        document.addEventListener('DOMContentLoaded', async function () {
             // 從 URL 取得卡片 ID
             const urlParams = new URLSearchParams(window.location.search);
             cardId = urlParams.get('id');
@@ -181,7 +185,15 @@
                 return;
             }
 
-            // 載入卡片
+            // 先檢查快取，立即填入表單
+            const cachedCard = getCachedCard(cardId);
+            if (cachedCard) {
+                currentCard = cachedCard;
+                fillForm(cachedCard);
+            }
+
+            // 初始化 API 並載入最新資料
+            await apiService.initialize();
             await loadCard(cardId);
         });
 
@@ -198,8 +210,11 @@
 
             if (result.success && result.data.card) {
                 currentCard = result.data.card;
+                // 更新快取
+                sessionStorage.setItem(`card_${id}`, JSON.stringify(currentCard));
                 fillForm(currentCard);
-            } else {
+            } else if (!currentCard) {
+                // 只有在沒有快取資料時才顯示錯誤
                 alert('載入卡片失敗');
                 window.location.href = 'index.html';
             }

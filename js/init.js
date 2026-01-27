@@ -12,15 +12,18 @@ async function initializeApp() {
     try {
         console.log('正在初始化應用...');
 
+        // 先從快取載入 UI（如果有的話）
+        loadUserUIFromCache();
+
         await apiService.initialize();
 
         if (apiService.currentUser) {
             currentUser = apiService.currentUser;
-            console.log('使用者已登入:', currentUser.email);
+            console.log('使用者已登入:', currentUser.email, 'ID:', currentUser.id);
             await loadUserData();
             await loadUserCards();
         } else {
-            console.log('使用者未登入');
+            console.log('使用者未登入，請先登入');
         }
 
         return { success: true };
@@ -34,12 +37,19 @@ async function initializeApp() {
  * 載入使用者資料
  */
 async function loadUserData() {
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.log('loadUserData: currentUser 是 null，跳過');
+        return;
+    }
+
+    console.log('loadUserData: 開始載入使用者資料，ID:', currentUser.id);
 
     try {
         const result = await apiService.getUserProfile(currentUser.id);
+        console.log('loadUserData: API 回傳結果:', result);
 
         if (result.success) {
+            console.log('loadUserData: 成功取得資料:', result.data);
             updateUserUI(result.data);
         } else {
             console.error('載入使用者資料失敗:', result.error);
@@ -47,6 +57,54 @@ async function loadUserData() {
     } catch (error) {
         console.error('載入使用者資料錯誤:', error);
     }
+}
+
+/**
+ * 更新使用者 UI (等級、XP 等)
+ */
+function updateUserUI(userData) {
+    // 快取使用者資料到 sessionStorage
+    sessionStorage.setItem('userData', JSON.stringify(userData));
+
+    // 更新等級
+    const levelEl = document.getElementById('user-level');
+    if (levelEl) {
+        levelEl.textContent = `Lv. ${userData.current_level || 1}`;
+    }
+
+    // 更新 XP 文字
+    const xpTextEl = document.getElementById('user-xp-text');
+    if (xpTextEl) {
+        xpTextEl.textContent = `${userData.current_xp || 0}/${userData.next_level_xp || 100}`;
+    }
+
+    // 更新 XP 進度條
+    const xpBarEl = document.getElementById('user-xp-bar');
+    if (xpBarEl) {
+        const percentage = ((userData.current_xp || 0) / (userData.next_level_xp || 100)) * 100;
+        xpBarEl.style.width = `${Math.min(percentage, 100)}%`;
+    }
+
+    // 更新下一等級需要的 XP
+    const nextLevelXpEl = document.getElementById('user-next-level-xp');
+    if (nextLevelXpEl) {
+        nextLevelXpEl.textContent = userData.next_level_xp || 100;
+    }
+
+    console.log('使用者 UI 已更新:', userData);
+}
+
+/**
+ * 從快取載入使用者 UI (立即顯示)
+ */
+function loadUserUIFromCache() {
+    const cached = sessionStorage.getItem('userData');
+    if (cached) {
+        const userData = JSON.parse(cached);
+        updateUserUI(userData);
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -74,6 +132,34 @@ async function loadUserCards() {
     }
 }
 
+// 卡片快取存儲 (key: card ID, value: card data)
+let cardsCache = {};
+
+/**
+ * 儲存卡片到 sessionStorage
+ */
+function cacheCard(card) {
+    sessionStorage.setItem(`card_${card.id}`, JSON.stringify(card));
+    cardsCache[card.id] = card;
+}
+
+/**
+ * 從 sessionStorage 讀取卡片
+ */
+function getCachedCard(cardId) {
+    // 先檢查記憶體快取
+    if (cardsCache[cardId]) return cardsCache[cardId];
+
+    // 再檢查 sessionStorage
+    const cached = sessionStorage.getItem(`card_${cardId}`);
+    if (cached) {
+        const card = JSON.parse(cached);
+        cardsCache[cardId] = card;
+        return card;
+    }
+    return null;
+}
+
 /**
  * 渲染卡片列表
  */
@@ -90,8 +176,11 @@ function renderCards(cards, container) {
 
     container.innerHTML = cards.map(card => renderCardItem(card)).join('');
 
+    // 快取所有卡片
+    cards.forEach(card => cacheCard(card));
+
     // 重新綁定編輯和刪除按鈕事件
-    bindCardActions();
+    bindCardActions(cards);
 }
 
 /**
@@ -125,13 +214,25 @@ function renderCardItem(card) {
 /**
  * 綁定卡片操作事件
  */
-function bindCardActions() {
+function bindCardActions(cards) {
+    // 卡片連結 - 點擊時快取資料
+    document.querySelectorAll('#cards-container a[href^="card.html"]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            const cardId = new URLSearchParams(href.split('?')[1]).get('id');
+            const card = cards?.find(c => c.id === cardId);
+            if (card) cacheCard(card);
+        });
+    });
+
     // 編輯按鈕
     document.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             const cardId = this.getAttribute('data-card-id');
+            const card = cards?.find(c => c.id === cardId);
+            if (card) cacheCard(card);
             window.location.href = `edit.html?id=${cardId}`;
         });
     });
@@ -147,6 +248,8 @@ function bindCardActions() {
 
             const result = await apiService.deleteCard(cardId, currentUser.id);
             if (result.success) {
+                sessionStorage.removeItem(`card_${cardId}`);
+                delete cardsCache[cardId];
                 await loadUserCards(); // 重新載入卡片
             } else {
                 alert('刪除失敗: ' + result.error.message);
@@ -155,32 +258,6 @@ function bindCardActions() {
     });
 }
 
-/**
- * 更新 UI 顯示使用者資料
- */
-function updateUserUI(userData) {
-    const levelElements = document.querySelectorAll('[data-user-level]');
-    levelElements.forEach(el => {
-        el.textContent = `Lv. ${userData.current_level}`;
-    });
-
-    const xpElements = document.querySelectorAll('[data-user-xp]');
-    xpElements.forEach(el => {
-        el.textContent = `${userData.current_xp}/${userData.next_level_xp}`;
-    });
-
-    const progressBars = document.querySelectorAll('[data-xp-progress]');
-    progressBars.forEach(bar => {
-        bar.style.width = `${userData.levelProgressPercentage}%`;
-    });
-
-    const cardCountElements = document.querySelectorAll('[data-card-count]');
-    cardCountElements.forEach(el => {
-        el.textContent = userData.total_cards_created;
-    });
-
-    console.log('UI 已更新:', userData);
-}
 
 /**
  * 顯示錯誤訊息

@@ -95,13 +95,15 @@
                 </div>
                 <div class="flex-1 space-y-1">
                     <div class="flex items-end justify-between">
-                        <div class="text-primary text-2xl font-black italic tracking-tighter leading-none">Lv. 12</div>
-                        <div class="text-[12px] font-bold text-primary italic pr-1">95/100</div>
+                        <div id="user-level"
+                            class="text-primary text-2xl font-black italic tracking-tighter leading-none">Lv. -</div>
+                        <div id="user-xp-text" class="text-[12px] font-bold text-primary italic pr-1">-/-</div>
                     </div>
                     <div class="w-full h-2 border border-zinc-600 bg-zinc-900 overflow-hidden">
-                        <div class="h-full bg-primary" style="width: 95%;"></div>
+                        <div id="user-xp-bar" class="h-full bg-primary" style="width: 0%;"></div>
                     </div>
-                    <div class="text-[10px] font-bold text-white tracking-widest uppercase opacity-80">NEXT LEVEL: 200
+                    <div class="text-[10px] font-bold text-white tracking-widest uppercase opacity-80">NEXT LEVEL: <span
+                            id="user-next-level-xp">-</span>
                         XP</div>
                 </div>
             </div>
