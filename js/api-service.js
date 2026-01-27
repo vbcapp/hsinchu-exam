@@ -287,6 +287,125 @@ class ApiService {
         }
     }
 
+    // ==================== 每日一卡相關 ====================
+
+    /**
+     * 取得今日的每日一卡
+     */
+    async getTodayDailyCard() {
+        try {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+            const { data, error } = await this.supabase
+                .from('daily_cards')
+                .select('*')
+                .eq('publish_date', today)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            // 如果今天沒有卡片，取最新的一張
+            if (!data) {
+                const { data: latestCard, error: latestError } = await this.supabase
+                    .from('daily_cards')
+                    .select('*')
+                    .order('publish_date', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (latestError) throw latestError;
+                return { success: true, data: latestCard };
+            }
+
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 將每日一卡添加到使用者收藏
+     */
+    async addDailyCardToCollection(dailyCardId, userId) {
+        try {
+            // 1. 取得每日一卡資料
+            const { data: dailyCard, error: fetchError } = await this.supabase
+                .from('daily_cards')
+                .select('*')
+                .eq('id', dailyCardId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            // 2. 複製到使用者的 flashcards
+            const now = new Date().toISOString();
+            const newCard = {
+                user_id: userId,
+                source_daily_card_id: dailyCardId,
+                category: dailyCard.category,
+                english_term: dailyCard.english_term,
+                chinese_translation: dailyCard.chinese_translation,
+                abbreviation: dailyCard.abbreviation,
+                description: dailyCard.description,
+                analogy: dailyCard.analogy,
+                level: dailyCard.level,
+                quiz_questions: dailyCard.quiz_questions,
+                is_public: false,
+                created_at: now,
+                updated_at: now
+            };
+
+            const { data: createdCard, error: insertError } = await this.supabase
+                .from('flashcards')
+                .insert(newCard)
+                .select()
+                .single();
+
+            if (insertError) throw insertError;
+
+            // 3. 更新 add_count
+            const { error: updateError } = await this.supabase
+                .from('daily_cards')
+                .update({ add_count: dailyCard.add_count + 1 })
+                .eq('id', dailyCardId);
+
+            if (updateError) {
+                console.warn('更新 add_count 失敗:', updateError);
+            }
+
+            // 4. 給使用者 XP
+            await this.addUserXp(userId, XP_REWARDS.CREATE_CARD);
+
+            return {
+                success: true,
+                data: createdCard,
+                xpEarned: XP_REWARDS.CREATE_CARD
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 檢查使用者是否已添加某張每日一卡
+     */
+    async hasUserAddedDailyCard(dailyCardId, userId) {
+        try {
+            const { data, error } = await this.supabase
+                .from('flashcards')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('source_daily_card_id', dailyCardId)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            return { success: true, hasAdded: !!data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
     // ==================== 卡片相關 ====================
 
     /**

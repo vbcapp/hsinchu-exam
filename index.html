@@ -139,71 +139,12 @@
                     <button data-filter="lv5"
                         class="filter-btn flex-none px-5 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm">Lv.5</button>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <a href="card.html"
-                        class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col min-h-[140px] relative transition-transform active:scale-[0.98]">
-                        <div class="mb-2">
-                            <span
-                                class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">Backend</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1">API</h3>
-                            <p class="text-[10px] leading-tight opacity-70 line-clamp-2">應用程式介面。定義不同組件互動規範。</p>
-                        </div>
-                        <div class="flex justify-end gap-2 mt-2">
-                            <span data-edit="true"
-                                class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
-                            <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
-                        </div>
-                    </a>
-                    <a href="card.html"
-                        class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col min-h-[140px] relative transition-transform active:scale-[0.98]">
-                        <div class="mb-2">
-                            <span
-                                class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">Frontend</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1">DOM</h3>
-                            <p class="text-[10px] leading-tight opacity-70 line-clamp-2">文件物件模型。HTML 文件的結構化表示。</p>
-                        </div>
-                        <div class="flex justify-end gap-2 mt-2">
-                            <span data-edit="true"
-                                class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
-                            <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
-                        </div>
-                    </a>
-                    <a href="card.html"
-                        class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col min-h-[140px] relative transition-transform active:scale-[0.98]">
-                        <div class="mb-2">
-                            <span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">JS</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1">Closure
-                            </h3>
-                            <p class="text-[10px] leading-tight opacity-70 line-clamp-2">閉包。函式及其引用的周圍環境組合。</p>
-                        </div>
-                        <div class="flex justify-end gap-2 mt-2">
-                            <span data-edit="true"
-                                class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
-                            <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
-                        </div>
-                    </a>
-                    <a href="card.html"
-                        class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col min-h-[140px] relative transition-transform active:scale-[0.98]">
-                        <div class="mb-2">
-                            <span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">Lib</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1">React
-                            </h3>
-                            <p class="text-[10px] leading-tight opacity-70 line-clamp-2">用於構建使用者介面的 JavaScript 庫。</p>
-                        </div>
-                        <div class="flex justify-end gap-2 mt-2">
-                            <span data-edit="true"
-                                class="material-symbols-outlined text-base cursor-pointer hover:text-primary">edit_square</span>
-                            <span class="material-symbols-outlined text-base cursor-pointer text-red-500">delete</span>
-                        </div>
-                    </a>
+                <div id="cards-container" class="grid grid-cols-2 gap-4">
+                    <!-- 卡片將由 JavaScript 動態載入 -->
+                    <div class="col-span-2 text-center py-8 text-gray-400">
+                        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+                        <p class="text-xs mt-2">載入中...</p>
+                    </div>
                 </div>
             </div>
         </main>
