@@ -16,7 +16,7 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#f9f506",
+                        "primary": "#ffd400",
                         "background-light": "#ffffff",
                         "background-dark": "#121212",
                     },
@@ -64,17 +64,15 @@
     </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-[#181811] overflow-hidden">
+<body class="bg-zinc-100 dark:bg-background-dark font-display text-[#181811] overflow-hidden">
     <div class="relative flex h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
-        <header class="flex-none bg-background-light px-4 pt-6 pb-4 border-b-thick border-black z-10">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex size-10 shrink-0 items-center justify-center neo-border-thick neo-shadow-sm bg-primary">
-                    <span class="material-symbols-outlined font-black">terminal</span>
+        <header
+            class="flex-none bg-zinc-100 dark:bg-background-dark border-b-2 border-black px-4 py-4 flex items-center justify-between z-10">
+            <div class="flex items-center gap-2">
+                <div class="bg-primary neo-border p-1 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-black font-bold">terminal</span>
                 </div>
-                <h1 class="text-[#181811] text-2xl font-black leading-tight tracking-tight uppercase italic">
-                    VIBECODING
-                </h1>
+                <h1 class="text-xl font-bold tracking-tight uppercase italic">VIBECODING</h1>
             </div>
         </header>
         <main class="flex-1 overflow-y-auto bg-[#f0f0f0] p-4 space-y-6 pb-28 no-scrollbar">
@@ -114,8 +112,8 @@
                     <div class="h-12 bg-white neo-border flex items-center justify-center font-bold">12</div>
                     <div class="h-12 bg-white neo-border flex items-center justify-center font-bold">13</div>
                     <div class="h-12 bg-white neo-border flex items-center justify-center font-bold">14</div>
-                    <div
-                        class="h-12 bg-primary neo-border-thick neo-shadow flex items-center justify-center font-black text-xl z-10">
+                    <div onclick="window.location.href='calendar_c.html'"
+                        class="h-12 bg-primary neo-border-thick neo-shadow flex items-center justify-center font-black text-xl z-10 cursor-pointer active:scale-95 transition-transform">
                         15</div>
                     <div class="h-12 bg-white neo-border flex items-center justify-center font-bold">16</div>
                     <div class="h-12 bg-white neo-border flex items-center justify-center font-bold">17</div>

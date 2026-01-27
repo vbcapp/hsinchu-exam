@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-TW">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffd400",
+                        "secondary": "#ff6b8b",
+                        "accent-blue": "#4a90e2",
+                        "background-light": "#f5f5f5",
+                        "background-dark": "#1a1a1a",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderWidth: {
+                        '3': '3px',
+                    },
+                    boxShadow: {
+                        'neo': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'neo-lg': '10px 10px 0px 0px rgba(0,0,0,1)',
+                        'neo-sm': '3px 3px 0px 0px rgba(0,0,0,1)',
+                        'neo-dark': '4px 4px 0px 0px rgba(255,255,255,0.2)',
+                        'neo-lg-dark': '10px 10px 0px 0px rgba(255,255,255,0.15)',
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+        .centered-container {
+            width: 100%;
+            max-width: 375px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        body {
+            min-height: 100dvh;
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-[#1d1a0c] dark:text-white min-h-screen flex flex-col items-center overflow-x-hidden">
+    <header
+        class="w-full bg-background-light dark:bg-background-dark border-b-3 border-black dark:border-white/20 p-2 sm:p-4 shrink-0 z-50 flex flex-col items-center">
+        <div class="w-full max-w-md">
+            <div class="flex items-center justify-between relative h-10 sm:h-12">
+                <button onclick="window.location.href='index.html'"
+                    class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center active:opacity-50 transition-opacity z-10 text-black dark:text-white">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl font-bold">arrow_back_ios_new</span>
+                </button>
+                <h1
+                    class="text-lg sm:text-xl font-bold tracking-tight absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+                    VibeCoding</h1>
+                <button
+                    class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center active:opacity-50 transition-opacity z-10">
+                    <span class="material-symbols-outlined text-xl sm:text-2xl">more_horiz</span>
+                </button>
+            </div>
+            <div class="mt-4 w-full overflow-x-auto no-scrollbar pb-1">
+                <div class="flex justify-between items-center gap-3 min-w-max px-1">
+                    <div
+                        class="flex flex-col items-center justify-center min-w-[60px] h-14 border-3 border-black rounded-xl bg-white shadow-neo-sm shrink-0 active:scale-95 transition-transform">
+                        <span class="text-[10px] font-bold uppercase opacity-60">Jan</span>
+                        <span class="text-lg font-bold">13</span>
+                    </div>
+                    <div
+                        class="flex flex-col items-center justify-center min-w-[60px] h-14 border-3 border-black rounded-xl bg-primary shadow-neo-sm shrink-0 active:scale-95 transition-transform">
+                        <span class="text-[10px] font-bold uppercase">Jan</span>
+                        <span class="text-xl font-bold">14</span>
+                    </div>
+                    <div
+                        class="flex flex-col items-center justify-center min-w-[60px] h-14 border-3 border-black rounded-xl bg-white shadow-neo-sm shrink-0 active:scale-95 transition-transform">
+                        <span class="text-[10px] font-bold uppercase opacity-60">Jan</span>
+                        <span class="text-lg font-bold">15</span>
+                    </div>
+                    <div
+                        class="flex flex-col items-center justify-center min-w-[60px] h-14 border-3 border-black rounded-xl bg-white shadow-neo-sm shrink-0 active:scale-95 transition-transform">
+                        <span class="text-[10px] font-bold uppercase opacity-60">Jan</span>
+                        <span class="text-lg font-bold">16</span>
+                    </div>
+                    <div
+                        class="flex flex-col items-center justify-center min-w-[60px] h-14 border-3 border-black rounded-xl bg-white shadow-neo-sm shrink-0 active:scale-95 transition-transform">
+                        <span class="text-[10px] font-bold uppercase opacity-60">Jan</span>
+                        <span class="text-lg font-bold">17</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="flex-1 flex flex-col items-center py-8 p-6 w-full">
+        <div class="centered-container">
+            <div
+                class="w-full bg-white dark:bg-[#2a2a2a] border-3 border-black dark:border-white shadow-neo-lg dark:shadow-neo-lg-dark rounded-2xl flex flex-col relative overflow-hidden">
+                <div class="absolute top-4 left-4">
+                    <div class="bg-primary border-3 border-black px-2 py-0.5 rounded shadow-neo-sm">
+                        <span class="text-[10px] font-bold tracking-widest uppercase">BACKEND</span>
+                    </div>
+                </div>
+                <div class="absolute top-4 right-4">
+                    <button
+                        class="bg-white dark:bg-black border-3 border-black dark:border-white w-8 h-8 rounded shadow-neo-sm flex items-center justify-center active:translate-x-[1px] active:translate-y-[1px] active:shadow-none">
+                        <span class="material-symbols-outlined text-xl font-black">add</span>
+                    </button>
+                </div>
+                <div class="p-6 pb-2 pt-14">
+                    <div class="flex flex-col items-center gap-1">
+                        <h2 class="text-7xl font-bold tracking-tighter text-center">API</h2>
+                        <span class="text-lg font-bold text-gray-500 mb-1">(API)</span>
+                        <span class="text-xl font-bold italic mb-6">應用程式介面</span>
+                        <div
+                            class="bg-primary border-3 border-black px-6 py-2 rounded-lg shadow-neo-sm flex items-center justify-center gap-2">
+                            <span class="text-sm font-bold tracking-widest">Lv.2</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-6 flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-sm font-bold mb-2 flex items-center gap-2">
+                            <span class="w-2 h-4 bg-primary border border-black inline-block"></span>
+                            內容說明
+                        </h3>
+                        <div
+                            class="max-h-[4.5em] overflow-y-auto leading-relaxed text-sm text-gray-800 dark:text-gray-200">
+                            API
+                            是軟體與軟體之間溝通的橋樑，讓不同程式可以互相交換資料或使用彼此的功能，而不需要知道對方的內部程式碼怎麼寫。這是一個比較長的測試文本，用來測試是否會出現捲軸。這是一個比較長的測試文本，用來測試是否會出現捲軸。
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold mb-2 flex items-center gap-2">
+                            <span class="w-2 h-4 bg-secondary border border-black inline-block"></span>
+                            生活化比喻
+                        </h3>
+                        <div
+                            class="bg-gray-50 dark:bg-black/20 border-3 border-black p-4 rounded-xl relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
+                            <div
+                                class="max-h-[9em] overflow-y-auto leading-relaxed text-sm text-gray-700 dark:text-gray-300 italic">
+                                💡 API
+                                就像是餐廳的服務生。你（客戶端）看菜單點餐，服務生將你的需求傳達給廚房（伺服器），最後再把做好的菜送到你桌上。你不需要知道廚房怎麼開火，只需要透過服務生就能得到食物。這是一個比較長的測試文本，用來測試是否會出現捲軸。這是一個比較長的測試文本，用來測試是否會出現捲軸。這是一個比較長的測試文本，用來測試是否會出現捲軸。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div
+        class="fixed top-20 left-1/2 -translate-x-[180px] w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10">
+    </div>
+    <div
+        class="fixed bottom-40 left-1/2 translate-x-[80px] w-48 h-48 bg-secondary/10 rounded-full blur-3xl pointer-events-none -z-10">
+    </div>
+
+</body>
+
+</html>
