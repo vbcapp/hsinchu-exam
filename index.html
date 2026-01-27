@@ -196,22 +196,35 @@
         </div>
     </main>
     <nav
-        class="fixed bottom-0 left-0 right-0 h-24 bg-white dark:bg-zinc-900 border-t-2 border-black flex items-center justify-around px-6 z-50">
-        <a class="flex flex-col items-center gap-1 group relative h-full justify-center" href="#">
+        class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t-thick border-black flex justify-around items-center px-2 py-4 pb-8 z-50">
+        <button class="flex flex-col items-center gap-1 group">
             <div
-                class="w-16 h-12 bg-primary neo-border-thick flex items-center justify-center neo-shadow-sm absolute -top-4">
-                <span class="material-symbols-outlined text-black font-bold text-3xl">style</span>
+                class="size-14 -mt-8 flex items-center justify-center neo-border-thick neo-shadow bg-primary group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-3xl font-black">style</span>
             </div>
-            <span class="text-xs font-bold text-black dark:text-white mt-10">學習卡</span>
-        </a>
-        <a class="flex flex-col items-center gap-1 group h-full justify-center" href="rank.html">
-            <span class="material-symbols-outlined text-3xl text-black dark:text-white">bar_chart</span>
-            <span class="text-xs font-bold text-black dark:text-white">排行榜</span>
-        </a>
-        <a class="flex flex-col items-center gap-1 group h-full justify-center" href="profile.html">
-            <span class="material-symbols-outlined text-3xl text-black dark:text-white">person</span>
-            <span class="text-xs font-bold text-black dark:text-white">個人</span>
-        </a>
+            <span class="text-[10px] font-black uppercase">單字卡</span>
+        </button>
+        <button onclick="window.location.href='calendar.html'" class="flex flex-col items-center gap-1 group">
+            <div
+                class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-2xl font-bold">calendar_month</span>
+            </div>
+            <span class="text-[10px] font-black uppercase">學習曆</span>
+        </button>
+        <button onclick="window.location.href='rank.html'" class="flex flex-col items-center gap-1 group">
+            <div
+                class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-2xl font-bold">trophy</span>
+            </div>
+            <span class="text-[9px] font-black uppercase">排行榜</span>
+        </button>
+        <button onclick="window.location.href='profile.html'" class="flex flex-col items-center gap-1 group">
+            <div
+                class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-2xl font-bold">person</span>
+            </div>
+            <span class="text-[9px] font-black uppercase">個人</span>
+        </button>
     </nav>
 
     <script>

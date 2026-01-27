@@ -42,7 +42,16 @@
             min-height: 100dvh;
         }
         .neo-border {
-            border: 3px solid black;
+            border: 2px solid #000000;
+        }
+        .neo-border-thick {
+            border: 3px solid #000000;
+        }
+        .neo-shadow {
+            box-shadow: 4px 4px 0px 0px #000000;
+        }
+        .neo-shadow-sm {
+            box-shadow: 2px 2px 0px 0px #000000;
         }
         .neo-card {
             border: 2px solid black;
@@ -108,22 +117,35 @@
         </div>
     </main>
     <nav
-        class="fixed bottom-0 left-0 right-0 h-24 bg-white dark:bg-zinc-900 border-t-2 border-black flex items-center justify-around px-6 z-50">
-        <a class="flex flex-col items-center gap-1 group h-full justify-center" href="index.html">
-            <span class="material-symbols-outlined text-3xl text-black dark:text-white">style</span>
-            <span class="text-xs font-bold text-black dark:text-white">學習卡</span>
-        </a>
-        <a class="flex flex-col items-center gap-1 group relative h-full justify-center" href="#">
+        class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t-thick border-black flex justify-around items-center px-2 py-4 pb-8 z-50">
+        <button onclick="window.location.href='index.html'" class="flex flex-col items-center gap-1 group">
             <div
-                class="w-16 h-12 bg-primary border-[3px] border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] absolute -top-4">
-                <span class="material-symbols-outlined text-black font-bold text-3xl">bar_chart</span>
+                class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-2xl font-bold">style</span>
             </div>
-            <span class="text-xs font-bold text-black dark:text-white mt-10">排行榜</span>
-        </a>
-        <a class="flex flex-col items-center gap-1 group h-full justify-center" href="profile.html">
-            <span class="material-symbols-outlined text-3xl text-black dark:text-white">person</span>
-            <span class="text-xs font-bold text-black dark:text-white">個人</span>
-        </a>
+            <span class="text-[9px] font-black uppercase">單字卡</span>
+        </button>
+        <button onclick="window.location.href='calendar.html'" class="flex flex-col items-center gap-1 group">
+            <div
+                class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-2xl font-bold">calendar_month</span>
+            </div>
+            <span class="text-[10px] font-black uppercase">學習曆</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 group">
+            <div
+                class="size-14 -mt-8 flex items-center justify-center neo-border-thick neo-shadow bg-primary group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-3xl font-black">trophy</span>
+            </div>
+            <span class="text-[10px] font-black uppercase">排行榜</span>
+        </button>
+        <button onclick="window.location.href='profile.html'" class="flex flex-col items-center gap-1 group">
+            <div
+                class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
+                <span class="material-symbols-outlined text-2xl font-bold">person</span>
+            </div>
+            <span class="text-[9px] font-black uppercase">個人</span>
+        </button>
     </nav>
 
 </body>
