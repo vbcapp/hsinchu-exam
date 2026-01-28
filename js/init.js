@@ -123,6 +123,14 @@ function updateUserUI(userData) {
         }
     }
 
+    // 更新升級資格：滿分卡顯示
+    const perfectCardReqEl = document.getElementById('perfect-card-requirement');
+    if (perfectCardReqEl) {
+        const currentPerfectCards = userData.perfect_card_count || 0;
+        const requiredPerfectCards = levelState.actualLevel; // 當前等級 = 需要的滿分卡數量
+        perfectCardReqEl.textContent = `升級資格：滿分卡 ${currentPerfectCards} / ${requiredPerfectCards}`;
+    }
+
     // 更新下一等級需要的 XP (保留原本 DOM，雖然後面邏輯可能不直接用它)
     const nextLevelXpEl = document.getElementById('user-next-level-xp');
     if (nextLevelXpEl) {
