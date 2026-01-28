@@ -315,9 +315,38 @@ function renderCardItem(card) {
     const isHearted = card.progress && card.progress.mastery_level === 0;
     const heartFill = isHearted ? '#EF4444' : '#F5F5F5'; // #EF4444 is Red
 
+    // 計算 Quiz 進度徽章 - 基於最後一次測驗分數
+    const lastScore = card.progress?.last_quiz_score;
+    let badgeClass = '';
+    let badgeEmoji = '';
+    let badgeBg = '';
+
+    if (lastScore === 0 || lastScore === 1) {
+        badgeClass = 'quiz-badge-novice';
+        badgeEmoji = '📝';
+        badgeBg = '#F97316'; // Orange
+    } else if (lastScore === 2) {
+        badgeClass = 'quiz-badge-intermediate';
+        badgeEmoji = '✓';
+        badgeBg = '#3B82F6'; // Blue
+    } else if (lastScore === 3) {
+        badgeClass = 'quiz-badge-perfect';
+        badgeEmoji = '⭐';
+        badgeBg = '#FACC15'; // Gold
+    }
+
+    // 決定是否顯示徽章（只有做過測驗才顯示）
+    const showBadge = lastScore !== null && lastScore !== undefined;
+
     return `
         <a href="card.html?id=${card.id}"
             class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98]">
+            ${showBadge ? `
+                <div class="absolute -top-2 -right-2 w-10 h-10 rounded-full neo-border-thick flex items-center justify-center z-20 shadow-lg"
+                     style="background-color: ${badgeBg};">
+                    <span class="text-lg">${badgeEmoji}</span>
+                </div>
+            ` : ''}
             <div class="mb-2">
                 <span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">${card.category || 'General'}</span>
             </div>

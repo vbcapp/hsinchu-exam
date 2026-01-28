@@ -688,6 +688,7 @@ class ApiService {
                 .update({
                     is_perfect: progress.is_perfect,
                     answered_question_indices: mergedIndices,
+                    last_quiz_score: correctCount, // 記錄最後一次測驗分數
                     last_reviewed_at: new Date().toISOString(),
                     // 簡單遞增練習次數
                     times_reviewed: (progress.times_reviewed || 0) + 1,
