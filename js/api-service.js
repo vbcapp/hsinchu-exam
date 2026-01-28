@@ -644,14 +644,17 @@ class ApiService {
             const bonuses = [];
             let perfectCardsToAdd = 0;
 
-            // 3. 判斷【開拓者獎勵】(第一次全對)
+            // 3. 判斷【開拓者獎勵】(每次全對都給)
             const isPerfectRun = correctCount === 3;
-            if (isPerfectRun && !progress.is_perfect) {
+            if (isPerfectRun) {
                 xpToAdd += 50;
                 bonuses.push({ name: '【開拓者獎勵】', xp: 50 });
-                perfectCardsToAdd = 1;
-                // 更新狀態將由下方 update 統一處理
-                progress.is_perfect = true;
+
+                // 只有第一次全對時才增加 perfect card count
+                if (!progress.is_perfect) {
+                    perfectCardsToAdd = 1;
+                    progress.is_perfect = true;
+                }
             }
 
             // 4. 判斷【大師勛章】(累積答對 5 題)
