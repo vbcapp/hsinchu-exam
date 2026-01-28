@@ -594,6 +594,138 @@ class ApiService {
     }
 
     /**
+     * 提交測驗結果並計算獎勵
+     * @param {string} userId 使用者 ID
+     * @param {string} cardId 卡片 ID (flashcard ID, not daily_card ID usually, assuming test context)
+     * @param {number} correctCount 答對題數 (0-3)
+     * @param {number[]} answeredIndices 本次答對的題目索引 (例如 [0, 2, 4])
+     * @returns {Promise<object>}
+     */
+    async submitQuizResult(userId, cardId, correctCount, answeredIndices = []) {
+        try {
+            console.log('=== API submitQuizResult ===');
+            console.log('correctCount received:', correctCount);
+            console.log('answeredIndices received:', answeredIndices);
+
+            // 1. 定義基礎 XP
+            let xpToAdd = 0;
+            if (correctCount === 1) xpToAdd = 20;
+            else if (correctCount === 2) xpToAdd = 50;
+            else if (correctCount === 3) xpToAdd = 100;
+
+            console.log('Base XP calculated:', xpToAdd);
+
+            // 2. 取得目前進度
+            let { data: progress } = await this.supabase
+                .from('user_card_progress')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('card_id', cardId)
+                .maybeSingle();
+
+            if (!progress) {
+                // 如果沒有進度紀錄，創建新的
+                const { data: newProgress, error: createError } = await this.supabase
+                    .from('user_card_progress')
+                    .insert({
+                        user_id: userId,
+                        card_id: cardId,
+                        mastery_level: 0,
+                        is_perfect: false,
+                        answered_question_indices: []
+                    })
+                    .select()
+                    .single();
+
+                if (createError) throw createError;
+                progress = newProgress;
+            }
+
+            const bonuses = [];
+            let perfectCardsToAdd = 0;
+
+            // 3. 判斷【開拓者獎勵】(第一次全對)
+            const isPerfectRun = correctCount === 3;
+            if (isPerfectRun && !progress.is_perfect) {
+                xpToAdd += 50;
+                bonuses.push({ name: '【開拓者獎勵】', xp: 50 });
+                perfectCardsToAdd = 1;
+                // 更新狀態將由下方 update 統一處理
+                progress.is_perfect = true;
+            }
+
+            // 4. 判斷【大師勛章】(累積答對 5 題)
+            // 合併舊的和新的索引，去重
+            const oldIndices = progress.answered_question_indices || [];
+            // 確保 indices 是數字
+            const cleanNewIndices = answeredIndices.map(Number);
+            const mergedIndicesSet = new Set([...oldIndices, ...cleanNewIndices]);
+            const mergedIndices = Array.from(mergedIndicesSet);
+
+            const isMasterBefore = oldIndices.length >= 5;
+            const isMasterNow = mergedIndices.length >= 5;
+
+            if (isMasterNow && !isMasterBefore) {
+                xpToAdd += 15;
+                bonuses.push({ name: '【大師勛章】', xp: 15 });
+            }
+
+            // 5. 更新 USER XP & Perfect Count
+            // 使用現有的 updateUserProgress (已包含 LevelSystem 邏輯)
+            const userUpdateResult = await this.updateUserProgress(userId, {
+                xpToAdd: xpToAdd,
+                perfectCardsToAdd: perfectCardsToAdd
+            });
+
+            if (!userUpdateResult.success) throw userUpdateResult.error;
+
+            // 6. 更新 Card Progress
+            const { error: progressUpdateError } = await this.supabase
+                .from('user_card_progress')
+                .update({
+                    is_perfect: progress.is_perfect,
+                    answered_question_indices: mergedIndices,
+                    last_reviewed_at: new Date().toISOString(),
+                    // 簡單遞增練習次數
+                    times_reviewed: (progress.times_reviewed || 0) + 1,
+                    times_correct: (progress.times_correct || 0) + correctCount,
+                    // 假設總題數 3
+                    times_incorrect: (progress.times_incorrect || 0) + (3 - correctCount)
+                    // TODO: Mastery Level 邏輯可在此擴充，目前先維持原樣或簡單提升
+                })
+                .eq('id', progress.id);
+
+            if (progressUpdateError) console.error('更新 Card Progress 失敗:', progressUpdateError);
+
+            // 7. 寫入 Test Record
+            const { error: recordError } = await this.supabase
+                .from('test_records')
+                .insert({
+                    user_id: userId,
+                    card_id: cardId,
+                    score: correctCount, // 新增 score 欄位 (需確保 schema 支援，如果沒有則需忽略或存入其他欄位)
+                    xp_earned: xpToAdd,
+                    bonuses: bonuses, // 紀錄獲得的獎勵 (JSONB)
+                    created_at: new Date().toISOString()
+                });
+
+            if (recordError) console.warn('寫入 Test Record 失敗:', recordError);
+
+            return {
+                success: true,
+                xpEarned: xpToAdd,
+                bonuses: bonuses,
+                newUserData: userUpdateResult.data.user,
+                isPerfectFirstTime: isPerfectRun && perfectCardsToAdd > 0,
+                isMasterFirstTime: isMasterNow && !isMasterBefore
+            };
+
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 刪除卡片
      */
     async deleteCard(cardId, userId) {

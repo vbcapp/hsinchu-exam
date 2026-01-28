@@ -190,6 +190,12 @@
         </button>
     </footer>
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="js/level-system.js"></script>
+    <script src="js/api-service.js"></script>
+
     <script>
         // 題目資料
         let quizQuestions = [
@@ -229,7 +235,6 @@
         let currentQuestionIndex = 0;
         let userAnswers = new Array(quizQuestions.length).fill(null);
         let autoNextTimeout = null;
-        // 從 localStorage 讀取解析展開狀態，若無則預設為 false
         let isExplanationExpanded = localStorage.getItem('isExplanationExpanded') === 'true';
 
         // DOM 元素
@@ -242,24 +247,25 @@
         const nextBtn = document.getElementById('next-btn');
         const nextBtnText = document.getElementById('next-btn-text');
 
-        let isInternalUpdate = false; // 標記是否為程式內部更新
+        let isInternalUpdate = false;
 
         // 初始化
-        function init() {
+        async function init() {
+            // 初始化 API Service
+            await apiService.initialize();
+
             const urlParams = new URLSearchParams(window.location.search);
             const mode = urlParams.get('mode');
             const reviewIndex = urlParams.get('index');
 
             if (mode === 'review') {
                 if (!loadReviewState()) {
-                    // 若讀取失敗 (例如無資料)，則退回一般模式
                     localStorage.removeItem('quizReviewState');
                     randomizeQuiz();
                 } else if (reviewIndex !== null) {
                     currentQuestionIndex = parseInt(reviewIndex, 10);
                 }
             } else {
-                // 清除舊的 review state，確保是全新的開始
                 localStorage.removeItem('quizReviewState');
                 randomizeQuiz();
             }
@@ -268,11 +274,9 @@
             prevBtn.addEventListener('click', handlePrevClick);
             nextBtn.addEventListener('click', handleNextClick);
 
-            // 監聽 summary 點擊事件，記錄使用者的操作行為
             const summaryEl = explanationDetails.querySelector('summary');
             if (summaryEl) {
                 summaryEl.addEventListener('click', (e) => {
-                    // 手動點擊切換狀態，延遲記錄最終狀態
                     setTimeout(() => {
                         isExplanationExpanded = explanationDetails.open;
                         localStorage.setItem('isExplanationExpanded', isExplanationExpanded);
@@ -281,23 +285,16 @@
             }
         }
 
-        // 隨機打亂題目與選項
         function randomizeQuiz() {
-            // 1. 打亂題目順序
             shuffleArray(quizQuestions);
-
-            // 2. 打亂每個題目的選項，並更新正確答案索引
             quizQuestions.forEach(q => {
-                const correctOptionText = q.options[q.correctAnswer - 1]; // 先暫存正確答案的文字
-                shuffleArray(q.options); // 打亂選項
-                q.correctAnswer = q.options.indexOf(correctOptionText) + 1; // 重新找出正確答案的新位置 (1-based)
+                const correctOptionText = q.options[q.correctAnswer - 1];
+                shuffleArray(q.options);
+                q.correctAnswer = q.options.indexOf(correctOptionText) + 1;
             });
-
-            // 重置使用者答案，確保長度正確 (雖然長度沒變，但習慣上重置一下)
             userAnswers = new Array(quizQuestions.length).fill(null);
         }
 
-        // Fisher-Yates 洗牌演算法
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -305,20 +302,15 @@
             }
         }
 
-        // 渲染題目
         function renderQuestion() {
             const question = quizQuestions[currentQuestionIndex];
             const answerState = userAnswers[currentQuestionIndex];
             const hasAnswered = !!answerState;
 
-            // 更新題目
             questionText.textContent = question.question;
-
-            // 更新進度條
             const progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
             progressBar.style.width = `${progress}%`;
 
-            // 渲染選項
             optionsContainer.innerHTML = question.options.map((option, index) => {
                 const btnIndex = index + 1;
                 let btnClass = "option-btn w-full text-left bg-white dark:bg-zinc-800/50 neo-border p-3.5 rounded-2xl shadow-neo relative";
@@ -328,88 +320,75 @@
                 if (hasAnswered) {
                     isDisabled = true;
                     if (btnIndex === question.correctAnswer) {
-                        // 正確答案樣式
                         btnClass += " option-correct shadow-none";
                         btnClass = btnClass.replace("shadow-neo", "");
                         btnContent = `
-                            <p class="font-bold text-lg leading-snug text-green-800 dark:text-green-400">
-                                ${String.fromCharCode(64 + btnIndex)}. ${option}
-                            </p>
-                            <div class="absolute -top-3 -right-3 bg-electric-green text-white rounded-full w-8 h-8 flex items-center justify-center shadow-neo border-2 border-black">
-                                <span class="material-symbols-outlined text-xl">check</span>
-                            </div>
-                        `;
+        <p class="font-bold text-lg leading-snug text-green-800 dark:text-green-400">
+            ${String.fromCharCode(64 + btnIndex)}. ${option}
+        </p>
+        <div class="absolute -top-3 -right-3 bg-electric-green text-white rounded-full w-8 h-8 flex items-center justify-center shadow-neo border-2 border-black">
+            <span class="material-symbols-outlined text-xl">check</span>
+        </div>
+        `;
                     } else if (btnIndex === answerState.selectedIndex && !answerState.isCorrect) {
-                        // 選錯的樣式
                         btnClass += " option-incorrect shadow-none";
                         btnClass = btnClass.replace("shadow-neo", "");
                         btnContent = `
-                            <p class="font-bold text-lg leading-snug text-red-800 dark:text-red-400">
-                                ${String.fromCharCode(64 + btnIndex)}. ${option}
-                            </p>
-                            <div class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-neo border-2 border-black">
-                                <span class="material-symbols-outlined text-xl">close</span>
-                            </div>
-                        `;
+        <p class="font-bold text-lg leading-snug text-red-800 dark:text-red-400">
+            ${String.fromCharCode(64 + btnIndex)}. ${option}
+        </p>
+        <div class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-neo border-2 border-black">
+            <span class="material-symbols-outlined text-xl">close</span>
+        </div>
+        `;
                     } else {
-                        // 其他選項
                         btnClass += " option-disabled";
                     }
                 }
 
                 return `
-                    <button class="${btnClass}"
-                            data-index="${btnIndex}"
-                            ${isDisabled ? 'disabled' : ''}
-                            onclick="handleOptionClick(${btnIndex})">
-                        ${btnContent}
-                    </button>
+        <button class="${btnClass}"
+            data-index="${btnIndex}"
+            ${isDisabled ? 'disabled' : ''}
+            onclick="handleOptionClick(${btnIndex})">
+            ${btnContent}
+        </button>
                 `;
             }).join('');
 
-            // 解析區域狀態
             explanationText.textContent = question.explanation;
             if (hasAnswered) {
                 explanationDetails.classList.remove('hidden');
-                // 根據全域狀態這定展開/收合
                 isInternalUpdate = true;
                 explanationDetails.open = isExplanationExpanded;
                 isInternalUpdate = false;
             } else {
                 explanationDetails.classList.add('hidden');
                 isInternalUpdate = true;
-                explanationDetails.open = false; // 重置為關閉
+                explanationDetails.open = false;
                 isInternalUpdate = false;
             }
 
-            // 更新按鈕狀態
             updateButtons(hasAnswered);
         }
 
-        // 處理選項點擊
         function handleOptionClick(selectedIndex) {
-            if (userAnswers[currentQuestionIndex]) return; // 已作答則忽略
+            if (userAnswers[currentQuestionIndex]) return;
 
             const question = quizQuestions[currentQuestionIndex];
             const isCorrect = selectedIndex === question.correctAnswer;
 
-            // 記錄狀態
             userAnswers[currentQuestionIndex] = { selectedIndex, isCorrect };
-
-            // 重新渲染當前題目以顯示結果選擇
             renderQuestion();
 
-            // 最後一題不自動跳轉
             if (currentQuestionIndex < quizQuestions.length - 1) {
                 autoNextTimeout = setTimeout(() => {
                     goToNextQuestion();
-                }, 5000); // 改為 5 秒
+                }, 5000);
             }
         }
 
-        // 更新按鈕顯示
         function updateButtons(hasAnswered) {
-            // 上一題按鈕：第一題不顯示
             if (currentQuestionIndex === 0) {
                 prevBtn.classList.add('hidden');
                 prevBtn.classList.remove('flex');
@@ -418,7 +397,6 @@
                 prevBtn.classList.add('flex');
             }
 
-            // 下一題按鈕
             nextBtn.disabled = !hasAnswered;
 
             const isLastQuestion = currentQuestionIndex === quizQuestions.length - 1;
@@ -431,7 +409,6 @@
             }
         }
 
-        // 上一題
         function handlePrevClick() {
             if (autoNextTimeout) clearTimeout(autoNextTimeout);
             if (currentQuestionIndex > 0) {
@@ -440,7 +417,6 @@
             }
         }
 
-        // 下一題
         function handleNextClick() {
             if (autoNextTimeout) clearTimeout(autoNextTimeout);
 
@@ -461,49 +437,75 @@
         }
 
         // 儲存結果並跳轉
-        function saveResultsAndRedirect() {
-            // 轉換 userAnswers 為結果陣列
+        async function saveResultsAndRedirect() {
             const resultsBoolean = userAnswers.map(ans => ans ? ans.isCorrect : false);
             const isPerfect = resultsBoolean.every(r => r === true);
             const correctCount = resultsBoolean.filter(r => r === true).length;
             const timestamp = new Date().toISOString();
 
-            // 儲存簡單結果供結果頁顯示
-            localStorage.setItem('quizResults', JSON.stringify({
+            // 準備基礎結果
+            const resultData = {
                 results: resultsBoolean,
                 isPerfect: isPerfect,
                 correctCount: correctCount,
                 totalQuestions: quizQuestions.length,
                 timestamp: timestamp
-            }));
+            };
+            localStorage.setItem('quizResults', JSON.stringify(resultData));
 
-            // 儲存完整狀態供回顧使用 (包含隨機後的題目順序和使用者答案)
+            // 儲存 review state
             localStorage.setItem('quizReviewState', JSON.stringify({
                 questions: quizQuestions,
                 answers: userAnswers,
                 timestamp: timestamp
             }));
 
+            // 呼叫 API 紀錄分數與獎勵
+            const urlParams = new URLSearchParams(window.location.search);
+            const cardId = urlParams.get('id');
+
+            // 存儲 cardId 供 result.html 和重測使用
+            if (cardId) {
+                sessionStorage.setItem('currentCardId', cardId);
+            }
+
+            if (apiService.currentUser && cardId) {
+                // 顯示簡單的 loading (Optional，或者直接跳轉)
+                const nextBtn = document.getElementById('next-btn');
+                if (nextBtn) nextBtn.textContent = '計算獎勵中...';
+
+                // 找出答對的題目索引
+                const answeredIndices = resultsBoolean
+                    .map((isCorrect, index) => isCorrect ? index : -1)
+                    .filter(index => index !== -1);
+
+                console.log('=== Quiz Debug ===');
+                console.log('resultsBoolean:', resultsBoolean);
+                console.log('correctCount:', correctCount);
+                console.log('answeredIndices:', answeredIndices);
+                console.log('userAnswers:', userAnswers);
+
+                const apiResult = await apiService.submitQuizResult(
+                    apiService.currentUser.id,
+                    cardId,
+                    correctCount,
+                    answeredIndices
+                );
+
+                if (apiResult.success) {
+                    console.log('Quiz submitted:', apiResult);
+                    localStorage.setItem('quizApiResult', JSON.stringify(apiResult));
+                    // 更新用戶緩存，讓 result.html 顯示最新的 XP
+                    if (apiResult.newUserData) {
+                        sessionStorage.setItem('userData', JSON.stringify(apiResult.newUserData));
+                    }
+                } else {
+                    console.error('Quiz submission failed:', apiResult.error);
+                }
+            }
+
             window.location.href = 'result.html';
         }
-
-        function loadReviewState() {
-            try {
-                const savedState = localStorage.getItem('quizReviewState');
-                if (savedState) {
-                    const data = JSON.parse(savedState);
-                    if (data.questions && data.answers) {
-                        quizQuestions = data.questions;
-                        userAnswers = data.answers;
-                        return true;
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading review state:', e);
-            }
-            return false;
-        }
-
         // 頁面載入時初始化
         document.addEventListener('DOMContentLoaded', init);
     </script>
