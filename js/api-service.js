@@ -706,9 +706,10 @@ class ApiService {
                 .insert({
                     user_id: userId,
                     card_id: cardId,
-                    score: correctCount, // 新增 score 欄位 (需確保 schema 支援，如果沒有則需忽略或存入其他欄位)
-                    xp_earned: xpToAdd,
-                    bonuses: bonuses, // 紀錄獲得的獎勵 (JSONB)
+                    is_correct: isPerfectRun, // 是否全對
+                    score: correctCount, // 答對題數
+                    xp_earned: xpToAdd, // 獲得的 XP
+                    bonuses: bonuses, // 獎勵 (JSONB)
                     created_at: new Date().toISOString()
                 });
 
