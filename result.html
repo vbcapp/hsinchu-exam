@@ -83,8 +83,8 @@
 </head>
 
 <body class="text-black dark:text-white min-h-screen flex flex-col overflow-x-hidden">
-    <header class="pt-8 px-6 pb-4 flex flex-col shrink-0">
-        <div class="flex items-center w-full mb-6 relative">
+    <header class="pt-6 px-6 pb-2 flex flex-col shrink-0">
+        <div class="flex items-center w-full mb-4 relative">
             <button id="back-btn" onclick="handleBack()"
                 class="w-11 h-11 flex items-center justify-center bg-white dark:bg-zinc-800 neo-border rounded-full shadow-neo active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all z-10 shrink-0">
                 <span class="material-symbols-outlined text-2xl font-bold">arrow_back</span>
@@ -99,51 +99,51 @@
         </div>
     </header>
 
-    <main class="flex-grow overflow-y-auto px-6 py-4 flex flex-col items-center justify-center space-y-8">
+    <main class="flex-grow overflow-y-auto px-6 py-2 flex flex-col items-center justify-center space-y-4">
         <!-- 分數卡片 -->
         <div
             class="w-full bg-white dark:bg-zinc-900 neo-border rounded-2xl shadow-neo overflow-hidden transform hover:scale-[1.02] transition-transform">
             <div class="h-4 bg-primary border-b-[3px] border-black"></div>
-            <div class="p-8 text-center space-y-4">
-                <p class="text-zinc-500 dark:text-zinc-400 font-bold text-lg uppercase tracking-wide">你的得分</p>
+            <div class="p-6 text-center space-y-2">
+                <p class="text-zinc-500 dark:text-zinc-400 font-bold text-base uppercase tracking-wide">你的得分</p>
                 <div class="flex items-baseline justify-center gap-2">
-                    <span id="score-text" class="text-7xl font-black text-neo-indigo dark:text-primary">0</span>
-                    <span class="text-4xl font-bold text-zinc-400">/</span>
-                    <span id="total-text" class="text-4xl font-bold text-zinc-400">3</span>
+                    <span id="score-text" class="text-6xl font-black text-neo-indigo dark:text-primary">0</span>
+                    <span class="text-3xl font-bold text-zinc-400">/</span>
+                    <span id="total-text" class="text-3xl font-bold text-zinc-400">3</span>
                 </div>
             </div>
         </div>
 
         <!-- 評語 -->
         <div id="message-container"
-            class="w-full text-center space-y-4 p-6 bg-note-yellow dark:bg-zinc-800/50 neo-border rounded-2xl shadow-neo-yellow">
-            <span id="result-emoji" class="text-6xl animate-bounce inline-block">🎉</span>
-            <h2 id="result-title" class="text-3xl font-black text-zinc-900 dark:text-white leading-tight">
+            class="w-full text-center space-y-2 p-4 bg-note-yellow dark:bg-zinc-800/50 neo-border rounded-2xl shadow-neo-yellow">
+            <span id="result-emoji" class="text-5xl animate-bounce inline-block">🎉</span>
+            <h2 id="result-title" class="text-2xl font-black text-zinc-900 dark:text-white leading-tight">
                 太棒了！
             </h2>
-            <p id="result-desc" class="text-zinc-700 dark:text-zinc-300 font-medium">
+            <p id="result-desc" class="text-zinc-700 dark:text-zinc-300 font-medium text-sm">
                 你已經完全掌握了這些知識！
             </p>
         </div>
 
         <!-- 詳細結果列表 (可選) -->
-        <div class="w-full space-y-3">
-            <h3 class="font-black text-lg px-2">答題狀況</h3>
+        <div class="w-full space-y-2">
+            <h3 class="font-black text-base px-2">答題狀況</h3>
             <div id="results-list" class="grid grid-cols-3 gap-3">
                 <!-- 由 JS 生成 -->
             </div>
         </div>
     </main>
 
-    <footer class="px-6 pb-10 pt-4 shrink-0 bg-transparent space-y-4">
+    <footer class="px-6 pb-6 pt-2 shrink-0 bg-transparent space-y-3">
         <button onclick="window.location.href='test.html'"
-            class="group w-full bg-primary text-black neo-border rounded-2xl py-4 font-black text-xl shadow-neo-lg hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_#3730A3] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
+            class="group w-full bg-primary text-black neo-border rounded-2xl py-3 font-black text-lg shadow-neo-lg hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_#3730A3] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
             <span class="material-symbols-outlined font-black">refresh</span>
             <span>再測一次</span>
         </button>
 
         <button onclick="window.location.href='index.html'"
-            class="group w-full bg-white dark:bg-zinc-800 text-black dark:text-white neo-border rounded-2xl py-4 font-black text-xl shadow-neo hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
+            class="group w-full bg-white dark:bg-zinc-800 text-black dark:text-white neo-border rounded-2xl py-3 font-black text-lg shadow-neo hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
             <span>回到首頁</span>
         </button>
     </footer>
