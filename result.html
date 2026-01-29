@@ -156,7 +156,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const resultData = localStorage.getItem('quizResults');
-            const apiResultData = localStorage.getItem('quizApiResult');
+            const apiResultData = sessionStorage.getItem('quizApiResult');
+
+            // Debug: 顯示 storage 內容
+            console.log('=== Result Page Debug ===');
+            console.log('quizResults exists:', !!resultData);
+            console.log('quizApiResult exists:', !!apiResultData);
+            console.log('quizApiResult raw:', apiResultData);
 
             if (!resultData) {
                 // 如果沒有結果資料，導回首頁或測驗頁
@@ -174,6 +180,9 @@
             if (apiResultData) {
                 try {
                     const apiResult = JSON.parse(apiResultData);
+                    console.log('=== Result Page Debug ===');
+                    console.log('apiResult:', apiResult);
+                    console.log('bonuses:', apiResult.bonuses);
                     if (apiResult.success) {
                         xpEarned = apiResult.xpEarned;
                         bonuses = apiResult.bonuses || [];
@@ -258,8 +267,12 @@
                         badge.classList.add('animate-bounce');
                     }, 500 + (index * 200));
 
-                    // 如果是特殊成就，觸發全螢幕慶祝
-                    if (bonus.name.includes('開拓者') || bonus.name.includes('大師')) {
+                    // 如果是【首次】特殊成就，觸發全螢幕慶祝（大師加成不觸發）
+                    const isFirstTimeAchievement =
+                        bonus.name.includes('開拓者') ||
+                        (bonus.name.includes('大師勛章') && bonus.isNew !== false);
+
+                    if (isFirstTimeAchievement) {
                         showCelebrationModal(bonus);
                     }
                 });

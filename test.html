@@ -121,7 +121,7 @@
 <body class="text-black dark:text-white min-h-screen flex flex-col overflow-x-hidden">
     <header class="pt-6 px-6 pb-2 flex flex-col shrink-0">
         <div class="flex items-center w-full mb-4 relative">
-            <button onclick="window.history.back()"
+            <button id="back-btn"
                 class="w-11 h-11 flex items-center justify-center bg-white dark:bg-zinc-800 neo-border rounded-full shadow-neo active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all z-10 shrink-0">
                 <span class="material-symbols-outlined text-2xl font-bold">chevron_left</span>
             </button>
@@ -270,14 +270,39 @@
                 }
 
                 if (data && data.quiz_questions && Array.isArray(data.quiz_questions) && data.quiz_questions.length > 0) {
-                    // 資料庫中的 correctAnswer 是 0-indexed，轉換為 1-indexed
-                    quizQuestions = data.quiz_questions.map(q => ({
-                        question: q.question,
-                        options: q.options,
-                        correctAnswer: q.correctAnswer + 1, // 轉為 1-indexed
-                        explanation: q.explanation
+                    // 1. 為每個題目加上原始索引（用於大師勛章追蹤）
+                    let allQuestions = data.quiz_questions.map((q, index) => ({
+                        ...q,
+                        originalIndex: index  // 保留原始索引 0-4
                     }));
-                    console.log(`成功載入 ${data.english_term} 的 ${quizQuestions.length} 題測驗題目`);
+
+                    // 2. 打亂題目順序
+                    shuffleArray(allQuestions);
+
+                    // 3. 只取前 3 題（如果超過 3 題的話）
+                    const selectedQuestions = allQuestions.slice(0, 3);
+
+                    // 4. 轉換格式，並打亂每題的選項順序
+                    quizQuestions = selectedQuestions.map(q => {
+                        // 複製選項陣列
+                        const shuffledOptions = [...q.options];
+                        // 記住正確答案的文字內容
+                        const correctOptionText = q.options[q.correctAnswer];
+                        // 打亂選項
+                        shuffleArray(shuffledOptions);
+                        // 找出正確答案在打亂後的新位置（轉為 1-indexed）
+                        const newCorrectAnswer = shuffledOptions.indexOf(correctOptionText) + 1;
+
+                        return {
+                            question: q.question,
+                            options: shuffledOptions,
+                            correctAnswer: newCorrectAnswer,
+                            explanation: q.explanation,
+                            originalIndex: q.originalIndex  // 保留原始索引
+                        };
+                    });
+
+                    console.log(`成功載入並隨機化 ${data.english_term} 的 ${quizQuestions.length} 題測驗題目（共 ${data.quiz_questions.length} 題）`);
                 } else {
                     console.warn('此卡片沒有測驗題目');
                     quizQuestions = defaultQuizQuestions;
@@ -326,13 +351,32 @@
                 }
             }
 
-            // 初始化 userAnswers 陣列
-            userAnswers = new Array(quizQuestions.length).fill(null);
+            // 初始化 userAnswers 陣列（僅非複習模式時重新初始化）
+            if (mode !== 'review') {
+                userAnswers = new Array(quizQuestions.length).fill(null);
+            }
 
             renderQuestion();
             prevBtn.addEventListener('click', handlePrevClick);
             nextBtn.addEventListener('click', handleNextClick);
-            nextBtn.addEventListener('click', handleNextClick);
+
+            // 返回按鈕 - 導向卡片頁面，不用 history.back()
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    // 優先使用儲存的返回 URL
+                    const returnUrl = sessionStorage.getItem('quizReturnUrl');
+                    const cardId = urlParams.get('id') || sessionStorage.getItem('currentCardId');
+
+                    if (returnUrl) {
+                        window.location.href = returnUrl;
+                    } else if (cardId) {
+                        window.location.href = `cardi.html?id=${cardId}`;
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
 
             const summaryEl = explanationDetails.querySelector('summary');
             if (summaryEl) {
@@ -534,16 +578,23 @@
                 const nextBtn = document.getElementById('next-btn');
                 if (nextBtn) nextBtn.textContent = '計算獎勵中...';
 
-                // 找出答對的題目索引
+                // 找出答對的題目【原始索引】（來自資料庫的 0-4）
+                // 這樣才能正確追蹤大師勛章進度
                 const answeredIndices = resultsBoolean
-                    .map((isCorrect, index) => isCorrect ? index : -1)
+                    .map((isCorrect, localIndex) => {
+                        if (isCorrect && quizQuestions[localIndex]) {
+                            // 使用原始索引，如果沒有則用本地索引
+                            return quizQuestions[localIndex].originalIndex ?? localIndex;
+                        }
+                        return -1;
+                    })
                     .filter(index => index !== -1);
 
                 console.log('=== Quiz Debug ===');
                 console.log('resultsBoolean:', resultsBoolean);
                 console.log('correctCount:', correctCount);
-                console.log('answeredIndices:', answeredIndices);
-                console.log('userAnswers:', userAnswers);
+                console.log('answeredIndices (original):', answeredIndices);
+                console.log('quizQuestions:', quizQuestions.map(q => ({ question: q.question.substring(0, 20), originalIndex: q.originalIndex })));
 
                 const apiResult = await apiService.submitQuizResult(
                     apiService.currentUser.id,
@@ -553,17 +604,26 @@
                 );
 
                 if (apiResult.success) {
-                    console.log('Quiz submitted:', apiResult);
-                    localStorage.setItem('quizApiResult', JSON.stringify(apiResult));
+                    console.log('Quiz submitted successfully:', apiResult);
+                    console.log('Saving to sessionStorage...');
+                    sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
+                    console.log('Saved! Verifying:', sessionStorage.getItem('quizApiResult'));
                     // 更新用戶緩存，讓 result.html 顯示最新的 XP
                     if (apiResult.newUserData) {
                         sessionStorage.setItem('userData', JSON.stringify(apiResult.newUserData));
                     }
                 } else {
                     console.error('Quiz submission failed:', apiResult.error);
+                    // 即使失敗也存儲結果，讓 result.html 知道發生了什麼
+                    sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
                 }
+            } else {
+                console.log('Skipping API call - no user or cardId');
+                console.log('currentUser:', apiService.currentUser);
+                console.log('cardId:', cardId);
             }
 
+            console.log('Redirecting to result.html...');
             window.location.href = 'result.html';
         }
         // 頁面載入時初始化

@@ -696,11 +696,21 @@ class ApiService {
             const bonuses = [];
             let perfectCardsToAdd = 0;
 
-            // 3. 判斷【開拓者獎勵】(每次全對都給)
+            // 3. 合併答對過的題目索引（用於追蹤大師勛章進度）
+            const oldIndices = progress.answered_question_indices || [];
+            const cleanNewIndices = answeredIndices.map(Number);
+            const mergedIndicesSet = new Set([...oldIndices, ...cleanNewIndices]);
+            const mergedIndices = Array.from(mergedIndicesSet);
+
+            // 4. 判斷【開拓者獎勵】- 只有第一次滿分才給 +50XP
             const isPerfectRun = correctCount === 3;
             if (isPerfectRun) {
-                xpToAdd += 50;
-                bonuses.push({ name: '【開拓者獎勵】', xp: 50 });
+                // 只有第一次滿分且尚未領取開拓者獎勵時才給
+                if (!progress.is_pioneer_claimed) {
+                    xpToAdd += 50;
+                    bonuses.push({ name: '【開拓者獎勵】', xp: 50 });
+                    progress.is_pioneer_claimed = true;
+                }
 
                 // 只有第一次全對時才增加 perfect card count
                 if (!progress.is_perfect) {
@@ -709,23 +719,25 @@ class ApiService {
                 }
             }
 
-            // 4. 判斷【大師勛章】(累積答對 5 題)
-            // 合併舊的和新的索引，去重
-            const oldIndices = progress.answered_question_indices || [];
-            // 確保 indices 是數字
-            const cleanNewIndices = answeredIndices.map(Number);
-            const mergedIndicesSet = new Set([...oldIndices, ...cleanNewIndices]);
-            const mergedIndices = Array.from(mergedIndicesSet);
+            // 5. 判斷【大師勛章】- 答對所有題目（5題）後，每次測驗都額外 +15XP
+            // 條件：必須至少答對 1 題才給大師加成
+            const totalQuestionCount = 5; // 題庫總題數
+            const wasMasterBefore = progress.is_mastered || false;
+            const isMasterNow = mergedIndices.length >= totalQuestionCount;
 
-            const isMasterBefore = oldIndices.length >= 5;
-            const isMasterNow = mergedIndices.length >= 5;
-
-            if (isMasterNow && !isMasterBefore) {
+            // 首次達成大師勛章（需要至少答對 1 題）
+            if (isMasterNow && !wasMasterBefore && correctCount >= 1) {
                 xpToAdd += 15;
-                bonuses.push({ name: '【大師勛章】', xp: 15 });
+                bonuses.push({ name: '【大師勛章】', xp: 15, isNew: true });
+                progress.is_mastered = true;
+            }
+            // 已經是大師，每次測驗答對至少 1 題就加 15XP
+            else if (wasMasterBefore && correctCount >= 1) {
+                xpToAdd += 15;
+                bonuses.push({ name: '【大師加成】', xp: 15, isNew: false });
             }
 
-            // 5. 更新 USER XP & Perfect Count
+            // 6. 更新 USER XP & Perfect Count
             // 使用現有的 updateUserProgress (已包含 LevelSystem 邏輯)
             const userUpdateResult = await this.updateUserProgress(userId, {
                 xpToAdd: xpToAdd,
@@ -734,7 +746,7 @@ class ApiService {
 
             if (!userUpdateResult.success) throw userUpdateResult.error;
 
-            // 6. 更新 Card Progress
+            // 7. 更新 Card Progress
             // 計算最高分（只有更高分才更新）
             const currentBest = progress.best_quiz_score || 0;
             const newBestScore = Math.max(currentBest, correctCount);
@@ -743,16 +755,15 @@ class ApiService {
                 .from('user_card_progress')
                 .update({
                     is_perfect: progress.is_perfect,
+                    is_pioneer_claimed: progress.is_pioneer_claimed,
+                    is_mastered: progress.is_mastered,
                     answered_question_indices: mergedIndices,
-                    last_quiz_score: correctCount, // 記錄最後一次測驗分數
-                    best_quiz_score: newBestScore, // 記錄歷史最高分
+                    last_quiz_score: correctCount,
+                    best_quiz_score: newBestScore,
                     last_reviewed_at: new Date().toISOString(),
-                    // 簡單遞增練習次數
                     times_reviewed: (progress.times_reviewed || 0) + 1,
                     times_correct: (progress.times_correct || 0) + correctCount,
-                    // 假設總題數 3
                     times_incorrect: (progress.times_incorrect || 0) + (3 - correctCount)
-                    // TODO: Mastery Level 邏輯可在此擴充，目前先維持原樣或簡單提升
                 })
                 .eq('id', progress.id);
 
@@ -779,7 +790,7 @@ class ApiService {
                 bonuses: bonuses,
                 newUserData: userUpdateResult.data.user,
                 isPerfectFirstTime: isPerfectRun && perfectCardsToAdd > 0,
-                isMasterFirstTime: isMasterNow && !isMasterBefore
+                isMasterFirstTime: isMasterNow && !wasMasterBefore
             };
 
         } catch (error) {
