@@ -688,15 +688,18 @@ class ApiService {
                 .maybeSingle();
 
             if (!progress) {
-                // 如果沒有進度紀錄，創建新的
+                // 如果沒有進度紀錄，創建新的（使用 upsert 避免重複 key 錯誤）
                 const { data: newProgress, error: createError } = await this.supabase
                     .from('user_card_progress')
-                    .insert({
+                    .upsert({
                         user_id: userId,
                         card_id: cardId,
                         mastery_level: 0,
                         is_perfect: false,
                         answered_question_indices: []
+                    }, {
+                        onConflict: 'user_id,card_id',
+                        ignoreDuplicates: false
                     })
                     .select()
                     .single();
