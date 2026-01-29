@@ -90,6 +90,19 @@
                 left: 200%;
             }
         }
+        /* Capped 狀態發光動畫 */
+        @keyframes cappedGlow {
+            0%, 100% {
+                box-shadow: 0 0 5px 2px rgba(255, 214, 0, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 15px 5px rgba(255, 214, 0, 0.9);
+            }
+        }
+        .capped-glow {
+            animation: cappedGlow 1.5s ease-in-out infinite;
+            cursor: pointer;
+        }
     </style>
     <!-- Add LevelSystem Script -->
     <script src="js/level-system.js"></script>
@@ -111,7 +124,8 @@
         </header>
 
         <main class="flex-1 overflow-y-auto p-4 space-y-6 pb-28 no-scrollbar">
-            <div class="bg-black border-[3px] border-primary p-4 flex items-center gap-4">
+            <div id="level-card"
+                class="bg-black border-[3px] border-primary p-4 flex items-center gap-4 transition-all">
                 <div
                     class="w-16 h-16 border-[3px] border-primary flex items-center justify-center bg-black flex-shrink-0">
                     <div class="w-10 h-10 bg-primary relative overflow-hidden">
