@@ -344,6 +344,10 @@
             } else {
                 // 一般模式：從資料庫載入卡片題目
                 localStorage.removeItem('quizReviewState');
+                // 清除上次的結果，避免返回時顯示舊資料
+                sessionStorage.removeItem('quizApiResult');
+                sessionStorage.removeItem('levelUpProcessed');
+                sessionStorage.removeItem('bonusCelebrationProcessed');
 
                 if (cardId) {
                     // 儲存 cardId 供之後使用（結果頁、重測）
@@ -601,31 +605,41 @@
                 console.log('answeredIndices (original):', answeredIndices);
                 console.log('quizQuestions:', quizQuestions.map(q => ({ question: q.question.substring(0, 20), originalIndex: q.originalIndex })));
 
-                const apiResult = await apiService.submitQuizResult(
-                    apiService.currentUser.id,
-                    cardId,
-                    correctCount,
-                    answeredIndices
-                );
+                try {
+                    const apiResult = await apiService.submitQuizResult(
+                        apiService.currentUser.id,
+                        cardId,
+                        correctCount,
+                        answeredIndices
+                    );
 
-                if (apiResult.success) {
-                    console.log('Quiz submitted successfully:', apiResult);
-                    console.log('Saving to sessionStorage...');
-                    sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
-                    console.log('Saved! Verifying:', sessionStorage.getItem('quizApiResult'));
-                    // 更新用戶緩存，讓 result.html 顯示最新的 XP
-                    if (apiResult.newUserData) {
-                        sessionStorage.setItem('userData', JSON.stringify(apiResult.newUserData));
+                    console.log('=== API Result ===');
+                    console.log('apiResult:', apiResult);
+
+                    if (apiResult.success) {
+                        console.log('Quiz submitted successfully!');
+                        console.log('XP earned:', apiResult.xpEarned);
+                        console.log('Bonuses:', apiResult.bonuses);
+                        sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
+                        console.log('Saved to sessionStorage! Verifying:', !!sessionStorage.getItem('quizApiResult'));
+
+                        // 更新用戶緩存，讓 result.html 顯示最新的 XP
+                        if (apiResult.newUserData) {
+                            sessionStorage.setItem('userData', JSON.stringify(apiResult.newUserData));
+                        }
+                    } else {
+                        console.error('Quiz submission failed:', apiResult.error);
+                        // 即使失敗也存儲結果，讓 result.html 知道發生了什麼
+                        sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
                     }
-                } else {
-                    console.error('Quiz submission failed:', apiResult.error);
-                    // 即使失敗也存儲結果，讓 result.html 知道發生了什麼
-                    sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
+                } catch (err) {
+                    console.error('API call exception:', err);
                 }
             } else {
-                console.log('Skipping API call - no user or cardId');
-                console.log('currentUser:', apiService.currentUser);
-                console.log('cardId:', cardId);
+                console.warn('=== Skipping API call ===');
+                console.warn('currentUser:', apiService.currentUser);
+                console.warn('cardId:', cardId);
+                console.warn('請確認已登入並有 cardId！');
             }
 
             console.log('Redirecting to result.html...');

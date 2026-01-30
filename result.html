@@ -194,15 +194,16 @@
                         xpEarned = apiResult.xpEarned;
                         bonuses = apiResult.bonuses || [];
 
-                        // 檢查是否升級（先記錄，稍後處理）
-                        if (apiResult.leveledUp) {
+                        // 檢查是否升級（使用單獨的 flag 避免重複觸發）
+                        const levelUpProcessed = sessionStorage.getItem('levelUpProcessed');
+                        if (apiResult.leveledUp && !levelUpProcessed) {
                             console.log('🎉 Level Up detected!', apiResult.oldLevel, '->', apiResult.newLevel);
                             pendingLevelUp = {
                                 oldLevel: apiResult.oldLevel,
                                 newLevel: apiResult.newLevel
                             };
-                            // 清除 API 結果，避免返回時重複觸發
-                            sessionStorage.removeItem('quizApiResult');
+                            // 標記升級已處理，避免返回時重複觸發
+                            sessionStorage.setItem('levelUpProcessed', 'true');
                         }
                     }
                 } catch (e) {
@@ -313,15 +314,22 @@
                     }, 500 + (index * 200));
 
                     // 如果是【首次】特殊成就，加入動畫隊列（大師加成不觸發）
+                    // 使用 flag 避免返回頁面時重複觸發
+                    const bonusCelebrationProcessed = sessionStorage.getItem('bonusCelebrationProcessed');
                     const isFirstTimeAchievement =
                         bonus.name.includes('開拓者') ||
                         (bonus.name.includes('大師勛章') && bonus.isNew !== false);
 
-                    if (isFirstTimeAchievement) {
+                    if (isFirstTimeAchievement && !bonusCelebrationProcessed) {
                         // 加入隊列而不是直接顯示
                         queueCelebration(bonus);
                     }
                 });
+
+                // 標記 bonus celebration 已處理
+                if (!sessionStorage.getItem('bonusCelebrationProcessed')) {
+                    sessionStorage.setItem('bonusCelebrationProcessed', 'true');
+                }
 
                 // 插入到評語描述下方
                 descEl.after(bonusContainer);
