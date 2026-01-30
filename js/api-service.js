@@ -834,10 +834,10 @@ class ApiService {
             console.log('correctCount received:', correctCount);
             console.log('answeredIndices received:', answeredIndices);
 
-            // 1. 定義基礎 XP
+            // 1. 定義基礎 XP（高底薪模式）
             let xpToAdd = 0;
-            if (correctCount === 1) xpToAdd = 20;
-            else if (correctCount === 2) xpToAdd = 50;
+            if (correctCount === 1) xpToAdd = 80;
+            else if (correctCount === 2) xpToAdd = 90;
             else if (correctCount === 3) xpToAdd = 100;
 
             console.log('Base XP calculated:', xpToAdd);
