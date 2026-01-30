@@ -154,6 +154,11 @@
     </footer>
 
     <script>
+        // 追蹤是否有待處理的升級
+        let pendingLevelUp = null;
+        // 追蹤正在顯示的慶祝動畫數量
+        let activeCelebrations = 0;
+
         document.addEventListener('DOMContentLoaded', () => {
             const resultData = localStorage.getItem('quizResults');
             const apiResultData = sessionStorage.getItem('quizApiResult');
@@ -187,21 +192,15 @@
                         xpEarned = apiResult.xpEarned;
                         bonuses = apiResult.bonuses || [];
 
-                        // 檢查是否升級
+                        // 檢查是否升級（先記錄，稍後處理）
                         if (apiResult.leveledUp) {
                             console.log('🎉 Level Up detected!', apiResult.oldLevel, '->', apiResult.newLevel);
-                            // 儲存升級資訊
-                            sessionStorage.setItem('levelUpData', JSON.stringify({
+                            pendingLevelUp = {
                                 oldLevel: apiResult.oldLevel,
                                 newLevel: apiResult.newLevel
-                            }));
-                            sessionStorage.setItem('levelUpReturnUrl', 'result.html');
+                            };
                             // 清除 API 結果，避免返回時重複觸發
                             sessionStorage.removeItem('quizApiResult');
-                            // 延遲跳轉，讓用戶先看到結果
-                            setTimeout(() => {
-                                window.location.href = 'upgrade.html';
-                            }, 1500);
                         }
                     }
                 } catch (e) {
@@ -327,6 +326,11 @@
                 descEl.after(bonusContainer);
             }
 
+            // 如果沒有慶祝動畫，但有升級，直接處理升級
+            if (activeCelebrations === 0 && pendingLevelUp) {
+                triggerLevelUpTransition();
+            }
+
             // 執行數字跳動動畫
             animateValue("score-text", 0, xpEarned, 1500);
 
@@ -370,8 +374,25 @@
             window.requestAnimationFrame(step);
         }
 
+        // 處理升級跳轉
+        function triggerLevelUpTransition() {
+            if (!pendingLevelUp) return;
+
+            // 儲存升級資訊
+            sessionStorage.setItem('levelUpData', JSON.stringify(pendingLevelUp));
+            sessionStorage.setItem('levelUpReturnUrl', 'result.html');
+
+            // 延遲跳轉，讓用戶先看到結果
+            setTimeout(() => {
+                window.location.href = 'upgrade.html';
+            }, 800);
+        }
+
         // 全螢幕慶祝 Modal
         function showCelebrationModal(bonus) {
+            // 增加活動中的慶祝動畫計數
+            activeCelebrations++;
+
             // 創建 Modal 元素
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300';
@@ -425,7 +446,15 @@
                 modal.classList.add('opacity-0');
                 modal.querySelector('div').classList.remove('scale-100');
                 modal.querySelector('div').classList.add('scale-50');
-                setTimeout(() => modal.remove(), 300);
+                setTimeout(() => {
+                    modal.remove();
+                    // 減少活動中的慶祝動畫計數
+                    activeCelebrations--;
+                    // 如果所有慶祝動畫都結束了，且有待處理的升級，觸發升級跳轉
+                    if (activeCelebrations === 0 && pendingLevelUp) {
+                        triggerLevelUpTransition();
+                    }
+                }, 300);
             };
             closeBtn.onclick = closeModal;
 

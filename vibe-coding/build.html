@@ -174,21 +174,13 @@
                 return;
             }
 
-            // 使用 localStorage 中的 user_device_id 作為 userId
-            let userUuid = localStorage.getItem('user_device_id');
-            if (!userUuid) {
-                userUuid = crypto.randomUUID();
-                localStorage.setItem('user_device_id', userUuid);
-            }
-
-            // 快速登入以獲取 userId
-            const loginResult = await apiService.quickLogin(userNickname);
-            if (loginResult.success) {
-                currentUserId = loginResult.user.id;
-                console.log('用戶 ID:', currentUserId);
+            // 直接使用已登入的用戶（apiService.initialize() 會自動獲取當前登入狀態）
+            if (apiService.currentUser) {
+                currentUserId = apiService.currentUser.id;
+                console.log('使用當前登入用戶 ID:', currentUserId);
             } else {
-                console.error('登入失敗:', loginResult.error);
-                alert('登入失敗，請重新登入');
+                console.error('用戶未登入');
+                alert('請先登入');
                 window.location.href = '../login.html';
                 return;
             }
