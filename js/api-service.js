@@ -245,6 +245,144 @@ class ApiService {
     }
 
     /**
+     * 取得排行榜資料（含等級計算與排序）
+     * @param {string} currentUserId - 當前登入用戶的 ID
+     * @returns {Promise<object>} 包含排序後的用戶列表與當前用戶排名
+     */
+    async getLeaderboard(currentUserId) {
+        try {
+            // 1. 取得所有用戶的基本資料（total_cards 由資料庫觸發器維護）
+            const { data: users, error } = await this.supabase
+                .from('users')
+                .select('id, username, avatar_url, current_xp, current_level, total_cards, perfect_card_count');
+
+            if (error) throw error;
+
+            // 2. 計算是否被卡住 (isCapped) - 使用 LevelSystem
+            const usersWithLevel = users.map(user => {
+                const perfectCardCount = user.perfect_card_count || 0;
+                const currentLevel = user.current_level || 1;
+                const totalCards = user.total_cards || 0;
+
+                // 使用 LevelSystem 判斷是否被卡住
+                let isCapped = false;
+                if (typeof LevelSystem !== 'undefined') {
+                    const theoretical = LevelSystem.calculateTheoreticalLevel(user.current_xp || 0);
+                    const maxLevel = perfectCardCount + 1;
+                    isCapped = theoretical.level > maxLevel;
+                }
+
+                return {
+                    ...user,
+                    actualLevel: currentLevel,
+                    total_cards: totalCards,
+                    isCapped: isCapped
+                };
+            });
+
+            // 5. 排序：依實際等級降序，等級相同則比 XP
+            usersWithLevel.sort((a, b) => {
+                if (b.actualLevel !== a.actualLevel) {
+                    return b.actualLevel - a.actualLevel;
+                }
+                return (b.current_xp || 0) - (a.current_xp || 0);
+            });
+
+            // 6. 找出當前用戶的排名
+            let currentUserRank = -1;
+            let currentUserData = null;
+            if (currentUserId) {
+                const index = usersWithLevel.findIndex(u => u.id === currentUserId);
+                if (index !== -1) {
+                    currentUserRank = index + 1;
+                    currentUserData = usersWithLevel[index];
+                }
+            }
+
+            return {
+                success: true,
+                data: usersWithLevel,
+                totalUsers: usersWithLevel.length,
+                currentUserRank,
+                currentUserData
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得卡片達人榜資料（依卡片數量排序）
+     * @param {string} currentUserId - 當前登入用戶的 ID
+     * @returns {Promise<object>} 包含排序後的用戶列表與當前用戶排名
+     */
+    async getCardLeaderboard(currentUserId) {
+        try {
+            // 1. 取得所有用戶的基本資料（total_cards 由資料庫觸發器維護）
+            const { data: users, error } = await this.supabase
+                .from('users')
+                .select('id, username, avatar_url, current_xp, current_level, total_cards');
+
+            if (error) throw error;
+
+            // 2. 取得當前用戶今日新增的卡片數量
+            let todayAddedCards = 0;
+            if (currentUserId) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayISO = today.toISOString();
+
+                const { count, error: countError } = await this.supabase
+                    .from('flashcards')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', currentUserId)
+                    .gte('created_at', todayISO);
+
+                if (!countError) {
+                    todayAddedCards = count || 0;
+                }
+            }
+
+            // 3. 組裝資料
+            const usersWithCards = users.map(user => ({
+                ...user,
+                total_cards: user.total_cards || 0,
+                actualLevel: user.current_level || 1
+            }));
+
+            // 4. 排序：依卡片數量降序，數量相同則比 XP
+            usersWithCards.sort((a, b) => {
+                if (b.total_cards !== a.total_cards) {
+                    return b.total_cards - a.total_cards;
+                }
+                return (b.current_xp || 0) - (a.current_xp || 0);
+            });
+
+            // 5. 找出當前用戶的排名
+            let currentUserRank = -1;
+            let currentUserData = null;
+            if (currentUserId) {
+                const index = usersWithCards.findIndex(u => u.id === currentUserId);
+                if (index !== -1) {
+                    currentUserRank = index + 1;
+                    currentUserData = usersWithCards[index];
+                }
+            }
+
+            return {
+                success: true,
+                data: usersWithCards,
+                totalUsers: usersWithCards.length,
+                currentUserRank,
+                currentUserData,
+                todayAddedCards
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 更新使用者資料
      */
     async updateUser(userId, updates) {

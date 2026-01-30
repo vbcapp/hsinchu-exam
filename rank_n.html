@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>卡片達人榜詳情頁面</title>
+    <title>卡片達人榜</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&amp;family=Space+Mono:wght@400;700&amp;display=swap"
@@ -39,30 +39,24 @@
             font-family: 'Noto Sans TC', 'Space Mono', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-
         .neo-border {
             border: 3px solid black;
         }
-
         .neo-border-thick {
             border: 4px solid black;
         }
-
         .neo-card {
             border: 3px solid black;
             box-shadow: 4px 4px 0px 0px black;
         }
-
         .neo-card-lg {
             border: 3px solid black;
             box-shadow: 8px 8px 0px 0px black;
         }
-
         .neo-card-user {
             border: 4px solid black;
             box-shadow: 4px 4px 0px 0px black;
         }
-
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
             display: inline-block;
@@ -73,10 +67,40 @@
         body {
             min-height: max(884px, 100dvh);
         }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(243, 244, 246, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
     </style>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 專案配置與 API Service -->
+    <script src="config.js"></script>
+    <script src="js/level-system.js"></script>
+    <script src="js/api-service.js"></script>
 </head>
 
 <body class="bg-background-light text-black pb-12 min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="text-center">
+            <span class="material-symbols-outlined text-5xl animate-spin">progress_activity</span>
+            <p class="mt-4 font-bold text-lg">載入排行榜中...</p>
+        </div>
+    </div>
+
     <header class="p-6">
         <div class="flex items-center gap-4 mb-6">
             <a href="rank.html"
@@ -86,136 +110,219 @@
             <h1 class="text-3xl font-black">卡片達人榜</h1>
         </div>
         <div class="space-y-1">
-            <p class="text-lg font-bold">總共 1,240 位學習者</p>
-            <p class="text-sm font-bold text-gray-500">最後更新：2024/05/20 上午 10:30</p>
+            <p id="total-users" class="text-lg font-bold">總共 -- 位學習者</p>
+            <p id="last-update" class="text-sm font-bold text-gray-500">最後更新：--</p>
         </div>
     </header>
+
     <main class="px-6 space-y-8">
-        <div class="flex items-end justify-center gap-3 pt-4">
-            <div class="flex-1 flex flex-col items-center">
-                <div class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
+        <!-- 前三名頒獎台 -->
+        <div id="podium-container" class="flex items-end justify-center gap-3 pt-4">
+            <!-- 第二名 -->
+            <div id="rank-2-container" class="flex-1 flex flex-col items-center">
+                <div id="rank-2-card" class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
                     <div
                         class="absolute -top-6 neo-border bg-white rounded-full w-12 h-12 flex items-center justify-center font-black text-xl">
                         2</div>
-                    <div class="w-12 h-12 neo-border bg-gray-200 rounded-full mb-2 overflow-hidden">
-                        <img alt="avatar" class="w-full h-full object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_pS2297B8uWe9YMQ_nwgY8tyfJSSl4Zjo9tsvrZgedomBYyDXWGlYiS0oJFfvVQMNL6KtsOvgXyeldosNtoct28N-xlJuc8CcWTDJnLo7fORvdheSkj6w9dbZp_aXDYFfvyVf5tckzKqjNz4HqiqVuZU7Pf5UwuZpYjpl-afOR-fTPvY0VgSK6p_vP_KUOuqwhafqi9bns7S3a3akupqn51ywUPJiPk7lLmpAB6kGwP2JgXfzx3G5C6TLZ2OkN0NXMWMY7ZOBxyKY" />
+                    <div id="rank-2-avatar" class="w-12 h-12 neo-border bg-gray-200 rounded-full mb-2 overflow-hidden">
+                        <img alt="avatar" src="" class="w-full h-full object-cover" />
                     </div>
-                    <span class="font-black text-xs truncate w-full text-center px-1">王小明</span>
-                    <span class="font-black text-2xl italic leading-tight">389</span>
-                    <span class="text-[10px] font-bold text-gray-500">Lv.14</span>
+                    <span id="rank-2-name" class="font-black text-xs truncate w-full text-center px-1">--</span>
+                    <span id="rank-2-cards" class="font-black text-2xl italic leading-tight">--</span>
+                    <span id="rank-2-level" class="text-[10px] font-bold text-gray-500">Lv.--</span>
                 </div>
             </div>
-            <div class="flex-1 flex flex-col items-center scale-110 z-10">
-                <div class="neo-card-lg bg-primary w-full pt-8 pb-6 flex flex-col items-center relative">
+
+            <!-- 第一名 (冠軍) -->
+            <div id="rank-1-container" class="flex-1 flex flex-col items-center scale-110 z-10">
+                <div id="rank-1-card"
+                    class="neo-card-lg bg-primary w-full pt-8 pb-6 flex flex-col items-center relative">
                     <div
                         class="absolute -top-8 neo-border bg-primary rounded-full w-14 h-14 flex items-center justify-center font-black text-2xl">
                         <span class="material-symbols-outlined text-3xl">workspace_premium</span>
                     </div>
-                    <div class="w-16 h-16 neo-border bg-white rounded-full mb-2 overflow-hidden">
-                        <img alt="avatar" class="w-full h-full object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFkz4f23tCsJx2XoWDwRbqOuT7ykrttxTJpEBUBj7buLZ29cFWTodfR05lCnqUVLh3ryGm95QIuMgz8Ut0bpEEuzJ9f89UpWhesieG9w93R2Fsh_3QgrvRu7hyTQXRdBvHIThU-UpRjQwE236gxRaLPmkIISJuouE3wQsycoWG8cb1CJHPoxt4pux1BXWyJhcntBJqar-6xrur66Khwxp5zPrB3dZ-SoKwcDubog8SekixtpZtWO9F63OMvpmxSGtOl6uykNrf0si3" />
+                    <div id="rank-1-avatar" class="w-16 h-16 neo-border bg-white rounded-full mb-2 overflow-hidden">
+                        <img alt="avatar" src="" class="w-full h-full object-cover" />
                     </div>
-                    <span class="font-black text-sm truncate w-full text-center px-1">程式之神</span>
-                    <span class="font-black text-4xl italic leading-tight">412</span>
-                    <span class="text-[11px] font-bold text-black/60">Lv.15</span>
+                    <span id="rank-1-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
+                    <span id="rank-1-cards" class="font-black text-4xl italic leading-tight">--</span>
+                    <span id="rank-1-level" class="text-[11px] font-bold text-black/60">Lv.--</span>
                 </div>
             </div>
-            <div class="flex-1 flex flex-col items-center">
-                <div class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
+
+            <!-- 第三名 -->
+            <div id="rank-3-container" class="flex-1 flex flex-col items-center">
+                <div id="rank-3-card" class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
                     <div
                         class="absolute -top-6 neo-border bg-white rounded-full w-12 h-12 flex items-center justify-center font-black text-xl">
                         3</div>
-                    <div class="w-12 h-12 neo-border bg-gray-100 rounded-full mb-2 overflow-hidden">
-                        <img alt="avatar" class="w-full h-full object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-UDWSnEnI8KXSS7dR1Q5mEIKZ01gfPTstZ1DZMwyqCUaZxEvO7d8Gg1bAQkb3W-WDYr2jXJk1Iw9J1HA5dt52E90joHaaRl-CkHl_8hHfOfD2E5fBBPp1t6HemEmGe_kql9WTqBrjA_WSEd3AGcwj6Z-QtQ1R0JLYZ_46MgJq-FsJE9t73jugOZ6kxs9rHDkkU869KLGD6VWpwcucabbfWUzjQ8rC65RAcR2UDzpukksnQe2sjyIoxIMETPa78J55mhdPRe2A9zfN" />
+                    <div id="rank-3-avatar" class="w-12 h-12 neo-border bg-gray-100 rounded-full mb-2 overflow-hidden">
+                        <img alt="avatar" src="" class="w-full h-full object-cover" />
                     </div>
-                    <span class="font-black text-xs truncate w-full text-center px-1">李大華</span>
-                    <span class="font-black text-2xl italic leading-tight">356</span>
-                    <span class="text-[10px] font-bold text-gray-500">Lv.12</span>
+                    <span id="rank-3-name" class="font-black text-xs truncate w-full text-center px-1">--</span>
+                    <span id="rank-3-cards" class="font-black text-2xl italic leading-tight">--</span>
+                    <span id="rank-3-level" class="text-[10px] font-bold text-gray-500">Lv.--</span>
                 </div>
             </div>
         </div>
-        <div class="space-y-4">
-            <div class="neo-card bg-white p-4 flex items-center gap-4">
-                <span class="font-black text-xl w-8 text-center">4</span>
-                <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-zinc-100">
-                    <img alt="avatar" class="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHUliyY67lkZv1PhWEsPLZsAV39RC9A-YJRbNs-ur1lT5TE5QY7uSfaPQlPTTpFOlCku7CnwR6a2heaIHMZxzE-BHeba3BxdZfJ5Y-nbo7z3m9MSMnPKlCH18kFL9L0jc8WjZzpvaUJbH5BfMjxGdg3ogIzQzjic5t3tuImdJ6efRCfhqYvwpCuJcH0ciYDLTqGDt-Hf-ca0Er-bEZ-acCgl6Cms6W7KOL318vw6mqLw_8s1OkAJVn5pB85BXJ4ryVTbjcjI8ukVDX" />
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-black text-lg leading-none mb-1">前端小白</h3>
-                    <p class="text-xs font-bold text-gray-500">Lv.11</p>
-                </div>
-                <div class="text-4xl font-black italic pr-2 tracking-tighter">342</div>
-            </div>
-            <div class="neo-card bg-white p-4 flex items-center gap-4">
-                <span class="font-black text-xl w-8 text-center">5</span>
-                <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-zinc-100">
-                    <img alt="avatar" class="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBIjEJdKzQs4F-XAmmXiAAWhlizOVxSNC58Yxi12-KFfj9en1E-63qEz3GkxustAz0sZizI23fowcOGFG6ZEiB7jRXZ2pVX2DvKKuFuKEalQ2CTTfBR1_tJPnTOjgx-P7VQjYemsSn_wdQewcZSgZhlDKRFbVVKSMMqRQyGX2NEEcMqWUpB6PcXGmVo6XK65dOxNyLe0ulEIRL8oQJ6LfH3e0IgoC4vyNcDkwrh41-tnKp2-ES24_22Fr8ECPzcPWhqq_aZwNjQsdq" />
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-black text-lg leading-none mb-1">後端大師</h3>
-                    <p class="text-xs font-bold text-gray-500">Lv.11</p>
-                </div>
-                <div class="text-4xl font-black italic pr-2 tracking-tighter">311</div>
-            </div>
-            <div class="neo-card bg-white p-4 flex items-center gap-4 opacity-80">
-                <span class="font-black text-xl w-8 text-center">6</span>
-                <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-zinc-100">
-                    <img alt="avatar" class="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG6-VZYNfH80T5e5XUg5vxNrI3XMRFRsjEANehtX_EK6gwt4IwV7WFCjFv_s211JQIsFoCEBrv9VNnuBBG8x9KF5KfikE4FjyAJGBEuWAEuli5SNvTu8HzdJALsqh5bU0cJWpCZ_vv3_0KFcAYus3-ylxNJudDn2PkrXq65k2IV6jEQvbi0bX30eWPfBp3qpnrN6bNbj_VZkSQsCk2VZAUQtqy0aDVUi1_RzXZo2DchbdktbabXmbDV_AIebn5C-fTgtSb9_e-azgs" />
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-black text-lg leading-none mb-1">林曉培</h3>
-                    <p class="text-xs font-bold text-gray-500">Lv.10</p>
-                </div>
-                <div class="text-4xl font-black italic pr-2 tracking-tighter">298</div>
-            </div>
-            <div class="neo-card-user bg-user-highlight p-4 flex items-center gap-4">
-                <span class="font-black text-xl w-8 text-center">#42</span>
-                <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-white">
-                    <img alt="avatar" class="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEV77hZ26BcMEU_SksSygZ6JqY57dn6GVrfxluhI6FGxOL05AY972yOAiVqicDUq_UtF-nzMdFPjwxXcpC-BX3k2bJzDqNcDPJz5npVgHPpxcsuLVUmvo2-O5R-WrkyV0bm7LMixG5lEH0qgkLLxZUZB5TlDM8RyxkUtE5gbriAhdqjoJWupeBDsXDry0P-I98P11Kgjawi8pqs8AV3NpnlyuKYO9K_QPAi6QVzNS8aorz3POBUBAT6VEf6Wvw0SWMeHDb7CfAf1To" />
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-black text-lg leading-none mb-1">你 (You)</h3>
-                    <p class="text-xs font-bold text-gray-500">Lv.7</p>
-                </div>
-                <div class="text-4xl font-black italic pr-2 tracking-tighter">110</div>
-            </div>
-            <div class="neo-card bg-white p-4 flex items-center gap-4 opacity-70">
-                <span class="font-black text-xl w-8 text-center">7</span>
-                <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-zinc-100">
-                    <img alt="avatar" class="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgn-UDLe1wnfqH5z93BW1HS2jD84ITQv96uF6-0apXHKophtO9PyOB8wNamcQrJxO-_-h3YBDaVa45H8Fskq_Hm_YHOq5rv6iuxgJUuc3BZf2Ib0fmzSqTNaVOL-yYs56edsmoJXwEZcayca1xNiymgSAnc0o60brbe-sST-y9a5aqng_z4GsD5OVvWiT4uqBG9wj6jOBr1pM2CE0nLIVnp-o9yB2sFYcSulwt6XoGT-bvxhBzHC9Kpk99wWW32tWZTiD08MLkt_fj" />
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-black text-lg leading-none mb-1">陳威利</h3>
-                    <p class="text-xs font-bold text-gray-500">Lv.10</p>
-                </div>
-                <div class="text-4xl font-black italic pr-2 tracking-tighter">275</div>
-            </div>
+
+        <!-- 第 4 名以後的列表 -->
+        <div id="rank-list" class="space-y-4">
+            <!-- 動態渲染 -->
         </div>
-        <div class="grid grid-cols-2 gap-4">
+
+        <!-- 底部統計區 -->
+        <div id="stats-container" class="grid grid-cols-2 gap-4">
             <div class="neo-card bg-white p-5">
                 <h4 class="text-xs font-black text-gray-500 mb-1">全球卡片排名</h4>
                 <div class="flex items-baseline gap-1">
-                    <span class="text-2xl font-black">#42</span>
-                    <span class="text-[10px] font-bold text-green-600">↑ 2</span>
+                    <span id="my-rank" class="text-2xl font-black">#--</span>
                 </div>
             </div>
             <div class="neo-card bg-white p-5">
                 <h4 class="text-xs font-black text-gray-500 mb-1">今日新增</h4>
                 <div class="flex items-baseline gap-1">
-                    <span class="text-2xl font-black">+12</span>
-                    <span class="text-[10px] font-bold text-primary bg-black px-1">STREAK!</span>
+                    <span id="today-added" class="text-2xl font-black">+0</span>
+                    <span id="streak-badge"
+                        class="text-[10px] font-bold text-primary bg-black px-1 hidden">STREAK!</span>
                 </div>
             </div>
         </div>
     </main>
 
+    <script>
+        // 預設頭像
+        const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFkz4f23tCsJx2XoWDwRbqOuT7ykrttxTJpEBUBj7buLZ29cFWTodfR05lCnqUVLh3ryGm95QIuMgz8Ut0bpEEuzJ9f89UpWhesieG9w93R2Fsh_3QgrvRu7hyTQXRdBvHIThU-UpRjQwE236gxRaLPmkIISJuouE3wQsycoWG8cb1CJHPoxt4pux1BXWyJhcntBJqar-6xrur66Khwxp5zPrB3dZ-SoKwcDubog8SekixtpZtWO9F63OMvpmxSGtOl6uykNrf0si3';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const podiumContainer = document.getElementById('podium-container');
+            const rankList = document.getElementById('rank-list');
+
+            try {
+                // 初始化 API Service
+                await apiService.initialize();
+
+                const currentUserId = apiService.currentUser?.id;
+
+                // 取得卡片排行榜資料
+                const result = await apiService.getCardLeaderboard(currentUserId);
+
+                if (!result.success) {
+                    throw new Error(result.error?.message || '載入失敗');
+                }
+
+                const { data: users, totalUsers, currentUserRank, currentUserData, todayAddedCards } = result;
+
+                // 更新總人數與時間
+                document.getElementById('total-users').textContent = `總共 ${totalUsers.toLocaleString()} 位學習者`;
+                document.getElementById('last-update').textContent = `最後更新：${new Date().toLocaleString('zh-TW')}`;
+
+                // 渲染邏輯
+                if (totalUsers === 0) {
+                    // 沒有任何用戶
+                    podiumContainer.innerHTML = '<p class="text-center text-gray-500 py-8">目前還沒有學習者</p>';
+                } else if (totalUsers === 1) {
+                    // 單人模式：只顯示冠軍，隱藏 2、3 名
+                    document.getElementById('rank-2-container').classList.add('hidden');
+                    document.getElementById('rank-3-container').classList.add('hidden');
+                    document.getElementById('rank-1-container').classList.remove('flex-1');
+                    document.getElementById('rank-1-container').classList.add('w-48');
+                    renderPodiumUser(1, users[0], currentUserId);
+                } else if (totalUsers === 2) {
+                    // 只有兩人：顯示 1、2 名，隱藏 3
+                    document.getElementById('rank-3-container').classList.add('hidden');
+                    renderPodiumUser(1, users[0], currentUserId);
+                    renderPodiumUser(2, users[1], currentUserId);
+                } else {
+                    // 多人模式：渲染前三名
+                    renderPodiumUser(1, users[0], currentUserId);
+                    renderPodiumUser(2, users[1], currentUserId);
+                    renderPodiumUser(3, users[2], currentUserId);
+                }
+
+                // 渲染第 4 名以後 (最多顯示 10 名)
+                const listUsers = users.slice(3, 10);
+                let listHTML = '';
+
+                listUsers.forEach((user, index) => {
+                    const rank = index + 4;
+                    const isCurrentUser = user.id === currentUserId;
+                    listHTML += renderListItem(rank, user, isCurrentUser);
+                });
+
+                // 如果當前用戶不在前 10 名，額外顯示「你 (You)」區塊
+                if (currentUserRank > 10 && currentUserData) {
+                    listHTML += renderListItem(currentUserRank, currentUserData, true);
+                }
+
+                rankList.innerHTML = listHTML;
+
+                // 更新底部統計
+                if (currentUserRank > 0) {
+                    document.getElementById('my-rank').textContent = `#${currentUserRank}`;
+                } else {
+                    document.getElementById('my-rank').textContent = '--';
+                }
+
+                // 今日新增
+                document.getElementById('today-added').textContent = `+${todayAddedCards}`;
+                if (todayAddedCards >= 5) {
+                    document.getElementById('streak-badge').classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error('排行榜載入錯誤:', error);
+                rankList.innerHTML = `<p class="text-center text-red-500 py-8">載入失敗：${error.message}</p>`;
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        /**
+         * 渲染頒獎台用戶 (依卡片數量顯示)
+         */
+        function renderPodiumUser(rank, user, currentUserId) {
+            const isCurrentUser = user.id === currentUserId;
+            const avatar = user.avatar_url || DEFAULT_AVATAR;
+            const name = isCurrentUser ? `${user.username} (你)` : user.username;
+
+            document.getElementById(`rank-${rank}-avatar`).querySelector('img').src = avatar;
+            document.getElementById(`rank-${rank}-name`).textContent = name;
+            document.getElementById(`rank-${rank}-cards`).textContent = user.total_cards;
+            document.getElementById(`rank-${rank}-level`).textContent = `Lv.${user.actualLevel}`;
+
+            // 如果是當前用戶，高亮顯示
+            if (isCurrentUser) {
+                document.getElementById(`rank-${rank}-card`).classList.add('ring-4', 'ring-primary');
+            }
+        }
+
+        /**
+         * 渲染列表項目 (依卡片數量顯示)
+         */
+        function renderListItem(rank, user, isCurrentUser) {
+            const avatar = user.avatar_url || DEFAULT_AVATAR;
+            const name = isCurrentUser ? '你 (You)' : user.username;
+            const cardClass = isCurrentUser
+                ? 'neo-card-user bg-user-highlight'
+                : 'neo-card bg-white';
+
+            return `
+                <div class="${cardClass} p-4 flex items-center gap-4" onclick="window.location.href='profile.html'">
+                    <span class="font-black text-xl w-8 text-center">${isCurrentUser ? '#' + rank : rank}</span>
+                    <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-zinc-100">
+                        <img alt="avatar" src="${avatar}" class="w-full h-full object-cover" />
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-black text-lg leading-none mb-1">${name}</h3>
+                        <p class="text-xs font-bold text-gray-500">Lv.${user.actualLevel}</p>
+                    </div>
+                    <div class="text-4xl font-black italic pr-2 tracking-tighter">${user.total_cards}</div>
+                </div>
+            `;
+        }
+    </script>
 </body>
 
 </html>
