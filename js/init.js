@@ -7,6 +7,9 @@ let currentUser = null;
 let allCards = []; // 儲存所有卡片用於篩選
 let currentFilter = 'all'; // 目前篩選條件 ('all', 'unfamiliar', 'lv1'...)
 
+// [Security Check] 管理員 UID
+const ADMIN_UID = "3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b";
+
 /**
  * 初始化應用
  */
@@ -201,6 +204,24 @@ async function loadUserCards() {
 
         if (result.success) {
             allCards = result.data.cards || [];
+
+            // [Admin Logic] 如果是管理員，額外載入私密的每日一卡
+            if (currentUser.id === ADMIN_UID) {
+                console.log('[Admin] Fetching private daily cards...');
+                const adminResult = await apiService.getAdminPrivateCards();
+                if (adminResult.success && adminResult.data) {
+                    const privateCards = adminResult.data.map(c => ({
+                        ...c,
+                        sourceType: 'daily_card', // 標記為每日一卡
+                        status: 'private',        // 標記狀態
+                        progress: { mastery_level: 0 } // 模擬進度以免報錯
+                    }));
+                    console.log(`[Admin] Loaded ${privateCards.length} private cards.`);
+                    // 合併到列表最前面
+                    allCards = [...privateCards, ...allCards];
+                }
+            }
+
             initFilterButtons();
             applyFilter(currentFilter);
         } else {
@@ -346,17 +367,27 @@ function renderCardItem(card) {
     // 決定是否顯示徽章（只有做過測驗才顯示）
     const showBadge = bestScore !== null && bestScore !== undefined && bestScore > 0;
 
+    // [Admin Logic] 私密卡片樣式
+    const isPrivate = card.status === 'private';
+    const borderClass = isPrivate ? 'border-dashed border-gray-400' : 'neo-border-thick';
+    const bgClass = isPrivate ? 'bg-gray-50 dark:bg-zinc-800/50' : 'bg-white dark:bg-zinc-900';
+    const privateTag = isPrivate ? `<span class="bg-gray-200 text-gray-600 px-1 text-[8px] font-bold uppercase ml-1">PRIVATE</span>` : '';
+
     return `
-        <a href="card.html?id=${card.id}"
-            class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98]">
+        <a href="${isPrivate ? '#' : `card.html?id=${card.id}`}"
+           data-card-id="${card.id}"
+           data-source-type="${card.sourceType || 'user_card'}"
+           data-status="${card.status || 'published'}"
+            class="${bgClass} ${borderClass} neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98] admin-card-item">
             ${showBadge ? `
                 <div class="absolute -top-2 -right-2 w-10 h-10 rounded-full neo-border-thick flex items-center justify-center z-20 shadow-lg"
                      style="background-color: ${badgeBg};">
                     <span class="text-lg">${badgeEmoji}</span>
                 </div>
             ` : ''}
-            <div class="mb-2">
+            <div class="mb-2 flex items-center">
                 <span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">${card.category || 'General'}</span>
+                ${privateTag}
             </div>
             <div class="flex-1">
                 <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1">${card.english_term}</h3>
@@ -395,11 +426,22 @@ function bindCardActions(cards) {
             }
 
             const href = this.getAttribute('href');
+            // 處理 # (私密卡片不可點擊跳轉)
+            if (href === '#') {
+                e.preventDefault();
+                return;
+            }
+
             const cardId = new URLSearchParams(href.split('?')[1]).get('id');
             const card = cards?.find(c => c.id === cardId);
             if (card) cacheCard(card);
         });
     });
+
+    // [Admin Logic] 綁定長按事件
+    if (currentUser && currentUser.id === ADMIN_UID) {
+        bindAdminLongPress();
+    }
 
     // 愛心按鈕
     document.querySelectorAll('[data-action="heart"]').forEach(btn => {
@@ -494,6 +536,178 @@ function bindCardActions(cards) {
     });
 }
 
+
+/**
+ * [Admin] 綁定長按事件
+ */
+function bindAdminLongPress() {
+    const cards = document.querySelectorAll('.admin-card-item');
+    let pressTimer;
+
+    cards.forEach(card => {
+        // 只針對 daily_cards 且是 private 狀態的 (其實 published 也可以改回 private，但先做單向)
+        // 為了方便測試，允許所有 daily_cards
+        const sourceType = card.getAttribute('data-source-type');
+        if (sourceType !== 'daily_card') return;
+
+        const startPress = (e) => {
+            // 避免與點擊衝突，如果是按鈕就不觸發
+            if (e.target.closest('button') || e.target.closest('[data-action]')) return;
+
+            pressTimer = setTimeout(() => {
+                showAdminActionMenu(card);
+            }, 600); // 0.6s 長按
+        };
+
+        const cancelPress = () => {
+            clearTimeout(pressTimer);
+        };
+
+        // Touch events
+        card.addEventListener('touchstart', startPress, { passive: true });
+        card.addEventListener('touchend', cancelPress);
+        card.addEventListener('touchmove', cancelPress);
+
+        // Mouse events (for desktop testing)
+        card.addEventListener('mousedown', startPress);
+        card.addEventListener('mouseup', cancelPress);
+        card.addEventListener('mouseleave', cancelPress);
+    });
+}
+
+function showAdminActionMenu(cardEl) {
+    // 觸覺回饋
+    if (navigator.vibrate) navigator.vibrate(50);
+
+    const cardId = cardEl.getAttribute('data-card-id');
+    const status = cardEl.getAttribute('data-status');
+    const isPrivate = status === 'private';
+
+    if (!isPrivate) {
+        // 如果已經發布，或許可以提示已發布
+        alert('此卡片已是公開狀態');
+        return;
+    }
+
+    // 建立臨時 Modal UI
+    const today = new Date().toISOString().split('T')[0];
+
+    // 為了符合要求："精美小選單"，我們動態插入一個
+    const menuHtml = `
+        <div id="admin-menu-overlay" class="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center animate-fade-in">
+            <div class="bg-white border-4 border-black p-6 w-[85%] max-w-sm relative neo-shadow">
+                <h3 class="text-xl font-black uppercase mb-4">Admin Consle</h3>
+                <p class="mb-2 font-bold text-gray-500 text-xs">STATUS: <span class="bg-gray-200 px-2 text-black">${status.toUpperCase()}</span></p>
+                
+                <div class="mb-4">
+                    <label class="block text-xs font-bold mb-1">PUBLISH DATE</label>
+                    <input type="date" id="publish-date-input" value="${today}" 
+                           class="w-full h-10 border-2 border-black px-2 font-bold focus:outline-none focus:ring-2 focus:ring-[#FFD600]">
+                    <p id="date-warning" class="text-[10px] font-bold text-red-500 mt-1 hidden">⚠️ DATE OCCUPIED</p>
+                </div>
+
+                <div class="space-y-3 mt-6">
+                    <button id="btn-publish" class="w-full py-3 bg-[#FFD600] border-3 border-black font-black text-lg neo-shadow active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        🚀 PUBLISH NOW
+                    </button>
+                    <button id="btn-cancel" class="w-full py-3 bg-white border-3 border-black font-bold neo-shadow active:translate-y-1 active:shadow-none transition-all">
+                        CANCEL
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', menuHtml);
+
+    const overlay = document.getElementById('admin-menu-overlay');
+    const btnPublish = document.getElementById('btn-publish');
+    const btnCancel = document.getElementById('btn-cancel');
+    const dateInput = document.getElementById('publish-date-input');
+    const dateWarning = document.getElementById('date-warning');
+
+    // 檢查日期可用性函數
+    const checkDate = async () => {
+        const date = dateInput.value;
+        if (!date) return;
+
+        // 雖然理論上要防抖 (debounce)，但這裡簡單處理
+        btnPublish.disabled = true;
+        btnPublish.textContent = 'CHECKING...';
+
+        const result = await apiService.checkDateAvailability(date);
+
+        if (result.success && !result.isAvailable) {
+            // 被佔用
+            dateWarning.classList.remove('hidden');
+            dateWarning.textContent = `⚠️ ${date} 已有已發布卡片`;
+            btnPublish.disabled = true;
+            btnPublish.textContent = '⛔ DATE OCCUPIED';
+            dateInput.classList.add('bg-red-50', 'text-red-500');
+        } else {
+            // 可用
+            dateWarning.classList.add('hidden');
+            btnPublish.disabled = false;
+            btnPublish.textContent = '🚀 PUBLISH NOW';
+            dateInput.classList.remove('bg-red-50', 'text-red-500');
+        }
+    };
+
+    // 初始檢查
+    checkDate();
+
+    // 綁定日期變更
+    dateInput.addEventListener('change', checkDate);
+
+    btnCancel.onclick = () => overlay.remove();
+
+    btnPublish.onclick = async () => {
+        const selectedDate = dateInput.value;
+        if (!selectedDate) {
+            alert('請選擇日期');
+            return;
+        }
+
+        btnPublish.innerHTML = 'PUBLISHING...';
+        btnPublish.disabled = true;
+
+        const result = await apiService.publishDailyCard(cardId, selectedDate);
+        if (result.success) {
+            // Success Effect
+            overlay.remove();
+
+            // Confetti or Flash
+            cardEl.style.transition = 'all 0.5s';
+            cardEl.style.backgroundColor = '#FFD600'; // Flash gold
+            setTimeout(() => {
+                cardEl.style.backgroundColor = 'white';
+                // 更新 UI
+                cardEl.classList.remove('border-dashed', 'border-gray-400', 'bg-gray-50');
+                cardEl.classList.add('neo-border-thick', 'neo-shadow');
+                cardEl.setAttribute('data-status', 'published');
+
+                // 移除舊的 published 標籤 (如果有的話)
+                const oldTag = cardEl.querySelector('.published-tag');
+                if (oldTag) oldTag.remove();
+
+                cardEl.querySelector('span.text-\\[8px\\]').insertAdjacentHTML('afterend', `
+                    <span class="published-tag bg-green-400 text-black border border-black px-1 text-[8px] font-bold uppercase ml-1 box-shadow-sm">✅ ${selectedDate}</span>
+                `);
+                // 移除 PRIVATE 標籤
+                const privateTag = cardEl.querySelector('.text-gray-600'); // hacky selector from render code
+                if (privateTag) privateTag.remove();
+
+                // 觸發震動
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            }, 500);
+
+        } else {
+            alert('Error: ' + result.error.message);
+            btnPublish.disabled = false;
+            btnPublish.textContent = '🚀 PUBLISH NOW';
+        }
+    };
+}
 
 /**
  * 顯示錯誤訊息

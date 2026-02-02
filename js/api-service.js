@@ -916,6 +916,71 @@ class ApiService {
     }
 
     /**
+     * [Admin] 取得所有私密狀態的每日一卡
+     */
+    async getAdminPrivateCards() {
+        try {
+            const { data, error } = await this.supabase
+                .from('daily_cards')
+                .select('*')
+                .eq('status', 'private')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * [Admin] 檢查日期是否已有發布的卡片
+     * @param {string} date - YYYY-MM-DD
+     */
+    async checkDateAvailability(date) {
+        try {
+            const { data, error } = await this.supabase
+                .from('daily_cards')
+                .select('id')
+                .eq('status', 'published')
+                .eq('publish_date', date)
+                .maybeSingle();
+
+            if (error) throw error;
+            // 如果 data 存在，代表該日已被佔用 (return false)
+            return { success: true, isAvailable: !data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * [Admin]發布每日一卡
+     * @param {string} cardId
+     * @param {string} date - YYYY-MM-DD
+     */
+    async publishDailyCard(cardId, date) {
+        try {
+            const updateData = { status: 'published' };
+            if (date) {
+                updateData.publish_date = date;
+            }
+
+            const { data, error } = await this.supabase
+                .from('daily_cards')
+                .update(updateData)
+                .eq('id', cardId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 更新卡片
      */
     async updateCard(cardId, updates) {
