@@ -298,14 +298,18 @@
             document.getElementById(`rank-${rank}-level`).textContent = user.actualLevel;
             document.getElementById(`rank-${rank}-cards`).textContent = `${user.total_cards || 0} 張卡片`;
 
-            // 如果 XP 卡住，加上金色閃爍
-            if (user.isCapped) {
-                document.getElementById(`rank-${rank}-level`).classList.add('capped-shimmer');
-            }
-
-            // 如果是當前用戶，高亮顯示
+            // 如果是當前用戶，加上金色閃爍 (名字與內容)
             if (isCurrentUser) {
+                document.getElementById(`rank-${rank}-name`).classList.add('capped-shimmer');
+                document.getElementById(`rank-${rank}-cards`).classList.add('capped-shimmer');
+                // 移除原本 Level 的閃爍 (若有的話，或確保不加)
+                document.getElementById(`rank-${rank}-level`).classList.remove('capped-shimmer');
+                // 卡片框高亮
                 document.getElementById(`rank-${rank}-card`).classList.add('ring-4', 'ring-primary');
+            } else {
+                document.getElementById(`rank-${rank}-name`).classList.remove('capped-shimmer');
+                document.getElementById(`rank-${rank}-cards`).classList.remove('capped-shimmer');
+                document.getElementById(`rank-${rank}-card`).classList.remove('ring-4', 'ring-primary');
             }
         }
 
@@ -318,7 +322,11 @@
             const cardClass = isCurrentUser
                 ? 'neo-card-user bg-yellow-50 ring-2 ring-primary ring-inset'
                 : 'neo-card bg-white';
-            const levelClass = user.isCapped ? 'capped-shimmer' : '';
+
+            // 是否有特效：改為當前用戶
+            const shimmerClass = isCurrentUser ? 'capped-shimmer' : '';
+            // 卡片文字顏色：如果有特效則跟隨特效，否則灰色
+            const cardsColorClass = isCurrentUser ? '' : 'text-gray-500';
 
             return `
                 <div class="${cardClass} p-4 flex items-center gap-4" onclick="window.location.href='profile.html'">
@@ -327,10 +335,10 @@
                         <img alt="avatar" src="${avatar}" class="w-full h-full object-cover" />
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-black text-lg">${name}</h3>
-                        <p class="text-xs font-bold text-gray-500">${user.total_cards || 0} 張卡片</p>
+                        <h3 class="font-black text-lg ${shimmerClass}">${name}</h3>
+                        <p class="text-xs font-bold ${cardsColorClass} ${shimmerClass}">${user.total_cards || 0} 張卡片</p>
                     </div>
-                    <div class="text-4xl font-black italic pr-2 ${levelClass}">${user.actualLevel}</div>
+                    <div class="text-4xl font-black italic pr-2">${user.actualLevel}</div>
                 </div>
             `;
         }
