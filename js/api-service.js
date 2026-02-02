@@ -1075,7 +1075,7 @@ class ApiService {
                     .insert({
                         user_id: userId,
                         card_id: cardId,
-                        mastery_level: 0,
+                        mastery_level: 1, // Fix: Default to 1 (Novice) not 0 (Hearted/Unfamiliar)
                         is_perfect: false,
                         answered_question_indices: []
                     })
