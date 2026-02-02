@@ -264,7 +264,7 @@ class ApiService {
                     ...user,
                     actualLevel: levelState.actualLevel,
                     isCapped: levelState.isCapped,
-                    total_cards: user.total_cards_created || 0 // 對應前端需要的欄位
+                    total_cards: user.total_cards || 0 // 對應前端需要的欄位
                 };
             });
 
@@ -326,12 +326,12 @@ class ApiService {
     async getCardLeaderboard(currentUserId) {
         try {
             // 1. 取得所有用戶 (Top 100)，依卡片數量排序
-            // 注意：這裡假設 users 表有 total_cards_created 欄位。如果不準確，可能需要 join flashcards count，但那樣效能較差。
-            // 我們先信任 users.total_cards_created (由 createCard/deleteCard 維護)
+            // 注意：這裡假設 users 表有 total_cards 欄位。如果不準確，可能需要 join flashcards count，但那樣效能較差。
+            // 我們先信任 users.total_cards (由 createCard/deleteCard 維護)
             const { data: users, error, count } = await this.supabase
                 .from('users')
                 .select('*', { count: 'exact' })
-                .order('total_cards_created', { ascending: false })
+                .order('total_cards', { ascending: false })
                 .limit(100);
 
             if (error) throw error;
@@ -349,7 +349,7 @@ class ApiService {
                 return {
                     ...user,
                     actualLevel: levelState.actualLevel,
-                    total_cards: user.total_cards_created || 0
+                    total_cards: user.total_cards || 0
                 };
             });
 
@@ -374,14 +374,14 @@ class ApiService {
                         currentUserData = {
                             ...myProfile.data,
                             actualLevel: myLevelState.actualLevel,
-                            total_cards: myProfile.data.total_cards_created || 0
+                            total_cards: myProfile.data.total_cards || 0
                         };
 
                         // 計算排名
                         const { count: higherCount, error: rankError } = await this.supabase
                             .from('users')
                             .select('*', { count: 'exact', head: true })
-                            .gt('total_cards_created', currentUserData.total_cards);
+                            .gt('total_cards', currentUserData.total_cards);
 
                         if (!rankError) {
                             currentUserRank = higherCount + 1;
@@ -683,6 +683,9 @@ class ApiService {
             // 4. 給使用者 XP
             const progressResult = await this.updateUserProgress(userId, { xpToAdd: XP_REWARDS.CREATE_CARD });
 
+            // [Sync] 同步卡片數量
+            await this._syncUserCardCount(userId);
+
             return {
                 success: true,
                 data: createdCard,
@@ -858,12 +861,8 @@ class ApiService {
 
             await this.addUserXp(cardData.user_id, XP_REWARDS.CREATE_CARD);
 
-            const userResult = await this.getUserProfile(cardData.user_id);
-            if (userResult.success) {
-                await this.updateUser(cardData.user_id, {
-                    total_cards_created: userResult.data.total_cards_created + 1
-                });
-            }
+            // [Sync] 同步卡片數量
+            await this._syncUserCardCount(cardData.user_id);
 
             return {
                 success: true,
@@ -907,13 +906,8 @@ class ApiService {
                 xpToAdd: totalXP
             });
 
-            // 更新使用者的卡片建立數量
-            const userResult = await this.getUserProfile(userId);
-            if (userResult.success) {
-                await this.updateUser(userId, {
-                    total_cards_created: userResult.data.total_cards_created + cardsData.length
-                });
-            }
+            // [Sync] 同步卡片數量
+            await this._syncUserCardCount(userId);
 
             return {
                 success: true,
@@ -1054,8 +1048,8 @@ class ApiService {
 
             // 1. 定義基礎 XP
             let xpToAdd = 0;
-            if (correctCount === 1) xpToAdd = 20;
-            else if (correctCount === 2) xpToAdd = 50;
+            if (correctCount === 1) xpToAdd = 70;
+            else if (correctCount === 2) xpToAdd = 85;
             else if (correctCount === 3) xpToAdd = 100;
 
             console.log('Base XP calculated:', xpToAdd);
@@ -1193,6 +1187,30 @@ class ApiService {
     /**
      * 刪除卡片
      */
+    /**
+     * 內部函數：同步使用者的卡片總數
+     */
+    async _syncUserCardCount(userId) {
+        if (!userId) return;
+        try {
+            const { count, error } = await this.supabase
+                .from('flashcards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+
+            if (error) throw error;
+
+            await this.updateUser(userId, {
+                total_cards: count
+            });
+        } catch (error) {
+            console.error('同步卡片數量失敗:', error);
+        }
+    }
+
+    /**
+     * 刪除卡片
+     */
     async deleteCard(cardId, userId) {
         try {
             const { error } = await this.supabase
@@ -1203,18 +1221,14 @@ class ApiService {
 
             if (error) throw error;
 
-            const userResult = await this.getUserProfile(userId);
-            if (userResult.success && userResult.data.total_cards_created > 0) {
-                await this.updateUser(userId, {
-                    total_cards_created: userResult.data.total_cards_created - 1
-                });
-            }
+            await this._syncUserCardCount(userId);
 
             return { success: true };
         } catch (error) {
             return this._handleError(error);
         }
     }
+
 
     // ==================== 進度與測驗相關 ====================
 

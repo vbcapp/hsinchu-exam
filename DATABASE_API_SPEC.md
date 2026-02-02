@@ -54,7 +54,7 @@
 | `current_level` | INTEGER | NOT NULL, DEFAULT 1 | 當前等級 (1-99) |
 | `current_xp` | INTEGER | NOT NULL, DEFAULT 0 | 當前經驗值 |
 | `next_level_xp` | INTEGER | NOT NULL, DEFAULT 100 | 升級所需 XP |
-| `total_cards_created` | INTEGER | NOT NULL, DEFAULT 0 | 建立的卡片總數 |
+| `total_cards` | INTEGER | NOT NULL, DEFAULT 0 | 使用者建立的卡片總數 (用於成就統計) |
 | `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW() | 建立時間 |
 | `updated_at` | TIMESTAMP | NOT NULL, DEFAULT NOW() | 更新時間 |
 
@@ -72,7 +72,7 @@
   "current_level": 12,
   "current_xp": 95,
   "next_level_xp": 100,
-  "total_cards_created": 110,
+  "total_cards": 110,
   "created_at": "2026-01-01T00:00:00Z",
   "updated_at": "2026-01-26T10:00:00Z"
 }
@@ -367,7 +367,7 @@ GET /users/550e8400-e29b-41d4-a716-446655440000
     "current_level": 12,
     "current_xp": 95,
     "next_level_xp": 100,
-    "total_cards_created": 24,
+    "total_cards": 24,
     "level_progress_percentage": 95
   }
 }
@@ -627,7 +627,7 @@ GET /users/550e8400-e29b-41d4-a716-446655440000/profile
       "current_level": 7,
       "current_xp": 12450,
       "next_level_xp": 15000,
-      "total_cards_created": 110
+      "total_cards": 110
     },
     "statistics": {
       "total_reviews": 450,
@@ -919,14 +919,15 @@ GET /rankings/cards?page=1&limit=50
 
 ### XP 計算規則
 
-| 動作 | 獲得 XP |
-|------|---------|
-| 建立新卡片 | +5 XP |
-| 測驗答對 (首次) | +10 XP |
-| 測驗答對 (複習) | +5 XP |
-| 測驗答錯 | +0 XP |
-| 連續 7 天學習 | +50 XP (獎勵) |
-| 卡片達到 Lv.5 | +25 XP (獎勵) |
+| 動作 | 獲得 XP | 說明 |
+|------|---------|-----|
+| 建立新卡片 | +50 XP | 包含新增每日一卡 |
+| 測驗答對 (1題) | +70 XP | 答對 1/3 題 |
+| 測驗答對 (2題) | +85 XP | 答對 2/3 題 |
+| 測驗答對 (3題) | +100 XP | 答對 3/3 題 (完美通關) |
+| 開拓者獎勵 | +50 XP | 首次滿分通關 |
+| 大師勛章 | +15 XP | 解鎖大師勛章 (5題全對) |
+| 每日登入 | +50 XP | 每日首次登入 |
 
 ### 等級升級公式
 
