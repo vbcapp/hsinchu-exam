@@ -205,22 +205,8 @@ async function loadUserCards() {
         if (result.success) {
             allCards = result.data.cards || [];
 
-            // [Admin Logic] 如果是管理員，額外載入私密的每日一卡
-            if (currentUser.id === ADMIN_UID) {
-                console.log('[Admin] Fetching private daily cards...');
-                const adminResult = await apiService.getAdminPrivateCards();
-                if (adminResult.success && adminResult.data) {
-                    const privateCards = adminResult.data.map(c => ({
-                        ...c,
-                        sourceType: 'daily_card', // 標記為每日一卡
-                        status: 'private',        // 標記狀態
-                        progress: { mastery_level: 0 } // 模擬進度以免報錯
-                    }));
-                    console.log(`[Admin] Loaded ${privateCards.length} private cards.`);
-                    // 合併到列表最前面
-                    allCards = [...privateCards, ...allCards];
-                }
-            }
+            // [Admin Logic] (Deprecated) 不再需要額外載入私密 Daily Cards，直接用 Flashcards
+            // if (currentUser.id === ADMIN_UID) { ... }
 
             initFilterButtons();
             applyFilter(currentFilter);
@@ -367,18 +353,16 @@ function renderCardItem(card) {
     // 決定是否顯示徽章（只有做過測驗才顯示）
     const showBadge = bestScore !== null && bestScore !== undefined && bestScore > 0;
 
-    // [Admin Logic] 私密卡片樣式
-    const isPrivate = card.status === 'private';
-    const borderClass = isPrivate ? 'border-dashed border-gray-400' : 'neo-border-thick';
-    const bgClass = isPrivate ? 'bg-gray-50 dark:bg-zinc-800/50' : 'bg-white dark:bg-zinc-900';
-    const privateTag = isPrivate ? `<span class="bg-gray-200 text-gray-600 px-1 text-[8px] font-bold uppercase ml-1">PRIVATE</span>` : '';
+    // [Admin Logic] 已發布標記
+    const isPublished = card.is_published;
+    const publishedTag = isPublished ? `<span class="bg-primary text-black border border-black px-1 text-[8px] font-bold uppercase ml-1">PUBLISHED</span>` : '';
 
     return `
-        <a href="${isPrivate ? '#' : `card.html?id=${card.id}`}"
+        <a href="card.html?id=${card.id}"
            data-card-id="${card.id}"
            data-source-type="${card.sourceType || 'user_card'}"
-           data-status="${card.status || 'published'}"
-            class="${bgClass} ${borderClass} neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98] admin-card-item">
+           data-is-published="${isPublished}"
+            class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98] admin-card-item">
             ${showBadge ? `
                 <div class="absolute -top-2 -right-2 w-10 h-10 rounded-full neo-border-thick flex items-center justify-center z-20 shadow-lg"
                      style="background-color: ${badgeBg};">
@@ -387,7 +371,7 @@ function renderCardItem(card) {
             ` : ''}
             <div class="mb-2 flex items-center">
                 <span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">${card.category || 'General'}</span>
-                ${privateTag}
+                ${publishedTag}
             </div>
             <div class="flex-1">
                 <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1">${card.english_term}</h3>
@@ -546,9 +530,9 @@ function bindAdminLongPress() {
 
     cards.forEach(card => {
         // 只針對 daily_cards 且是 private 狀態的 (其實 published 也可以改回 private，但先做單向)
-        // 為了方便測試，允許所有 daily_cards
-        const sourceType = card.getAttribute('data-source-type');
-        if (sourceType !== 'daily_card') return;
+        // Admin 可以長按任何卡片進行發布
+        // const sourceType = card.getAttribute('data-source-type');
+        // if (sourceType !== 'daily_card') return; // 移除此限制
 
         const startPress = (e) => {
             // 避免與點擊衝突，如果是按鈕就不觸發
@@ -580,12 +564,10 @@ function showAdminActionMenu(cardEl) {
     if (navigator.vibrate) navigator.vibrate(50);
 
     const cardId = cardEl.getAttribute('data-card-id');
-    const status = cardEl.getAttribute('data-status');
-    const isPrivate = status === 'private';
+    const isPublished = cardEl.getAttribute('data-is-published') === 'true';
 
-    if (!isPrivate) {
-        // 如果已經發布，或許可以提示已發布
-        alert('此卡片已是公開狀態');
+    if (isPublished) {
+        alert('此卡片已是公開狀態 (Published)');
         return;
     }
 
@@ -596,8 +578,8 @@ function showAdminActionMenu(cardEl) {
     const menuHtml = `
         <div id="admin-menu-overlay" class="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center animate-fade-in">
             <div class="bg-white border-4 border-black p-6 w-[85%] max-w-sm relative neo-shadow">
-                <h3 class="text-xl font-black uppercase mb-4">Admin Consle</h3>
-                <p class="mb-2 font-bold text-gray-500 text-xs">STATUS: <span class="bg-gray-200 px-2 text-black">${status.toUpperCase()}</span></p>
+                <h3 class="text-xl font-black uppercase mb-4">Publish to Daily</h3>
+                <p class="mb-2 font-bold text-gray-500 text-xs">TARGET: PUBLIC CALENDAR</p>
                 
                 <div class="mb-4">
                     <label class="block text-xs font-bold mb-1">PUBLISH DATE</label>
@@ -671,7 +653,7 @@ function showAdminActionMenu(cardEl) {
         btnPublish.innerHTML = 'PUBLISHING...';
         btnPublish.disabled = true;
 
-        const result = await apiService.publishDailyCard(cardId, selectedDate);
+        const result = await apiService.publishFlashcardToDaily(cardId, selectedDate);
         if (result.success) {
             // Success Effect
             overlay.remove();
@@ -681,21 +663,19 @@ function showAdminActionMenu(cardEl) {
             cardEl.style.backgroundColor = '#FFD600'; // Flash gold
             setTimeout(() => {
                 cardEl.style.backgroundColor = 'white';
-                // 更新 UI
-                cardEl.classList.remove('border-dashed', 'border-gray-400', 'bg-gray-50');
-                cardEl.classList.add('neo-border-thick', 'neo-shadow');
-                cardEl.setAttribute('data-status', 'published');
+                // 更新 UI: 加上 PUBLISHED 標籤
+                cardEl.setAttribute('data-is-published', 'true');
 
-                // 移除舊的 published 標籤 (如果有的話)
+                // 移除舊標籤 (防重複)
                 const oldTag = cardEl.querySelector('.published-tag');
                 if (oldTag) oldTag.remove();
 
-                cardEl.querySelector('span.text-\\[8px\\]').insertAdjacentHTML('afterend', `
-                    <span class="published-tag bg-green-400 text-black border border-black px-1 text-[8px] font-bold uppercase ml-1 box-shadow-sm">✅ ${selectedDate}</span>
-                `);
-                // 移除 PRIVATE 標籤
-                const privateTag = cardEl.querySelector('.text-gray-600'); // hacky selector from render code
-                if (privateTag) privateTag.remove();
+                const categoryTag = cardEl.querySelector('span.neo-border');
+                if (categoryTag) {
+                    categoryTag.insertAdjacentHTML('afterend', `
+                        <span class="published-tag bg-primary text-black border border-black px-1 text-[8px] font-bold uppercase ml-1 box-shadow-sm">✅ ${selectedDate}</span>
+                    `);
+                }
 
                 // 觸發震動
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);

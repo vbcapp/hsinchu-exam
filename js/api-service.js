@@ -194,6 +194,44 @@ class ApiService {
         }
     }
 
+    /**
+     * 登出
+     */
+    async logout() {
+        try {
+            // 嘗試登出 Supabase (即使失敗也繼續清除本地資料)
+            const { error } = await this.supabase.auth.signOut();
+            if (error) console.warn('Supabase sign out warning:', error);
+
+            return { success: true };
+        } catch (error) {
+            console.warn('Logout execution error:', error);
+            // 即使發生錯誤，也要確保前端登出
+            return { success: true };
+        } finally {
+            // [CRITICAL] 強制清除所有本地狀態，確保不會自動登入回舊帳號
+            this.currentUser = null;
+
+            // 清除應用相關資料
+            localStorage.removeItem('userNickname');
+            localStorage.removeItem('userConsent');
+            localStorage.removeItem('loginTime');
+            localStorage.removeItem('user_device_id');
+
+            // 清除 Supabase Auth Token (防止 SDK 自動恢復 Session)
+            // Supabase 預設使用 key: sb-<project-ref>-auth-token
+            // 我們不僅清除變數，也清除任何可能的 Supabase key
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                    localStorage.removeItem(key);
+                }
+            });
+
+            sessionStorage.clear();
+            console.log('Local session cleared.');
+        }
+    }
+
     // ==================== 使用者相關 ====================
 
     /**
@@ -497,13 +535,12 @@ class ApiService {
      */
     async getMonthlyDailyCards(year, month) {
         try {
-            // 計算該月份的起始與結束日期
-            const startDate = new Date(year, month - 1, 1);
-            const endDate = new Date(year, month, 0);
+            // [Fix] 直接手動組字串，避免時區導致的偏移 (e.g., 2026-02-01 00:00 -> 2026-01-31 23:00)
+            const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
 
-            // 格式化為 YYYY-MM-DD
-            const startStr = startDate.toISOString().split('T')[0];
-            const endStr = endDate.toISOString().split('T')[0];
+            // 計算該月最後一天
+            const lastDay = new Date(year, month, 0).getDate();
+            const endStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
             console.log(`查詢月份卡片: ${startStr} ~ ${endStr}`);
 
@@ -747,11 +784,32 @@ class ApiService {
      */
     async getCardWithProgress(cardId, userId) {
         try {
-            const { data: card, error: cardError } = await this.supabase
+            // 1. Try fetching from flashcards
+            let { data: card, error: cardError } = await this.supabase
                 .from('flashcards')
                 .select('*')
                 .eq('id', cardId)
                 .single();
+
+            // 2. If not found in flashcards, try fetching from daily_cards
+            if (cardError && cardError.code === 'PGRST116') {
+                const { data: dailyCard, error: dailyError } = await this.supabase
+                    .from('daily_cards')
+                    .select('*')
+                    .eq('id', cardId)
+                    .single();
+
+                if (!dailyError && dailyCard) {
+                    card = dailyCard;
+                    card.is_daily_card = true; // Flag to identify source
+                    cardError = null;
+                } else {
+                    // If still not found or other error, throw the original error
+                    throw cardError;
+                }
+            } else if (cardError) {
+                throw cardError;
+            }
 
             if (cardError) throw cardError;
 
@@ -872,66 +930,7 @@ class ApiService {
         }
     }
 
-    /**
-     * 批量建立每日一卡 (管理員專用)
-     * @param {array} cardsData - 卡片數據數組
-     * @param {string} status - 狀態 ('published' or 'private')
-     */
-    async createDailyCards(cardsData, status = 'published') {
-        try {
-            const now = new Date().toISOString();
 
-            // 轉換資料格式：移除 user_id 等與 daily_cards 無關的欄位
-            const newCards = cardsData.map(card => {
-                // 解構出不需要的欄位，保留剩下的
-                // 注意：daily_cards 表格沒有 is_public 欄位，也需要移除
-                const { user_id, source_daily_card_id, id, created_at, updated_at, is_public, ...rest } = card;
-
-                return {
-                    ...rest,
-                    status: status, // 強制設定狀態
-                    created_at: now,
-                    updated_at: now,
-                    // 確保必填欄位存在 (如果 AI 生成的有缺，這裡可能要檢查)
-                    // daily_cards 需要: english_term, chinese_translation, category, description
-                };
-            });
-
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .insert(newCards)
-                .select();
-
-            if (error) throw error;
-
-            return {
-                success: true,
-                data: data,
-                cardsCreated: data.length,
-                xpEarned: 0 // 管理員操作不計算 XP
-            };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * [Admin] 取得所有私密狀態的每日一卡
-     */
-    async getAdminPrivateCards() {
-        try {
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .select('*')
-                .eq('status', 'private')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            return { success: true, data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
 
     /**
      * [Admin] 檢查日期是否已有發布的卡片
@@ -955,30 +954,67 @@ class ApiService {
     }
 
     /**
-     * [Admin]發布每日一卡
-     * @param {string} cardId
-     * @param {string} date - YYYY-MM-DD
+     * [Refactor] 管理員發布卡片流程：
+     * 1. 從 flashcards 讀取來源卡片
+     * 2. 複製一份到 daily_cards (public)
+     * 3. 標記來源卡片 is_published = true
      */
-    async publishDailyCard(cardId, date) {
+    async publishFlashcardToDaily(flashcardId, publishDate) {
         try {
-            const updateData = { status: 'published' };
-            if (date) {
-                updateData.publish_date = date;
-            }
+            // 1. 獲取 Flashcard 原始資料
+            const { data: flashcard, error: fetchError } = await this.supabase
+                .from('flashcards')
+                .select('*')
+                .eq('id', flashcardId)
+                .single();
 
-            const { data, error } = await this.supabase
+            if (fetchError) throw fetchError;
+
+            // 2. 準備要寫入 daily_cards 的資料
+            const dailyCardData = {
+                english_term: flashcard.english_term,
+                chinese_translation: flashcard.chinese_translation,
+                description: flashcard.description,
+                category: flashcard.category,
+                analogy: flashcard.analogy,
+                abbreviation: flashcard.abbreviation,
+                quiz_questions: flashcard.quiz_questions,
+                publish_date: publishDate,
+                status: 'published',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            // 注意：因為 Supabase JS Client 不支援 transaction，這裡必須分兩步做
+            // 理想上應該用 RPC，但這裡用 Client 端模擬，管理員流量小沒關係
+
+            // 2.1 插入 daily_cards
+            const { data: insertedDaily, error: insertError } = await this.supabase
                 .from('daily_cards')
-                .update(updateData)
-                .eq('id', cardId)
+                .insert(dailyCardData) // 直接使用上面準備好的完整物件 (Supabase 會忽略多餘欄位，但我們已經精準匹配了)
                 .select()
                 .single();
 
-            if (error) throw error;
-            return { success: true, data };
+            if (insertError) throw insertError;
+
+            // 2.2 更新 flashcards 狀態
+            const { error: updateError } = await this.supabase
+                .from('flashcards')
+                .update({ is_published: true })
+                .eq('id', flashcardId);
+
+            if (updateError) {
+                console.error('更新 Flashcard 狀態失敗，但 Daily Card 已發布', updateError);
+                // 這裡不算失敗，因為公開卡片已經出去了
+            }
+
+            return { success: true, data: insertedDaily };
+
         } catch (error) {
             return this._handleError(error);
         }
     }
+
 
     /**
      * 更新卡片

@@ -250,21 +250,12 @@
                     const flashcards = aiService.transformToFlashcardFormat(aiResult.data, currentUserId);
                     console.log('轉換後的卡片數據:', flashcards);
 
-                    // 3. 批量插入到 Supabase (分流偵測)
+                    // 3. 批量插入到 Supabase
                     console.log('步驟 3: 保存到資料庫...');
 
-                    let createResult;
-
-                    // [分流偵測] Admin -> daily_cards, User -> flashcards
-                    if (currentUserId === ADMIN_UID) {
-                        console.log('[Admin Flow] Saving to daily_cards (status: private)...');
-                        loadingMessage.textContent = '正在保存每日一卡 (Private)...';
-                        createResult = await apiService.createDailyCards(flashcards, 'private');
-                    } else {
-                        console.log('[User Flow] Saving to user_generated_cards (flashcards)...');
-                        loadingMessage.textContent = '正在保存卡片到資料庫...';
-                        createResult = await apiService.createCards(flashcards);
-                    }
+                    // [Refactor] 管理員也統一存到 flashcards (個人單字庫)，發布時再複製到 daily_cards
+                    loadingMessage.textContent = '正在保存卡片到資料庫...';
+                    let createResult = await apiService.createCards(flashcards);
 
                     if (!createResult.success) {
                         throw new Error(createResult.error.message || '保存卡片失敗');
@@ -276,7 +267,7 @@
                     loadingOverlay.classList.add('hidden');
 
                     if (currentUserId === ADMIN_UID) {
-                        alert(`【管理員模式】\n成功生成 ${createResult.cardsCreated} 張每日一卡！\n狀態：Private`);
+                        alert(`【管理員模式】\n成功生成 ${createResult.cardsCreated} 張卡片！\n已存入您的個人單字庫。`);
                     } else {
                         alert(`成功生成 ${createResult.cardsCreated} 張卡片！\n獲得 ${createResult.xpEarned} XP`);
                     }

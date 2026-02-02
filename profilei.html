@@ -266,20 +266,29 @@
         }
 
         // 登出
-        function logout() {
+        async function logout() {
             if (confirm('確定要登出嗎？')) {
-                // 清除 localStorage
-                localStorage.removeItem('userNickname');
-                localStorage.removeItem('userConsent');
-                localStorage.removeItem('loginTime');
+                const btn = document.querySelector('button[onclick="logout()"]');
+                const originalText = btn ? btn.innerHTML : '登出';
+                if (btn) btn.innerHTML = '登出中...';
 
-                // TODO: 如果有 Supabase 認證，也登出
-                if (apiService?.supabase) {
-                    apiService.supabase.auth.signOut();
+                try {
+                    // 使用 apiService 的登出方法，它會正確清除 user_device_id 和 Supabase Session
+                    if (apiService) {
+                        await apiService.logout();
+                    } else {
+                        // Fallback if apiService not ready
+                        localStorage.clear();
+                        sessionStorage.clear();
+                    }
+
+                    alert('✅ 已登出');
+                    window.location.href = 'login.html';
+                } catch (e) {
+                    console.error('Logout failed:', e);
+                    alert('登出發生錯誤，但我們會嘗試轉跳');
+                    window.location.href = 'login.html';
                 }
-
-                alert('✅ 已登出');
-                window.location.href = 'login.html';
             }
         }
 

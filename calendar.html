@@ -65,6 +65,16 @@
 </head>
 
 <body class="bg-zinc-100 dark:bg-background-dark font-display text-[#181811] overflow-hidden">
+    <!-- Navigation Loading Overlay -->
+    <div id="nav-loading-overlay"
+        class="fixed inset-0 bg-white dark:bg-zinc-900 z-[100] hidden flex flex-col items-center justify-center animate-fade-in">
+        <div class="relative w-20 h-20 mb-6">
+            <div class="absolute inset-0 border-4 border-gray-200"></div>
+            <div class="absolute inset-0 border-4 border-primary border-t-transparent animate-spin"></div>
+        </div>
+        <h3 class="text-2xl font-black italic uppercase tracking-widest text-primary animate-pulse">LOADING CARD</h3>
+    </div>
+
     <div class="relative flex h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
         <header
             class="flex-none bg-zinc-100 dark:bg-background-dark border-b-2 border-black px-4 py-4 flex items-center justify-between z-10">
@@ -406,78 +416,4 @@
         document.getElementById('next-month-btn').onclick = () => changeMonth(1);
     });
 
-    let currentDisplayDate = new Date();
-
-    function changeMonth(delta) {
-        currentDisplayDate.setMonth(currentDisplayDate.getMonth() + delta);
-        renderCalendar(currentDisplayDate.getFullYear(), currentDisplayDate.getMonth() + 1);
-    }
-
-    async function renderCalendar(year, month) {
-        const titleEl = document.getElementById('calendar-title');
-        const gridEl = document.getElementById('calendar-grid');
-
-        // 更新標題
-        titleEl.textContent = `${year}年${month}月`;
-
-        // 載入該月卡片數據
-        const result = await apiService.getMonthlyDailyCards(year, month);
-        const cards = result.success ? result.data : [];
-        const cardsMap = {}; // date -> card
-        cards.forEach(c => cardsMap[c.publish_date] = c);
-
-        // 計算日期
-        const firstDay = new Date(year, month - 1, 1);
-        const lastDay = new Date(year, month, 0);
-        const daysInMonth = lastDay.getDate();
-        const startDayOfWeek = firstDay.getDay(); // 0 = Sun, 1 = Mon...
-
-        let html = '';
-
-        // 填充前面的空白
-        for (let i = 0; i < startDayOfWeek; i++) {
-            html += `<div class="h-14 bg-gray-200/50 neo-border opacity-30"></div>`;
-        }
-
-        const todayStr = new Date().toISOString().split('T')[0];
-
-        // 填充日期
-        for (let day = 1; day <= daysInMonth; day++) {
-            // 格式化日期 YYYY-MM-DD (注意時區問題，這裡簡單拼字串)
-            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-            const isToday = dateStr === todayStr;
-            const isFuture = dateStr > todayStr;
-            const card = cardsMap[dateStr];
-
-            let cellClass = 'h-14 neo-border flex flex-col items-center justify-center relative ';
-            let content = `<span class="font-bold text-lg leading-none">${day}</span>`;
-            let clickAction = '';
-
-            if (isToday) {
-                cellClass += 'bg-primary neo-shadow active:scale-95 transition-transform z-10 '; // 
-            } else {
-                cellClass += 'bg-white ';
-            }
-
-            if (card) {
-                if (isFuture) {
-                    // 未來卡片：只顯示數字 (防雷)
-                    cellClass += 'opacity-80 ';
-                } else {
-                    // 已發布且到了日期：顯示內容
-                    content += `<span class="text-[8px] font-black uppercase text-center w-full px-0.5 truncate mt-0.5">${card.english_term}</span>`;
-                    clickAction = `onclick="window.location.href='calendar_c.html?id=${card.id}'"`;
-                    cellClass += 'cursor-pointer hover:bg-yellow-50 active:scale-95 transition-transform ';
-                }
-            } else {
-                // 該日無卡片
-                cellClass += 'text-gray-400 ';
-            }
-
-            html += `<div class="${cellClass}" ${clickAction}>${content}</div>`;
-        }
-
-        gridEl.innerHTML = html;
-    }
 </script>
