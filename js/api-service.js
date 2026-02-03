@@ -1211,7 +1211,7 @@ class ApiService {
                 bonuses: bonuses,
                 newUserData: userUpdateResult.data.user,
                 isPerfectFirstTime: isPerfectRun && perfectCardsToAdd > 0,
-                isMasterFirstTime: isMasterNow && !isMasterBefore
+                isMasterFirstTime: isMasterNow && !wasMasterBefore
             };
 
         } catch (error) {
