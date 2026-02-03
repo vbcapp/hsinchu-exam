@@ -850,10 +850,7 @@ class ApiService {
             // 2. 抓取母版卡片 (需提供管理員 UUID)
             let query = this.supabase
                 .from('flashcards')
-                .select(`
-                    *,
-                    quiz_questions (*)
-                `)
+                .select('*') // Select all columns including quiz_questions JSONB
                 .eq('is_public', true);
 
             if (adminUuid) {
@@ -880,8 +877,8 @@ class ApiService {
                 level: card.level,
                 description: card.description,
                 analogy: card.analogy,
-                description: card.description,
-                analogy: card.analogy,
+                // Direct copy of JSONB quiz questions
+                quiz_questions: card.quiz_questions,
                 is_public: false,
                 is_published: false,
                 created_at: new Date().toISOString(),
@@ -896,46 +893,18 @@ class ApiService {
 
             if (insertError) throw insertError;
 
-            // 4. 重建測驗題目關聯
-            const cardMap = {};
-            insertedCards.forEach(c => cardMap[c.english_term] = c.id);
+            // 4. 建立學習進度 (Progress Records)
+            let progressRecords = insertedCards.map(newCard => ({
+                user_id: userId,
+                card_id: newCard.id,
+                box: 1,
+                mastery_level: 0,
+                next_review_at: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }));
 
-            let allQuestions = [];
-            let progressRecords = [];
-
-            masterCards.forEach(masterCard => {
-                const newCardId = cardMap[masterCard.english_term];
-                if (newCardId) {
-                    if (masterCard.quiz_questions && masterCard.quiz_questions.length > 0) {
-                        masterCard.quiz_questions.forEach(q => {
-                            allQuestions.push({
-                                card_id: newCardId,
-                                question: q.question,
-                                options: q.options,
-                                correct_answer: q.correct_answer,
-                                explanation: q.explanation
-                            });
-                        });
-                    }
-
-                    progressRecords.push({
-                        user_id: userId,
-                        card_id: newCardId,
-                        box: 1,
-                        mastery_level: 1,
-                        next_review_at: new Date().toISOString(),
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-                }
-            });
-
-            if (allQuestions.length > 0) {
-                const { error: qError } = await this.supabase
-                    .from('quiz_questions')
-                    .insert(allQuestions);
-                if (qError) console.error('Error copying questions:', qError);
-            }
+            // The old logic for quiz_questions table insertion is removed since we use JSONB column now.
 
             if (progressRecords.length > 0) {
                 const { error: pError } = await this.supabase
