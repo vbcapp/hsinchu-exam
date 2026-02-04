@@ -27,6 +27,10 @@ const ERROR_CODES = {
     INTERNAL_ERROR: 'INTERNAL_ERROR'
 };
 
+// ==================== 管理員配置 ====================
+// 管理員 UUID - 請替換為實際的管理員 UUID
+const ADMIN_UUID = '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b'; // 請修改為實際的管理員 UUID
+
 // ==================== 等級計算公式 ====================
 // 計算下一等級所需 XP
 function calculateNextLevelXp(currentLevel) {

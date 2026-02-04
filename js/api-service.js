@@ -1226,13 +1226,15 @@ class ApiService {
      * @param {string} cardId 卡片 ID (flashcard ID, not daily_card ID usually, assuming test context)
      * @param {number} correctCount 答對題數 (0-3)
      * @param {number[]} answeredIndices 本次答對的題目索引 (例如 [0, 2, 4])
+     * @param {Array<{questionIndex: number, isCorrect: boolean}>} questionResults 每道題的作答結果（可選）
      * @returns {Promise<object>}
      */
-    async submitQuizResult(userId, cardId, correctCount, answeredIndices = []) {
+    async submitQuizResult(userId, cardId, correctCount, answeredIndices = [], questionResults = null) {
         try {
             console.log('=== API submitQuizResult ===');
             console.log('correctCount received:', correctCount);
             console.log('answeredIndices received:', answeredIndices);
+            console.log('questionResults received:', questionResults);
 
             // 1. 定義基礎 XP
             let xpToAdd = 0;
@@ -1311,7 +1313,11 @@ class ApiService {
                 bonuses.push({ name: '【大師加成】', xp: 15, isNew: false });
             }
 
-            // 6. 更新 USER XP & Perfect Count
+            // 6. 取得當前用戶資料（用於記錄 oldLevel）
+            const userProfileResult = await this.getUserProfile(userId);
+            const oldLevel = userProfileResult.success ? userProfileResult.data.current_level : 1;
+
+            // 7. 更新 USER XP & Perfect Count
             // 使用現有的 updateUserProgress (已包含 LevelSystem 邏輯)
             const userUpdateResult = await this.updateUserProgress(userId, {
                 xpToAdd: xpToAdd,
@@ -1320,7 +1326,7 @@ class ApiService {
 
             if (!userUpdateResult.success) throw userUpdateResult.error;
 
-            // 7. 更新 Card Progress
+            // 8. 更新 Card Progress
             // 計算最高分（只有更高分才更新）
             const currentBest = progress.best_quiz_score || 0;
             const newBestScore = Math.max(currentBest, correctCount);
@@ -1343,7 +1349,7 @@ class ApiService {
 
             if (progressUpdateError) console.error('Error updating progress:', progressUpdateError);
 
-            // 7. 寫入 Test Record
+            // 9. 寫入 Test Record
             const { error: recordError } = await this.supabase
                 .from('test_records')
                 .insert({
@@ -1358,6 +1364,17 @@ class ApiService {
 
             if (recordError) console.warn('寫入 Test Record 失敗:', recordError);
 
+            // 10. 更新每道題的統計（如果有提供 questionResults）
+            if (questionResults && Array.isArray(questionResults)) {
+                console.log('更新題目統計:', questionResults);
+                // 並行更新所有題目的統計
+                await Promise.all(
+                    questionResults.map(result =>
+                        this._updateQuestionStats(cardId, result.questionIndex, result.isCorrect)
+                    )
+                );
+            }
+
             return {
                 success: true,
                 xpEarned: xpToAdd,
@@ -1366,7 +1383,7 @@ class ApiService {
                 // [Fix] Pass level up flags to result.html
                 leveledUp: userUpdateResult.data.leveledUp,
                 newLevel: userUpdateResult.data.levelState ? userUpdateResult.data.levelState.actualLevel : null,
-                oldLevel: user.current_level,
+                oldLevel: oldLevel,
 
                 isPerfectFirstTime: isPerfectRun && perfectCardsToAdd > 0,
                 isMasterFirstTime: isMasterNow && !wasMasterBefore
@@ -1596,6 +1613,221 @@ class ApiService {
             }
         } catch (error) {
             return this._handleError(error);
+        }
+    }
+
+    // ==================== 管理員儀表板相關 ====================
+
+    /**
+     * 取得每日註冊趨勢（最近 30 天）
+     */
+    async getAdminDailyRegistrations(days = 30) {
+        try {
+            // 計算起始日期
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            const startDateStr = startDate.toISOString().split('T')[0];
+
+            const { data, error } = await this.supabase
+                .from('users')
+                .select('created_at')
+                .gte('created_at', startDateStr)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            // 處理數據：按日期分組統計
+            const dailyStats = {};
+            data.forEach(user => {
+                const date = user.created_at.split('T')[0];
+                dailyStats[date] = (dailyStats[date] || 0) + 1;
+            });
+
+            // 填充缺失的日期（確保連續）
+            const result = [];
+            for (let i = 0; i < days; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - (days - 1 - i));
+                const dateStr = date.toISOString().split('T')[0];
+                result.push({
+                    date: dateStr,
+                    count: dailyStats[dateStr] || 0
+                });
+            }
+
+            return { success: true, data: result };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得錯誤次數最多的前 N 張卡片
+     */
+    async getAdminTopIncorrectCards(limit = 5) {
+        try {
+            // 使用 Supabase RPC 或直接查詢
+            // 由於需要 JOIN 和聚合，這裡使用 SQL 邏輯
+            const { data, error } = await this.supabase
+                .from('user_card_progress')
+                .select('card_id, times_incorrect, flashcards!inner(english_term, chinese_translation)')
+                .order('times_incorrect', { ascending: false })
+                .limit(100); // 先取較多資料
+
+            if (error) throw error;
+
+            // 手動聚合（因為可能有多個用戶對同一張卡的進度）
+            const cardStats = {};
+            data.forEach(progress => {
+                const cardId = progress.card_id;
+                if (!cardStats[cardId]) {
+                    cardStats[cardId] = {
+                        card_id: cardId,
+                        english_term: progress.flashcards?.english_term || 'Unknown',
+                        chinese_translation: progress.flashcards?.chinese_translation || '未知',
+                        total_incorrect: 0
+                    };
+                }
+                cardStats[cardId].total_incorrect += progress.times_incorrect || 0;
+            });
+
+            // 轉換為陣列並排序
+            const sortedCards = Object.values(cardStats)
+                .sort((a, b) => b.total_incorrect - a.total_incorrect)
+                .slice(0, limit);
+
+            return { success: true, data: sortedCards };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得 Mastery Level 分佈
+     */
+    async getAdminMasteryDistribution() {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_card_progress')
+                .select('mastery_level');
+
+            if (error) throw error;
+
+            // 統計各個等級的數量
+            const distribution = {
+                0: 0, // 未熟悉
+                1: 0, // 初學
+                2: 0, // 進階
+                3: 0, // 熟練
+                4: 0, // 精通
+                5: 0  // 大師
+            };
+
+            data.forEach(progress => {
+                const level = progress.mastery_level || 0;
+                if (level in distribution) {
+                    distribution[level]++;
+                }
+            });
+
+            return { success: true, data: distribution };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得錯誤率最高的題目（魔王陷阱題）
+     */
+    async getAdminTopErrorQuestions(limit = 5) {
+        try {
+            const { data, error } = await this.supabase
+                .from('quiz_questions')
+                .select('*, flashcards!inner(english_term, chinese_translation)')
+                .gt('total_attempts', 0) // 只取有被作答過的題目
+                .order('wrong_count', { ascending: false })
+                .limit(100); // 先取較多資料
+
+            if (error) throw error;
+
+            // 計算錯誤率並排序
+            const questionsWithErrorRate = data.map(q => ({
+                ...q,
+                error_rate: q.total_attempts > 0 ? (q.wrong_count / q.total_attempts) : 0
+            }))
+                .sort((a, b) => b.error_rate - a.error_rate)
+                .slice(0, limit);
+
+            return { success: true, data: questionsWithErrorRate };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 更新題目統計（內部函數）
+     * @param {string} cardId - 卡片 ID
+     * @param {number} questionIndex - 題目索引 (0-4)
+     * @param {boolean} isCorrect - 是否答對
+     */
+    async _updateQuestionStats(cardId, questionIndex, isCorrect) {
+        try {
+            // 1. 查詢該題目是否存在
+            const { data: existing, error: fetchError } = await this.supabase
+                .from('quiz_questions')
+                .select('*')
+                .eq('card_id', cardId)
+                .eq('question_index', questionIndex)
+                .maybeSingle();
+
+            if (fetchError) throw fetchError;
+
+            if (existing) {
+                // 2. 如果存在，更新統計
+                const { error: updateError } = await this.supabase
+                    .from('quiz_questions')
+                    .update({
+                        total_attempts: existing.total_attempts + 1,
+                        wrong_count: existing.wrong_count + (isCorrect ? 0 : 1)
+                    })
+                    .eq('id', existing.id);
+
+                if (updateError) throw updateError;
+            } else {
+                // 3. 如果不存在，嘗試新增
+                // 需要先取得題目文字（Optional）
+                let questionText = `Question ${questionIndex + 1}`;
+                const { data: card } = await this.supabase
+                    .from('flashcards')
+                    .select('quiz_questions')
+                    .eq('id', cardId)
+                    .single();
+
+                if (card && card.quiz_questions && card.quiz_questions[questionIndex]) {
+                    questionText = card.quiz_questions[questionIndex].question || questionText;
+                }
+
+                const { error: insertError } = await this.supabase
+                    .from('quiz_questions')
+                    .insert({
+                        card_id: cardId,
+                        question_index: questionIndex,
+                        question: questionText,
+                        total_attempts: 1,
+                        wrong_count: isCorrect ? 0 : 1
+                    });
+
+                if (insertError) {
+                    // 如果同時有其他人新增導致唯一鍵衝突，則重試更新
+                    if (insertError.code === '23505') {
+                        return this._updateQuestionStats(cardId, questionIndex, isCorrect);
+                    }
+                    throw insertError;
+                }
+            }
+        } catch (error) {
+            // 統計更新失敗不應該影響主流程，只記錄錯誤
+            console.error('Failed to update question stats:', error);
         }
     }
 

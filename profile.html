@@ -90,6 +90,8 @@
     </style>
     <!-- Add LevelSystem Script -->
     <script src="js/level-system.js"></script>
+    <!-- Add Chart.js for Admin Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
 <body
@@ -155,6 +157,73 @@
         </div>
     </section>
     <main class="flex-grow p-6 space-y-6 pb-32">
+        <!-- Admin Dashboard (Hidden by default, shown only for admin) -->
+        <div id="admin-dashboard" class="hidden space-y-6">
+            <div class="bg-primary border-4 border-black p-4 neo-brutalism-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-black text-3xl">admin_panel_settings</span>
+                    <h2 class="text-2xl font-black italic uppercase">管理員儀表板</h2>
+                </div>
+                <p class="text-sm font-bold">系統數據概覽與分析</p>
+            </div>
+
+            <!-- Chart 1: Daily Registrations -->
+            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-black dark:text-white">trending_up</span>
+                    <h3 class="text-xl font-black italic uppercase">每日註冊趨勢</h3>
+                </div>
+                <div class="bg-white p-4 border-2 border-black">
+                    <canvas id="registrations-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Top Incorrect Cards -->
+            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-black dark:text-white">error</span>
+                    <h3 class="text-xl font-black italic uppercase">內容待優化</h3>
+                    <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">(錯誤次數最多的 Top 5 卡片)</span>
+                </div>
+                <div class="bg-white p-4 border-2 border-black">
+                    <canvas id="incorrect-cards-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Mastery Level Distribution -->
+            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-black dark:text-white">pie_chart</span>
+                    <h3 class="text-xl font-black italic uppercase">熟練度分佈</h3>
+                </div>
+                <div class="bg-white p-4 border-2 border-black flex justify-center">
+                    <canvas id="mastery-chart" style="max-width: 400px; max-height: 400px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Top Error Questions (魔王陷阱題) -->
+            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
+                    <h3 class="text-xl font-black italic uppercase">魔王陷阱題</h3>
+                    <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">(錯誤率最高的 Top 5 題目)</span>
+                </div>
+                <div class="space-y-3">
+                    <!-- Loading state -->
+                    <div id="error-questions-loading" class="text-center py-8">
+                        <span class="text-sm font-bold">載入中...</span>
+                    </div>
+                    <!-- Content container -->
+                    <div id="error-questions-list" class="hidden space-y-3"></div>
+                    <!-- Empty state -->
+                    <div id="error-questions-empty" class="hidden text-center py-8">
+                        <span class="material-symbols-outlined text-6xl text-zinc-300 dark:text-zinc-600">check_circle</span>
+                        <p class="mt-2 text-sm font-bold text-zinc-500 dark:text-zinc-400">目前沒有足夠的答題數據</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div
             class="bg-white dark:bg-gray-800 border-4 border-black p-4 flex justify-between items-center neo-brutalism-card">
             <div class="flex items-center gap-3">
@@ -303,6 +372,13 @@
 
                     // 更新其他 UI (Level, XP 等)
                     updateProfilePageUI(profileResult.data); // 這會處理頭像
+
+                    // ==================== Admin Dashboard ====================
+                    // 檢查是否為管理員
+                    if (apiService.currentUser.id === ADMIN_UUID) {
+                        console.log('管理員已登入，載入儀表板...');
+                        await initAdminDashboard();
+                    }
                 }
             }
 
@@ -565,6 +641,327 @@
 
 
         });
+
+        // ==================== Admin Dashboard Functions ====================
+        let registrationsChart, incorrectCardsChart, masteryChart;
+
+        async function initAdminDashboard() {
+            try {
+                // 顯示 Dashboard
+                const dashboardEl = document.getElementById('admin-dashboard');
+                if (dashboardEl) {
+                    dashboardEl.classList.remove('hidden');
+                }
+
+                // 載入並渲染四個圖表/區塊
+                await renderRegistrationsChart();
+                await renderIncorrectCardsChart();
+                await renderMasteryChart();
+                await renderErrorQuestionsChart();
+            } catch (error) {
+                console.error('初始化管理員儀表板失敗:', error);
+            }
+        }
+
+        async function renderRegistrationsChart() {
+            const result = await apiService.getAdminDailyRegistrations(30);
+            if (!result.success) {
+                console.error('取得註冊數據失敗:', result.error);
+                return;
+            }
+
+            const ctx = document.getElementById('registrations-chart');
+            if (!ctx) return;
+
+            const labels = result.data.map(item => {
+                const date = new Date(item.date);
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            const data = result.data.map(item => item.count);
+
+            // 銷毀舊圖表（如果存在）
+            if (registrationsChart) {
+                registrationsChart.destroy();
+            }
+
+            registrationsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '每日註冊人數',
+                        data: data,
+                        borderColor: '#FFD600',
+                        backgroundColor: 'rgba(255, 214, 0, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#FFD600',
+                        pointBorderColor: '#000000',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { family: 'Inter', weight: 'bold', size: 12 },
+                                color: '#000000'
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: { family: 'Inter', weight: 'bold' }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Inter', weight: 'bold' }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function renderIncorrectCardsChart() {
+            const result = await apiService.getAdminTopIncorrectCards(5);
+            if (!result.success) {
+                console.error('取得錯誤卡片數據失敗:', result.error);
+                return;
+            }
+
+            const ctx = document.getElementById('incorrect-cards-chart');
+            if (!ctx) return;
+
+            const labels = result.data.map(item =>
+                `${item.chinese_translation} (${item.english_term})`
+            );
+            const data = result.data.map(item => item.total_incorrect);
+
+            // 銷毀舊圖表（如果存在）
+            if (incorrectCardsChart) {
+                incorrectCardsChart.destroy();
+            }
+
+            incorrectCardsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '累計錯誤次數',
+                        data: data,
+                        backgroundColor: [
+                            '#FF6B6B',
+                            '#FFA94D',
+                            '#FFD93D',
+                            '#6BCF7F',
+                            '#4ECDC4'
+                        ],
+                        borderColor: '#000000',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { family: 'Inter', weight: 'bold', size: 12 },
+                                color: '#000000'
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: { family: 'Inter', weight: 'bold' }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: { family: 'Inter', weight: 'bold', size: 10 }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function renderMasteryChart() {
+            const result = await apiService.getAdminMasteryDistribution();
+            if (!result.success) {
+                console.error('取得熟練度分佈數據失敗:', result.error);
+                return;
+            }
+
+            const ctx = document.getElementById('mastery-chart');
+            if (!ctx) return;
+
+            const labels = ['未熟悉', '初學', '進階', '熟練', '精通', '大師'];
+            const data = [
+                result.data[0] || 0,
+                result.data[1] || 0,
+                result.data[2] || 0,
+                result.data[3] || 0,
+                result.data[4] || 0,
+                result.data[5] || 0
+            ];
+
+            // 銷毀舊圖表（如果存在）
+            if (masteryChart) {
+                masteryChart.destroy();
+            }
+
+            masteryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '學習進度數量',
+                        data: data,
+                        backgroundColor: [
+                            '#CCCCCC',
+                            '#A8D5BA',
+                            '#FFD93D',
+                            '#FF9F40',
+                            '#FF6384',
+                            '#9966FF'
+                        ],
+                        borderColor: '#000000',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', weight: 'bold', size: 12 },
+                                color: '#000000',
+                                padding: 15
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        async function renderErrorQuestionsChart() {
+            const result = await apiService.getAdminTopErrorQuestions(5);
+
+            const loadingEl = document.getElementById('error-questions-loading');
+            const listEl = document.getElementById('error-questions-list');
+            const emptyEl = document.getElementById('error-questions-empty');
+
+            // 隱藏載入狀態
+            if (loadingEl) loadingEl.classList.add('hidden');
+
+            if (!result.success) {
+                console.error('取得錯誤題目數據失敗:', result.error);
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            if (!result.data || result.data.length === 0) {
+                // 沒有數據，顯示空狀態
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            // 有數據，渲染列表
+            if (listEl) {
+                listEl.classList.remove('hidden');
+                listEl.innerHTML = result.data.map((q, index) => {
+                    const errorRate = (q.error_rate * 100).toFixed(1);
+                    const cardName = q.flashcards?.chinese_translation || '未知卡片';
+                    const englishTerm = q.flashcards?.english_term || '';
+                    const questionText = q.question || '題目內容未知';
+
+                    // 根據錯誤率決定顏色
+                    let bgColor = '#FFF3E0'; // 預設橘色
+                    let borderColor = '#FF9800';
+                    if (errorRate >= 80) {
+                        bgColor = '#FFEBEE'; // 紅色
+                        borderColor = '#F44336';
+                    } else if (errorRate >= 60) {
+                        bgColor = '#FFF3E0'; // 橘色
+                        borderColor = '#FF9800';
+                    } else if (errorRate >= 40) {
+                        bgColor = '#FFF9C4'; // 黃色
+                        borderColor = '#FBC02D';
+                    }
+
+                    return `
+                        <div class="bg-white border-4 border-black p-4 neo-shadow-sm" style="background-color: ${bgColor};">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-lg">
+                                    ${index + 1}
+                                </div>
+                                <div class="flex-grow">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="font-black text-sm uppercase">${cardName}</span>
+                                        ${englishTerm ? `<span class="text-xs font-bold text-zinc-600">(${englishTerm})</span>` : ''}
+                                        <span class="ml-auto px-2 py-1 bg-black text-white text-xs font-black">
+                                            第 ${q.question_index + 1} 題
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-bold mb-2 leading-relaxed">${questionText}</p>
+                                    <div class="flex items-center gap-4 text-xs font-black">
+                                        <span style="color: ${borderColor};">
+                                            錯誤率: ${errorRate}%
+                                        </span>
+                                        <span class="text-zinc-600">
+                                            作答: ${q.total_attempts} 次
+                                        </span>
+                                        <span class="text-zinc-600">
+                                            答錯: ${q.wrong_count} 次
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
 
         function updateProfilePageUI(userData) {
             // 使用 LevelSystem 計算顯示狀態
