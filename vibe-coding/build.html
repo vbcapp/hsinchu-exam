@@ -143,8 +143,8 @@
             <div class="mb-4">
                 <span class="material-symbols-outlined text-5xl animate-spin">progress_activity</span>
             </div>
-            <h3 class="text-xl font-black mb-2">正在生成卡片...</h3>
-            <p class="text-sm text-gray-600" id="loading-message">請稍候，AI 正在為您生成學習卡片</p>
+            <h3 class="text-xl font-black mb-2">卡片生成中...</h3>
+            <p class="text-sm text-gray-600" id="loading-message">即將完成，請稍候約 1 分鐘。AI 內容可能包含錯誤，請斟酌使用。</p>
         </div>
     </div>
 
@@ -235,7 +235,7 @@
                 try {
                     // 1. 調用 AI Service 生成卡片數據
                     console.log('步驟 1: 調用 OpenAI API...');
-                    loadingMessage.textContent = '正在調用 AI 生成內容...';
+                    loadingMessage.innerHTML = '即將完成，請稍候約 1 分鐘。<br> AI 內容可能包含錯誤，請斟酌使用。';
                     const aiResult = await aiService.generateFlashcards(terms);
 
                     if (!aiResult.success) {
