@@ -426,8 +426,20 @@
 
             optionsContainer.innerHTML = question.options.map((option, index) => {
                 const btnIndex = index + 1;
+                // HTML Escape helper
+                const escapeHtml = (unsafe) => {
+                    return unsafe
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
+                };
+
+                const safeOption = escapeHtml(option);
+
                 let btnClass = "option-btn w-full text-left bg-white dark:bg-zinc-800/50 neo-border p-3.5 rounded-2xl shadow-neo relative";
-                let btnContent = `<p class="font-bold text-lg leading-snug">${String.fromCharCode(65 + index)}. ${option}</p>`;
+                let btnContent = `<p class="font-bold text-lg leading-snug">${String.fromCharCode(65 + index)}. ${safeOption}</p>`;
                 let isDisabled = false;
 
                 if (hasAnswered) {
@@ -437,7 +449,7 @@
                         btnClass = btnClass.replace("shadow-neo", "");
                         btnContent = `
         <p class="font-bold text-lg leading-snug text-green-800 dark:text-green-400">
-            ${String.fromCharCode(64 + btnIndex)}. ${option}
+            ${String.fromCharCode(64 + btnIndex)}. ${safeOption}
         </p>
         <div class="absolute -top-3 -right-3 bg-electric-green text-white rounded-full w-8 h-8 flex items-center justify-center shadow-neo border-2 border-black">
             <span class="material-symbols-outlined text-xl">check</span>
@@ -448,7 +460,7 @@
                         btnClass = btnClass.replace("shadow-neo", "");
                         btnContent = `
         <p class="font-bold text-lg leading-snug text-red-800 dark:text-red-400">
-            ${String.fromCharCode(64 + btnIndex)}. ${option}
+            ${String.fromCharCode(64 + btnIndex)}. ${safeOption}
         </p>
         <div class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-neo border-2 border-black">
             <span class="material-symbols-outlined text-xl">close</span>

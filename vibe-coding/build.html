@@ -264,13 +264,23 @@
                     console.log('卡片保存成功:', createResult);
 
                     // 4. 顯示成功訊息
+                    // 4. 顯示成功訊息 (改為傳遞給 index.html 顯示 Toast)
                     loadingOverlay.classList.add('hidden');
 
-                    if (currentUserId === ADMIN_UID) {
-                        alert(`【管理員模式】\n成功生成 ${createResult.cardsCreated} 張卡片！\n已存入您的個人單字庫。`);
-                    } else {
-                        alert(`成功生成 ${createResult.cardsCreated} 張卡片！\n獲得 ${createResult.xpEarned} XP`);
+                    // 儲存成功狀態到 sessionStorage，讓 index.html 顯示通知
+                    // 不管是管理員還是普通用戶，都統一顯示 Toast
+                    // 優先使用 abbreviation (縮寫)，如果沒有才用 english_term
+                    let displayTerm = null;
+                    if (flashcards.length === 1) {
+                        displayTerm = flashcards[0].abbreviation || flashcards[0].english_term;
                     }
+
+                    const successData = {
+                        count: createResult.cardsCreated,
+                        term: displayTerm,
+                        xp: createResult.xpEarned || 0 // 確保有數值
+                    };
+                    sessionStorage.setItem('newCardSuccess', JSON.stringify(successData));
 
                     // 5. 跳轉回首頁
                     window.location.href = '../index.html';
