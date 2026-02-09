@@ -10,6 +10,7 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -154,14 +155,16 @@
             <div
                 class="w-full bg-white dark:bg-[#2a2a2a] border-3 border-black dark:border-white shadow-neo-lg dark:shadow-neo-lg-dark rounded-xl flex flex-col relative overflow-hidden h-full">
                 <div class="absolute top-4 left-4">
-                    <div class="bg-primary border-3 border-black px-2 py-0.5 rounded shadow-neo-sm">
-                        <span id="card-category" class="text-[10px] font-bold tracking-widest uppercase"></span>
+                    <div
+                        class="bg-[#ffd400] border-3 border-black px-3 py-1 rounded shadow-neo-sm min-h-[28px] flex items-center justify-center">
+                        <span id="card-category"
+                            class="text-[11px] font-bold tracking-widest uppercase leading-none mt-[1px]"></span>
                     </div>
                 </div>
                 <div class="absolute top-4 right-4">
                     <div
-                        class="bg-white dark:bg-black border-3 border-black dark:border-white px-2 py-0.5 rounded shadow-neo-sm">
-                        <span id="card-level" class="text-[10px] font-bold"></span>
+                        class="bg-white dark:bg-black border-3 border-black dark:border-white px-3 py-1 rounded shadow-neo-sm min-h-[28px] flex items-center justify-center">
+                        <span id="card-level" class="text-[11px] font-bold leading-none mt-[1px]"></span>
                     </div>
                 </div>
                 <div class="p-6 pb-2 pt-14 shrink-0">
@@ -172,7 +175,7 @@
                         <span id="card-abbreviation" class="text-lg font-bold text-gray-500 mb-1"></span>
                         <span id="card-translation" class="text-xl font-bold italic mb-6"></span>
                         <button id="collapse-btn"
-                            class="bg-primary border-3 border-black px-6 py-2 rounded-lg shadow-neo-sm flex items-center gap-2 hover:bg-yellow-400 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
+                            class="bg-[#ffd400] border-3 border-black px-6 py-2 rounded-lg shadow-neo-sm flex items-center gap-2 hover:bg-yellow-400 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
                             <span class="text-xs font-bold">收合詳細資訊</span>
                             <span class="material-symbols-outlined text-sm font-bold">expand_less</span>
                         </button>
@@ -181,7 +184,7 @@
                 <div class="px-6 py-2 flex flex-col gap-4 overflow-y-auto flex-1 h-0">
                     <div>
                         <h3 class="text-sm font-bold mb-2 flex items-center gap-2">
-                            <span class="w-2 h-4 bg-primary border border-black inline-block"></span>
+                            <span class="w-2 h-4 bg-[#ffd400] border border-black inline-block"></span>
                             內容說明
                         </h3>
                         <div id="card-description"
@@ -190,12 +193,12 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-bold mb-2 flex items-center gap-2">
-                            <span class="w-2 h-4 bg-primary border border-black inline-block"></span>
+                            <span class="w-2 h-4 bg-[#ffd400] border border-black inline-block"></span>
                             生活化比喻
                         </h3>
                         <div
                             class="bg-gray-50 dark:bg-black/20 border-3 border-black p-4 rounded-lg relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-[#ffd400]"></div>
                             <div id="card-analogy"
                                 class="max-h-[9em] overflow-y-auto leading-relaxed text-sm text-gray-700 dark:text-gray-300 italic">
                             </div>
@@ -213,10 +216,10 @@
                             <span class="material-symbols-outlined text-xl font-bold">psychology</span>
                             <span class="text-base font-bold tracking-wider">測驗</span>
                         </a>
-                        <a href="share.html"
+                        <button id="share-btn" onclick="generateCardImage()"
                             class="w-12 h-12 rounded-full border-3 border-black bg-white dark:bg-black shadow-neo flex items-center justify-center active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all shrink-0 text-black dark:text-white">
-                            <span class="material-symbols-outlined text-xl">share</span>
-                        </a>
+                            <span class="material-symbols-outlined text-xl">image</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -466,8 +469,162 @@
             const collapseBtn = document.getElementById('collapse-btn');
             if (collapseBtn) collapseBtn.onclick = () => window.location.href = `card.html?id=${card.id}`;
         }
-    </script>
 
+        // 生成分享圖片
+        async function generateCardImage() {
+            // Show loading
+            if (typeof ModalSystem !== 'undefined') {
+                ModalSystem.toast('正在生成圖片...', 'info', 2000);
+            }
+
+            // Target the card container
+            const cardElement = document.querySelector('.centered-container > div');
+            if (!cardElement) return;
+
+            try {
+                const canvas = await html2canvas(cardElement, {
+                    scale: 3, // Higher resolution for better quality
+                    useCORS: true, // Allow loading cross-origin images (like avatars)
+                    backgroundColor: null, // Transparent background to respect border radius
+                    logging: false,
+                    onclone: (clonedDoc) => {
+                        const clonedCard = clonedDoc.querySelector('.centered-container > div');
+
+                        // 1. Expand content (remove scrollbars)
+                        clonedCard.style.height = 'auto'; // Allow card to grow
+                        clonedCard.style.overflow = 'visible';
+
+                        // Expand description and analogy sections
+                        const scrollables = clonedCard.querySelectorAll('.overflow-y-auto');
+                        scrollables.forEach(el => {
+                            el.style.overflow = 'visible';
+                            el.style.maxHeight = 'none';
+                        });
+
+                        // 2. Hide Buttons (Interactive elements are useless in image)
+                        // 2. Hide Buttons (Interactive elements are useless in image)
+                        const buttonContainer = clonedCard.querySelector('.px-6.pb-6.pt-2');
+                        if (buttonContainer) buttonContainer.style.display = 'none';
+
+                        const collapseBtn = clonedCard.querySelector('#collapse-btn');
+                        if (collapseBtn) collapseBtn.style.display = 'none';
+
+                        // 3. Add Neo-Brutalism Footer
+                        const footer = clonedDoc.createElement('div');
+                        footer.style.cssText = `
+                            position: absolute; 
+                            bottom: 0; 
+                            left: 0;
+                            width: 100%;
+                            height: 64px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center; /* Center the text since left brand is gone */
+                            padding: 0 24px;
+                            padding-bottom: 12px; /* Move content up */
+                            border-top: 3px solid #000;
+                            background-color: #ffd400; /* Primary Yellow */
+                            border-radius: 0 0 10px 10px; 
+                            z-index: 10;
+                        `;
+
+                        // Remove Left VibeCoding Brand (User requested deletion)
+
+                        // Right: Course Name
+                        const rightText = document.createElement('div');
+                        rightText.style.cssText = `
+                            font-family: inherit;
+                            font-weight: 700;
+                            font-size: 14px; /* Slightly larger */
+                            color: #000;
+                        `;
+                        rightText.innerText = 'iPas AI應用規劃師考證班';
+
+                        footer.appendChild(rightText);
+
+                        // Move Badges Up (User request: "Red circled parts move up")
+                        const badges = clonedCard.querySelectorAll('.absolute.top-4');
+                        badges.forEach(b => {
+                            b.style.top = '12px'; // Original is top-4 (16px), move up to 12px
+                        });
+
+                        // Ensure proper spacing and positioning
+                        clonedCard.style.paddingBottom = '70px'; // Space for footer
+                        if (getComputedStyle(clonedCard).position === 'static') {
+                            clonedCard.style.position = 'relative';
+                        }
+                        clonedCard.appendChild(footer);
+
+                        // Ensure proper spacing and positioning
+                        clonedCard.style.paddingBottom = '70px'; // Space for footer
+                        if (getComputedStyle(clonedCard).position === 'static') {
+                            clonedCard.style.position = 'relative';
+                        }
+                        clonedCard.appendChild(footer);
+                    }
+                });
+
+                const imgUrl = canvas.toDataURL('image/png');
+                showImagePreview(imgUrl);
+
+            } catch (err) {
+                console.error('Image generation failed:', err);
+                ModalSystem.alert('錯誤', '圖片生成失敗，請稍後再試');
+            }
+        }
+
+        // 顯示圖片預覽 Modal
+        function showImagePreview(imgUrl) {
+            // Remove existing overlay if any
+            const existing = document.getElementById('image-preview-overlay');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'image-preview-overlay';
+            overlay.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300';
+
+            overlay.innerHTML = `
+                <div class="bg-white border-[3px] border-black text-black w-full max-w-sm rounded-xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)] transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+                    <div class="bg-primary border-b-3 border-black px-4 py-3 flex justify-between items-center shrink-0">
+                        <h3 class="font-black text-lg tracking-wider uppercase">卡片快照</h3>
+                        <button id="close-preview-btn" class="material-symbols-outlined hover:text-white transition-colors">close</button>
+                    </div>
+                    <div class="p-4 overflow-y-auto flex-1 flex flex-col items-center bg-gray-100">
+                        <img src="${imgUrl}" class="w-full rounded-lg border-2 border-black shadow-sm mb-4" alt="Card Snapshot" />
+                        <p class="text-xs text-gray-500 font-bold mb-4 text-center">長按圖片可儲存，或使用下方按鈕</p>
+                    </div>
+                    <div class="p-4 border-t-3 border-black bg-white shrink-0 grid grid-cols-2 gap-3">
+                        <button id="download-btn" class="col-span-2 bg-black text-white border-2 border-black py-3 rounded-lg font-bold shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-2">
+                             <span class="material-symbols-outlined text-sm">download</span> 下載圖片
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Event Listeners
+            document.getElementById('close-preview-btn').onclick = () => {
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.remove(), 300);
+            };
+
+            document.getElementById('download-btn').onclick = () => {
+                const link = document.createElement('a');
+                link.download = `vibecoding-card-${currentCard ? currentCard.id : 'share'}.png`;
+                link.href = imgUrl;
+                link.click();
+            };
+
+            // Animate In
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                const modal = overlay.querySelector('div');
+                modal.classList.remove('scale-95');
+                modal.classList.add('scale-100');
+            });
+        }
+    </script>
 </body>
 
 </html>
