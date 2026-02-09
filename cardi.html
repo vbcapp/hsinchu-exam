@@ -154,17 +154,17 @@
         <div class="centered-container h-full">
             <div
                 class="w-full bg-white dark:bg-[#2a2a2a] border-3 border-black dark:border-white shadow-neo-lg dark:shadow-neo-lg-dark rounded-xl flex flex-col relative overflow-hidden h-full">
-                <div class="absolute top-4 left-4">
+                <div class="absolute top-6 left-6">
                     <div
-                        class="bg-[#ffd400] border-3 border-black px-3 py-1 rounded shadow-neo-sm min-h-[28px] flex items-center justify-center">
+                        class="bg-[#ffd400] border-3 border-black px-3 rounded shadow-neo-sm min-h-[28px] flex items-center justify-center pb-[2px]">
                         <span id="card-category"
-                            class="text-[11px] font-bold tracking-widest uppercase leading-none mt-[1px]"></span>
+                            class="text-[11px] font-bold tracking-widest uppercase leading-none"></span>
                     </div>
                 </div>
-                <div class="absolute top-4 right-4">
+                <div class="absolute top-6 right-6">
                     <div
-                        class="bg-white dark:bg-black border-3 border-black dark:border-white px-3 py-1 rounded shadow-neo-sm min-h-[28px] flex items-center justify-center">
-                        <span id="card-level" class="text-[11px] font-bold leading-none mt-[1px]"></span>
+                        class="bg-white dark:bg-black border-3 border-black dark:border-white px-3 rounded shadow-neo-sm min-h-[28px] flex items-center justify-center pb-[2px]">
+                        <span id="card-level" class="text-[11px] font-bold leading-none"></span>
                     </div>
                 </div>
                 <div class="p-6 pb-2 pt-14 shrink-0">
@@ -500,6 +500,21 @@
                             el.style.overflow = 'visible';
                             el.style.maxHeight = 'none';
                         });
+
+                        // 3. Align Badges (Already handled in CSS now, but ensuring safety)
+                        // Content padding is p-6 (24px). Badges are now top-6/left-6 in CSS.
+
+                        // Increase Top Padding (Balanced in CSS? No, usually needs override for expand)
+                        const titleContainer = clonedCard.querySelector('.p-6.pb-2.pt-14');
+                        if (titleContainer) {
+                            titleContainer.style.paddingTop = '68px';
+                        }
+
+                        // Increase Margin Below Translation
+                        const translation = clonedCard.querySelector('#card-translation');
+                        if (translation) {
+                            translation.style.marginBottom = '32px';
+                        }
 
                         // 2. Hide Buttons (Interactive elements are useless in image)
                         // 2. Hide Buttons (Interactive elements are useless in image)
