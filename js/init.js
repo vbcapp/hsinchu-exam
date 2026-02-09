@@ -32,6 +32,7 @@ async function initializeApp() {
                 const initResult = await apiService.copyMasterCardsToUser(currentUser.id, ADMIN_UID);
                 if (initResult && initResult.count > 0) {
                     console.log(`已為新用戶初始化 ${initResult.count} 張母版卡片`);
+                    localStorage.setItem('show_onboarding', 'true'); // 標記為需要顯示新手導覽
                 }
             } catch (err) {
                 console.error('初始化母版卡片失敗 (非致命錯誤):', err);

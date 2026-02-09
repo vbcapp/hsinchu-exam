@@ -922,20 +922,27 @@ class ApiService {
             console.log('User has no cards. Starting initialization...');
 
             // 2. 抓取母版卡片 (需提供管理員 UUID)
+            // [Fix] Remove is_public check for admin cards to ensure all master cards are copied
             let query = this.supabase
                 .from('flashcards')
-                .select('*') // Select all columns including quiz_questions JSONB
-                .eq('is_public', true);
+                .select('*');
 
             if (adminUuid) {
                 query = query.eq('user_id', adminUuid);
+            } else {
+                // If no admin UUID provided, fallback to public cards (should not happen in our config)
+                query = query.eq('is_public', true);
             }
 
             const { data: masterCards, error: nodesError } = await query;
 
-            if (nodesError) throw nodesError;
+            if (nodesError) {
+                console.error('Error fetching master cards:', nodesError);
+                throw nodesError;
+            }
+
             if (!masterCards || masterCards.length === 0) {
-                console.warn('No master cards found to copy.');
+                console.warn(`No master cards found for Admin UUID: ${adminUuid}`);
                 return { success: false, message: 'No master cards found.' };
             }
 

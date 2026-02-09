@@ -571,6 +571,16 @@
     <script src="js/init.js"></script>
     <script src="js/modal-system.js"></script>
 
+    <!-- Onboarding System -->
+    <script src="js/onboarding-system.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for onboarding
+            if (typeof OnboardingSystem !== 'undefined') {
+                OnboardingSystem.checkAndShow();
+            }
+        });
+    </script>
 </body>
 
 </html>
