@@ -117,7 +117,8 @@ function updateUserUI(userData) {
     const xpTextEl = document.getElementById('user-xp-text');
     if (xpTextEl) {
         if (levelState.isCapped) {
-            xpTextEl.textContent = `MAX (Need Perfect Card)`;
+            const nextLevel = levelState.actualLevel + 1;
+            xpTextEl.textContent = ` ➔   Lv. ${nextLevel} [ 尚未解鎖 🔒 ]`;
         } else {
             xpTextEl.textContent = `${levelState.progressInLevel}/${levelState.xpForNextLevel}`;
         }
@@ -144,7 +145,8 @@ function updateUserUI(userData) {
     if (perfectCardReqEl) {
         const currentPerfectCards = userData.perfect_card_count || 0;
         const requiredPerfectCards = levelState.actualLevel; // 當前等級 = 需要的滿分卡數量
-        perfectCardReqEl.textContent = `升級資格：滿分卡 ${currentPerfectCards} / ${requiredPerfectCards}`;
+        const remaining = requiredPerfectCards - currentPerfectCards;
+        perfectCardReqEl.textContent = `進度：${currentPerfectCards} / ${requiredPerfectCards} (還差 ${remaining} 張！)`;
     }
 
     // 更新下一等級需要的 XP (保留原本 DOM，雖然後面邏輯可能不直接用它)
@@ -155,6 +157,28 @@ function updateUserUI(userData) {
 
     // 更新卡片數量
     updateCardCountUI(userData.total_cards || 0);
+
+    // [NEW] 處理等級卡片點擊事件：當 XP 滿但滿分卡不足時，點擊跳轉到 rule.html
+    const levelCardEl = document.getElementById('level-card');
+    if (levelCardEl) {
+        if (levelState.isCapped) {
+            // XP 已滿，顯示為可點擊狀態
+            levelCardEl.style.cursor = 'pointer';
+            levelCardEl.classList.add('capped-glow'); // 添加閃爍效果
+
+            // 移除舊的事件監聽器（避免重複綁定）
+            levelCardEl.replaceWith(levelCardEl.cloneNode(true));
+            const newLevelCardEl = document.getElementById('level-card');
+
+            newLevelCardEl.addEventListener('click', () => {
+                window.location.href = 'rule.html';
+            });
+        } else {
+            // XP 未滿，移除點擊效果
+            levelCardEl.style.cursor = 'default';
+            levelCardEl.classList.remove('capped-glow');
+        }
+    }
 
     console.log('使用者 UI 已更新:', levelState);
 }
