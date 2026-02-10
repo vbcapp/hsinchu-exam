@@ -26,6 +26,25 @@ async function initializeApp() {
             currentUser = apiService.currentUser;
             console.log('使用者已登入:', currentUser.email, 'ID:', currentUser.id);
 
+            // [Security Check] 白名單檢查 (針對 Google 登入等無法事前攔截的情況)
+            if (typeof STUDENT_EMAILS !== 'undefined' && Array.isArray(STUDENT_EMAILS)) {
+                // 檢查是否為 Email 登入的用戶 (包含 Google SSO)
+                const userEmail = currentUser.email;
+                if (userEmail && !STUDENT_EMAILS.includes(userEmail)) {
+                    console.warn(`非白名單用戶 (${userEmail}) 嘗試登入，強制登出`);
+                    await apiService.supabase.auth.signOut();
+
+                    // 清除本地暫存
+                    localStorage.removeItem('userNickname');
+                    localStorage.removeItem('userConsent');
+                    localStorage.removeItem('sb-izkduljyuscydklvagxm-auth-token');
+
+                    // 導向登入頁並帶上參數以顯示錯誤訊息
+                    window.location.href = 'login.html?error=unauthorized';
+                    return { success: false };
+                }
+            }
+
             // [Silent Sync] 檢查並初始化母版卡片
             // 為了讓新用戶不僅擁有卡片，還能馬上看到，這裡使用 await (雖會稍微增加首次讀取時間)
             try {

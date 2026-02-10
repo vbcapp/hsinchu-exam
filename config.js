@@ -35,6 +35,16 @@ const ADMIN_UUIDS = [
     '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b'  // New Admin
 ];
 
+// ==================== 學員白名單 ====================
+// 只有在名單內的 Email 才能註冊或登入
+// 請將所有學員 Email 加入此陣列 (記得保留管理員 Email)
+const STUDENT_EMAILS = [
+    'ceceloveye@gmail.com',         // Admin 1
+    'b1230463@ulive.pccu.edu.tw',   // Admin 2
+    'boonling2003212@gmail.com',
+    // 在此新增學員 Email，例如: 'student1@example.com',
+];
+
 // ==================== 等級計算公式 ====================
 // 計算下一等級所需 XP
 function calculateNextLevelXp(currentLevel) {

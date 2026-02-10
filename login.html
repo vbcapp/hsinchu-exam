@@ -329,6 +329,19 @@
 
                 // 判斷使用哪種登入方式
                 if (email && password) {
+                    // [Security Check] 白名單檢查
+                    // 檢查 STUDENT_EMAILS 是否定義，且 Email 是否在白名單中
+                    if (typeof STUDENT_EMAILS !== 'undefined' && Array.isArray(STUDENT_EMAILS)) {
+                        const isWhitelisted = STUDENT_EMAILS.includes(email);
+                        if (!isWhitelisted) {
+                            ModalSystem.alert('存取被拒', '抱歉，您不是本課程的學員，無法註冊或登入。');
+                            // 恢復按鈕
+                            btn.innerHTML = '<span>開始使用</span> <span class="material-symbols-outlined font-black">arrow_forward</span>';
+                            btn.disabled = false;
+                            return;
+                        }
+                    }
+
                     // 使用 Email/密碼 登入/註冊
                     console.log('使用 Email 登入/註冊:', email);
                     result = await apiService.authWithEmailPassword(email, password, nickname);
