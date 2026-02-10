@@ -8,7 +8,7 @@ let allCards = []; // 儲存所有卡片用於篩選
 let currentFilter = 'all'; // 目前篩選條件 ('all', 'unfamiliar', 'lv1'...)
 
 // [Security Check] 管理員 UID
-const ADMIN_UID = "17da7d22-17ad-4d40-a5d2-9c2ce9216cf0";
+// [Security Check] 管理員組態已移至 config.js (MASTER_ADMIN_ID, ADMIN_UUIDS)
 
 /**
  * 初始化應用
@@ -29,7 +29,7 @@ async function initializeApp() {
             // [Silent Sync] 檢查並初始化母版卡片
             // 為了讓新用戶不僅擁有卡片，還能馬上看到，這裡使用 await (雖會稍微增加首次讀取時間)
             try {
-                const initResult = await apiService.copyMasterCardsToUser(currentUser.id, ADMIN_UID);
+                const initResult = await apiService.copyMasterCardsToUser(currentUser.id, MASTER_ADMIN_ID);
                 if (initResult && initResult.count > 0) {
                     console.log(`已為新用戶初始化 ${initResult.count} 張母版卡片`);
                     localStorage.setItem('show_onboarding', 'true'); // 標記為需要顯示新手導覽
@@ -466,8 +466,8 @@ function bindCardActions(cards) {
         });
     });
 
-    // [Admin Logic] 綁定長按事件
-    if (currentUser && currentUser.id === ADMIN_UID) {
+    // [Admin Logic] 綁定長按事件 (支援多管理員)
+    if (currentUser && typeof ADMIN_UUIDS !== 'undefined' && ADMIN_UUIDS.includes(currentUser.id)) {
         bindAdminLongPress();
     }
 

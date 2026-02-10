@@ -378,7 +378,7 @@
 
                     // ==================== Admin Dashboard ====================
                     // 檢查是否為管理員
-                    if (apiService.currentUser.id === ADMIN_UUID) {
+                    if (typeof ADMIN_UUIDS !== 'undefined' && ADMIN_UUIDS.includes(apiService.currentUser.id)) {
                         console.log('管理員已登入，載入儀表板...');
                         await initAdminDashboard();
                     }
