@@ -146,7 +146,7 @@ function updateUserUI(userData) {
         const currentPerfectCards = userData.perfect_card_count || 0;
         const requiredPerfectCards = levelState.actualLevel; // 當前等級 = 需要的滿分卡數量
         const remaining = requiredPerfectCards - currentPerfectCards;
-        perfectCardReqEl.textContent = `進度：${currentPerfectCards} / ${requiredPerfectCards} (還差 ${remaining} 張！)`;
+        perfectCardReqEl.textContent = `滿分卡片進度：${currentPerfectCards} / ${requiredPerfectCards} (還差 ${remaining} 張！)`;
     }
 
     // 更新下一等級需要的 XP (保留原本 DOM，雖然後面邏輯可能不直接用它)
