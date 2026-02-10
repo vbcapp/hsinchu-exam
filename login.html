@@ -332,14 +332,20 @@
                     // [Security Check] 白名單檢查
                     // 檢查 STUDENT_EMAILS 是否定義，且 Email 是否在白名單中
                     if (typeof STUDENT_EMAILS !== 'undefined' && Array.isArray(STUDENT_EMAILS)) {
+                        console.log('Checking whitelist for:', email);
                         const isWhitelisted = STUDENT_EMAILS.includes(email);
+                        console.log('Is whitelisted:', isWhitelisted);
+
                         if (!isWhitelisted) {
-                            ModalSystem.alert('存取被拒', '抱歉，您不是本課程的學員，無法註冊或登入。');
+                            console.log('Access denied. Showing alert...');
+                            ModalSystem.alert('存取被拒', '抱歉，你不是本課程的學員，無法注冊或登入。若有問題，可聯係 ceceloveye@gmail.com');
                             // 恢復按鈕
                             btn.innerHTML = '<span>開始使用</span> <span class="material-symbols-outlined font-black">arrow_forward</span>';
                             btn.disabled = false;
                             return;
                         }
+                    } else {
+                        console.warn('STUDENT_EMAILS is undefined or not an array');
                     }
 
                     // 使用 Email/密碼 登入/註冊
@@ -381,8 +387,17 @@
             }
         }
 
-        // 檢查是否已經登入過
+
+
+        // 檢查是否已經登入過，以及是否有錯誤訊息
         window.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('error') === 'unauthorized') {
+                ModalSystem.alert('存取被拒', '抱歉，你不是本課程的學員，無法注冊或登入。若有問題，可聯係 ceceloveye@gmail.com');
+                // 清除 URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
             const nickname = localStorage.getItem('userNickname');
             const consent = localStorage.getItem('userConsent');
 

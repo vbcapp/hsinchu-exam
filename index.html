@@ -300,7 +300,7 @@
 
             // 檢查是否有授權錯誤 (來自 init.js 的強制登出)
             if (urlParams.get('error') === 'unauthorized') {
-                ModalSystem.alert('存取被拒', '抱歉，您不是本課程的學員，無法使用此系統。');
+                ModalSystem.alert('存取被拒', '抱歉，你不是本課程的學員，無法注冊或登入。若有問題，可聯係 ceceloveye@gmail.com');
                 // 清除 URL 參數，避免重整時再次跳出
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
