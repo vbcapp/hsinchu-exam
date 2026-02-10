@@ -159,7 +159,7 @@
 
         <!-- 解析區 (使用 details 標籤) -->
         <details id="explanation-details"
-            class="group mt-4 mb-auto bg-note-yellow dark:bg-zinc-800 border-[3px] border-dashed border-zinc-400 dark:border-zinc-600 rounded-2xl overflow-hidden transition-all hidden">
+            class="group mt-4 bg-note-yellow dark:bg-zinc-800 border-[3px] border-dashed border-zinc-400 dark:border-zinc-600 rounded-2xl overflow-hidden transition-all hidden">
             <summary class="flex items-center justify-between p-3 cursor-pointer list-none select-none">
                 <div class="flex items-center gap-2">
                     <span class="text-base">💡</span>
@@ -173,22 +173,23 @@
                 </p>
             </div>
         </details>
-    </main>
 
-    <footer class="px-6 pb-8 pt-4 shrink-0 bg-transparent flex gap-4">
-        <button id="prev-btn"
-            class="hidden flex-1 bg-white text-black neo-border rounded-2xl py-4 font-black text-xl shadow-neo active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all items-center justify-center gap-2">
-            <span class="material-symbols-outlined font-black">arrow_back</span>
-            <span>上一題</span>
-        </button>
-        <button id="next-btn"
-            class="group flex-1 bg-primary text-black neo-border rounded-2xl py-4 font-black text-xl shadow-neo-lg hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_#3730A3] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled>
-            <span id="next-btn-text">下一題</span>
-            <span
-                class="material-symbols-outlined font-black group-hover:translate-x-1 transition-transform">arrow_forward</span>
-        </button>
-    </footer>
+        <!-- 按鈕區 -->
+        <div class="flex gap-4 mt-4 mb-8">
+            <button id="prev-btn"
+                class="hidden flex-1 bg-white text-black neo-border rounded-2xl py-4 font-black text-xl shadow-neo active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all items-center justify-center gap-2">
+                <span class="material-symbols-outlined font-black">arrow_back</span>
+                <span>上一題</span>
+            </button>
+            <button id="next-btn"
+                class="group flex-1 bg-primary text-black neo-border rounded-2xl py-4 font-black text-xl shadow-neo-lg hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_#3730A3] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+                <span id="next-btn-text">下一題</span>
+                <span
+                    class="material-symbols-outlined font-black group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </button>
+        </div>
+    </main>
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

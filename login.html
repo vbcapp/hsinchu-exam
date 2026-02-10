@@ -252,11 +252,24 @@
                 // 儲存同意狀態 (OAuth 回調後需要)
                 localStorage.setItem('userConsent', 'true');
 
+                const redirectUrl = window.location.origin + '/index.html';
+                console.log('正在嘗試 Google 登入...');
+                console.log('Redirect URL:', redirectUrl);
+
+                if (window.location.protocol === 'file:') {
+                    alert('Google 登入不支援直接開啟檔案 (file://)。請使用 Live Server (http://127.0.0.1:5500) 開啟網頁。');
+                    throw new Error('不支援 file:// 協定');
+                }
+
                 // 使用 Supabase OAuth 登入 Google
                 const { data, error } = await apiService.supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/index.html'
+                        redirectTo: redirectUrl,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
                     }
                 });
 

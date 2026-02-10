@@ -41,7 +41,11 @@ async function initializeApp() {
             await loadUserData();
             await loadUserCards();
         } else {
-            console.log('使用者未登入，請先登入');
+            // 如果不在登入頁面，才導向登入頁
+            if (!window.location.pathname.endsWith('login.html')) {
+                console.log('使用者未登入，請先登入');
+                window.location.href = 'login.html';
+            }
         }
 
         return { success: true };
