@@ -886,7 +886,7 @@
             let levelState;
             if (typeof LevelSystem !== 'undefined') {
                 const currentXP = userData.current_xp || 0;
-                const perfectCards = userData.perfect_card_count || 0;
+                const perfectCards = userData.correct_answer_count || 0;
                 levelState = LevelSystem.calculateState(currentXP, perfectCards);
             } else {
                 console.warn('LevelSystem not loaded, falling back to simple display');

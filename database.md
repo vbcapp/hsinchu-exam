@@ -22,7 +22,9 @@
 | `avatar_url` | `text` | NULLABLE | 大頭貼 URL |
 | `current_level` | `integer` | DEFAULT 1 | 當前等級 |
 | `current_xp` | `integer` | DEFAULT 0 | 目前累積經驗值 |
+| `current_level_xp` | `integer` | DEFAULT 0 | 當前等級內已累積的經驗值 |
 | `next_level_xp` | `integer` | DEFAULT 100 | 下一等級所需經驗總值 |
+| `perfect_card_count` | `integer` | DEFAULT 0 | 已棄用，改用 correct_answer_count |
 | `correct_answer_count` | `integer` | DEFAULT 0 | 答對題目總數 |
 | `total_questions` | `integer` | DEFAULT 0 | 已作答的題目總數 |
 | `created_at` | `timestamptz` | DEFAULT now() | 帳號建立時間 |

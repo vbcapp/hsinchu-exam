@@ -116,7 +116,7 @@ function updateUserUI(userData) {
     let levelState;
     if (typeof LevelSystem !== 'undefined') {
         const currentXP = userData.current_xp || 0;
-        const perfectCards = userData.perfect_card_count || 0;
+        const perfectCards = userData.correct_answer_count || 0;
         levelState = LevelSystem.calculateState(currentXP, perfectCards);
     } else {
         console.warn('LevelSystem not loaded, falling back to simple display');
@@ -166,10 +166,15 @@ function updateUserUI(userData) {
     // 更新升級資格：滿分卡顯示
     const perfectCardReqEl = document.getElementById('perfect-card-requirement');
     if (perfectCardReqEl) {
-        const currentPerfectCards = userData.perfect_card_count || 0;
+        const currentPerfectCards = userData.correct_answer_count || 0;
         const requiredPerfectCards = levelState.actualLevel; // 當前等級 = 需要的滿分卡數量
         const remaining = requiredPerfectCards - currentPerfectCards;
-        perfectCardReqEl.textContent = `滿分卡片進度：${currentPerfectCards} / ${requiredPerfectCards} (還差 ${remaining} 張！)`;
+
+        if (currentPerfectCards >= requiredPerfectCards) {
+            perfectCardReqEl.textContent = `加油！持續答題，即可升級！`;
+        } else {
+            perfectCardReqEl.textContent = `藍色勾勾卡片進度：${currentPerfectCards} / ${requiredPerfectCards} (還差 ${remaining} 張！)`;
+        }
     }
 
     // 更新下一等級需要的 XP (保留原本 DOM，雖然後面邏輯可能不直接用它)

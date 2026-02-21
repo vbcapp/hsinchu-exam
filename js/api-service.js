@@ -309,7 +309,7 @@ class ApiService {
 
                 // 如果全域有 LevelSystem，用它算準確狀態
                 if (typeof LevelSystem !== 'undefined') {
-                    levelState = LevelSystem.calculateState(user.current_xp || 0, user.perfect_card_count || 0);
+                    levelState = LevelSystem.calculateState(user.current_xp || 0, user.correct_answer_count || 0);
                 }
 
                 return {
@@ -337,7 +337,7 @@ class ApiService {
                         // 重算 levelState
                         let myLevelState = { actualLevel: myProfile.data.current_level || 1, isCapped: false };
                         if (typeof LevelSystem !== 'undefined') {
-                            myLevelState = LevelSystem.calculateState(myProfile.data.current_xp || 0, myProfile.data.perfect_card_count || 0);
+                            myLevelState = LevelSystem.calculateState(myProfile.data.current_xp || 0, myProfile.data.correct_answer_count || 0);
                         }
 
                         currentUserData = {
@@ -395,7 +395,7 @@ class ApiService {
                 };
 
                 if (typeof LevelSystem !== 'undefined') {
-                    levelState = LevelSystem.calculateState(user.current_xp || 0, user.perfect_card_count || 0);
+                    levelState = LevelSystem.calculateState(user.current_xp || 0, user.correct_answer_count || 0);
                 }
 
                 return {
@@ -420,7 +420,7 @@ class ApiService {
                     if (myProfile.success) {
                         let myLevelState = { actualLevel: myProfile.data.current_level || 1 };
                         if (typeof LevelSystem !== 'undefined') {
-                            myLevelState = LevelSystem.calculateState(myProfile.data.current_xp || 0, myProfile.data.perfect_card_count || 0);
+                            myLevelState = LevelSystem.calculateState(myProfile.data.current_xp || 0, myProfile.data.correct_answer_count || 0);
                         }
 
                         currentUserData = {
@@ -533,7 +533,7 @@ class ApiService {
 
             // 2. 計算新數值
             const currentTotalXP = user.current_xp || 0; // 資料庫存的是累積總 XP
-            const currentPerfectCards = user.perfect_card_count || 0;
+            const currentPerfectCards = user.correct_answer_count || 0;
 
             const newTotalXP = currentTotalXP + xpToAdd;
             const newPerfectCards = currentPerfectCards + perfectCardsToAdd;
@@ -550,10 +550,13 @@ class ApiService {
             // 4. 更新資料庫
             const updates = {
                 current_xp: newTotalXP,
-                perfect_card_count: newPerfectCards,
                 current_level: levelState.actualLevel,
-                current_level_xp: levelState.currentLevelXP // 使用修正後的數值 (卡等時會是滿額)
+                next_level_xp: levelState.xpForNextLevel
             };
+
+            if (perfectCardsToAdd !== 0) {
+                updates.correct_answer_count = newPerfectCards;
+            }
 
             const updateResult = await this.updateUser(userId, updates);
 
@@ -1014,7 +1017,7 @@ class ApiService {
                 .maybeSingle();
 
             const isFirstTime = !existingProgress;
-            const wasCorrectBefore = existingProgress?.is_correct === true;
+            const wasCorrectBefore = (existingProgress?.times_correct > 0);
 
             // 2. 計算 XP 獎勵
             let xpToAdd = 0;
@@ -1085,22 +1088,16 @@ class ApiService {
             const userProfileResult = await this.getUserProfile(userId);
             const oldLevel = userProfileResult.success ? userProfileResult.data.current_level : 1;
 
-            // 6. 更新用戶 XP 與等級
+            // 6. 更新用戶 XP、等級與滿分卡片數
+            const perfectCardsToAdd = (isCorrect && !wasCorrectBefore) ? 1 : 0;
             const userUpdateResult = await this.updateUserProgress(userId, {
-                xpToAdd: xpToAdd
+                xpToAdd: xpToAdd,
+                perfectCardsToAdd: perfectCardsToAdd
             });
 
             if (!userUpdateResult.success) {
                 console.error('更新用戶 XP 失敗:', userUpdateResult.error);
                 throw userUpdateResult.error;
-            }
-
-            // 7. 如果是首次答對，更新 correct_answer_count
-            if (isCorrect && !wasCorrectBefore) {
-                const currentCount = userProfileResult.data.correct_answer_count || 0;
-                await this.updateUser(userId, {
-                    correct_answer_count: currentCount + 1
-                });
             }
 
             return {
