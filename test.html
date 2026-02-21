@@ -110,6 +110,33 @@
         .option-disabled {
             opacity: 0.4;
         }
+
+        /* XP 飄動動畫 */
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-30px) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) scale(1);
+            }
+        }
+
+        .xp-float {
+            animation: floatUp 1s ease-out forwards;
+            position: fixed;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #FACC15;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            pointer-events: none;
+            z-index: 9999;
+        }
     </style>
     <style>
         body {
@@ -133,10 +160,19 @@
                 </div>
             </div>
         </div>
-        <div class="w-full px-2">
-            <div class="w-full h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden neo-border">
-                <div id="progress-bar" class="h-full bg-electric-green transition-all duration-300" style="width: 33%;">
-                </div>
+        <!-- 卡片資訊 -->
+        <div class="w-full px-2 mb-4 flex gap-2 flex-wrap justify-center">
+            <div class="bg-white dark:bg-zinc-800 neo-border px-3 py-1.5 rounded-lg shadow-neo-yellow">
+                <span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">類別：</span>
+                <span id="card-category" class="text-xs font-black">--</span>
+            </div>
+            <div class="bg-white dark:bg-zinc-800 neo-border px-3 py-1.5 rounded-lg shadow-neo-yellow">
+                <span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">章節：</span>
+                <span id="card-chapter" class="text-xs font-black">--</span>
+            </div>
+            <div class="bg-white dark:bg-zinc-800 neo-border px-3 py-1.5 rounded-lg shadow-neo-yellow">
+                <span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">題型：</span>
+                <span id="question-type" class="text-xs font-black">--</span>
             </div>
         </div>
     </header>
@@ -200,12 +236,13 @@
     <script>
         // 題目資料 (將從資料庫載入)
         let quizQuestions = [];
+        let currentCardData = null; // 儲存完整卡片資料
 
         // 預設題目 (無法載入時使用)
         const defaultQuizQuestions = [
             {
                 question: "題目載入失敗",
-                options: ["請返回重試", "請返回重試", "請返回重試"],
+                options: ["請返回重試", "請返回重試", "請返回重試", "請返回重試"],
                 correctAnswer: 1,
                 explanation: "無法載入此卡片的測驗題目，請返回卡片頁面重新進入。"
             }
@@ -229,38 +266,15 @@
 
         let isInternalUpdate = false;
 
-        // 從 localStorage 載入複習狀態
-        function loadReviewState() {
-            const savedState = localStorage.getItem('quizReviewState');
-            if (!savedState) return false;
-
-            try {
-                const state = JSON.parse(savedState);
-                // 注意：儲存時使用的是 questions 和 answers
-                if (state.questions && state.answers) {
-                    quizQuestions = state.questions;
-                    userAnswers = state.answers;
-                    return true;
-                }
-            } catch (e) {
-                console.error('載入複習狀態失敗:', e);
-            }
-            return false;
-        }
-
-        // 隨機化測驗（打亂題目和選項順序）
-        function randomizeQuiz() {
-            // 可在此添加隨機化邏輯
-            // 目前保持題目順序不變
-        }
+        // 移除：複習模式和隨機化功能已不需要
 
         // 從資料庫載入卡片的測驗題目
         async function loadCardQuestions(cardId) {
             try {
-                // 使用 apiService 的 supabase 實例直接查詢
+                // 使用 apiService 的 supabase 實例直接查詢，包含更多卡片資訊
                 const { data, error } = await apiService.supabase
                     .from('flashcards')
-                    .select('quiz_questions, english_term')
+                    .select('quiz_questions, english_term, category, chinese_term')
                     .eq('id', cardId)
                     .single();
 
@@ -270,45 +284,41 @@
                     return;
                 }
 
+                // 儲存完整卡片資料
+                currentCardData = data;
+
                 if (data && data.quiz_questions && Array.isArray(data.quiz_questions) && data.quiz_questions.length > 0) {
                     // 儲存卡片名稱供 result.html 使用
                     if (data.english_term) {
                         sessionStorage.setItem('currentCardName', data.english_term);
                     }
 
-                    // 1. 為每個題目加上原始索引（用於大師勛章追蹤）
-                    let allQuestions = data.quiz_questions.map((q, index) => ({
-                        ...q,
-                        originalIndex: index  // 保留原始索引 0-4
-                    }));
+                    // 隨機選取1題（不打亂，保持原始索引）
+                    const randomIndex = Math.floor(Math.random() * data.quiz_questions.length);
+                    const selectedQuestion = data.quiz_questions[randomIndex];
 
-                    // 2. 打亂題目順序
-                    shuffleArray(allQuestions);
+                    // 確保選項有4個，如果不足則補充
+                    let options = [...selectedQuestion.options];
+                    while (options.length < 4) {
+                        options.push(`選項 ${options.length + 1}`);
+                    }
+                    // 如果超過4個，只取前4個
+                    options = options.slice(0, 4);
 
-                    // 3. 只取前 3 題（如果超過 3 題的話）
-                    const selectedQuestions = allQuestions.slice(0, 3);
+                    // 建立單一題目（不打亂選項順序）
+                    quizQuestions = [{
+                        question: selectedQuestion.question,
+                        options: options,
+                        correctAnswer: selectedQuestion.correctAnswer,
+                        explanation: selectedQuestion.explanation,
+                        originalIndex: randomIndex,
+                        questionType: selectedQuestion.questionType || '單選'  // 題目類型
+                    }];
 
-                    // 4. 轉換格式，並打亂每題的選項順序
-                    quizQuestions = selectedQuestions.map(q => {
-                        // 複製選項陣列
-                        const shuffledOptions = [...q.options];
-                        // 記住正確答案的文字內容
-                        const correctOptionText = q.options[q.correctAnswer];
-                        // 打亂選項
-                        shuffleArray(shuffledOptions);
-                        // 找出正確答案在打亂後的新位置（轉為 1-indexed）
-                        const newCorrectAnswer = shuffledOptions.indexOf(correctOptionText) + 1;
+                    console.log(`成功載入 ${data.english_term} 的測驗題目`);
 
-                        return {
-                            question: q.question,
-                            options: shuffledOptions,
-                            correctAnswer: newCorrectAnswer,
-                            explanation: q.explanation,
-                            originalIndex: q.originalIndex  // 保留原始索引
-                        };
-                    });
-
-                    console.log(`成功載入並隨機化 ${data.english_term} 的 ${quizQuestions.length} 題測驗題目（共 ${data.quiz_questions.length} 題）`);
+                    // 顯示卡片資訊
+                    updateCardInfo();
                 } else {
                     console.warn('此卡片沒有測驗題目');
                     quizQuestions = defaultQuizQuestions;
@@ -319,72 +329,56 @@
             }
         }
 
+        // 更新卡片資訊顯示
+        function updateCardInfo() {
+            if (!currentCardData) return;
+
+            const categoryEl = document.getElementById('card-category');
+            const chapterEl = document.getElementById('card-chapter');
+            const questionTypeEl = document.getElementById('question-type');
+
+            if (categoryEl) categoryEl.textContent = currentCardData.category || '未分類';
+            if (chapterEl) chapterEl.textContent = currentCardData.chinese_term || '通用';
+            if (questionTypeEl && quizQuestions[0]) {
+                questionTypeEl.textContent = quizQuestions[0].questionType || '單選';
+            }
+        }
+
         // 初始化
         async function init() {
             // 初始化 API Service
             await apiService.initialize();
 
             const urlParams = new URLSearchParams(window.location.search);
-            const mode = urlParams.get('mode');
-            const reviewIndex = urlParams.get('index');
             const cardId = urlParams.get('id');
 
-            // 復習模式：從 localStorage 載入
-            if (mode === 'review') {
-                if (!loadReviewState()) {
-                    localStorage.removeItem('quizReviewState');
-                    // 復習模式失敗時，嘗試重新載入卡片題目
-                    if (cardId) {
-                        await loadCardQuestions(cardId);
-                    } else {
-                        quizQuestions = defaultQuizQuestions;
-                    }
-                } else if (reviewIndex !== null) {
-                    currentQuestionIndex = parseInt(reviewIndex, 10);
-                }
+            // 清除上次的結果，避免返回時顯示舊資料
+            sessionStorage.removeItem('quizApiResult');
+            sessionStorage.removeItem('levelUpProcessed');
+            sessionStorage.removeItem('bonusCelebrationProcessed');
+
+            if (cardId) {
+                // 儲存 cardId 供之後使用（結果頁、重測）
+                sessionStorage.setItem('currentCardId', cardId);
+                await loadCardQuestions(cardId);
             } else {
-                // 一般模式：從資料庫載入卡片題目
-                localStorage.removeItem('quizReviewState');
-                // 清除上次的結果，避免返回時顯示舊資料
-                sessionStorage.removeItem('quizApiResult');
-                sessionStorage.removeItem('levelUpProcessed');
-                sessionStorage.removeItem('bonusCelebrationProcessed');
-
-                if (cardId) {
-                    // 儲存 cardId 供之後使用（結果頁、重測）
-                    sessionStorage.setItem('currentCardId', cardId);
-                    await loadCardQuestions(cardId);
-                } else {
-                    // 沒有 cardId，使用預設題目
-                    console.warn('無卡片 ID，無法載入題目');
-                    quizQuestions = defaultQuizQuestions;
-                }
+                // 沒有 cardId，使用預設題目
+                console.warn('無卡片 ID，無法載入題目');
+                quizQuestions = defaultQuizQuestions;
             }
 
-            // 初始化 userAnswers 陣列（僅非複習模式時重新初始化）
-            if (mode !== 'review') {
-                userAnswers = new Array(quizQuestions.length).fill(null);
-            }
+            // 初始化 userAnswers 陣列（固定只有1題）
+            userAnswers = new Array(quizQuestions.length).fill(null);
 
             renderQuestion();
             prevBtn.addEventListener('click', handlePrevClick);
             nextBtn.addEventListener('click', handleNextClick);
 
-            // 返回按鈕 - 導向卡片頁面，不用 history.back()
+            // 返回按鈕 - 返回到首頁
             const backBtn = document.getElementById('back-btn');
             if (backBtn) {
                 backBtn.addEventListener('click', () => {
-                    // 優先使用儲存的返回 URL
-                    const returnUrl = sessionStorage.getItem('quizReturnUrl');
-                    const cardId = urlParams.get('id') || sessionStorage.getItem('currentCardId');
-
-                    if (returnUrl) {
-                        window.location.href = returnUrl;
-                    } else if (cardId) {
-                        window.location.href = `cardi.html?id=${cardId}`;
-                    } else {
-                        window.location.href = 'index.html';
-                    }
+                    window.location.href = 'index.html';
                 });
             }
 
@@ -399,22 +393,7 @@
             }
         }
 
-        function randomizeQuiz() {
-            shuffleArray(quizQuestions);
-            quizQuestions.forEach(q => {
-                const correctOptionText = q.options[q.correctAnswer - 1];
-                shuffleArray(q.options);
-                q.correctAnswer = q.options.indexOf(correctOptionText) + 1;
-            });
-            userAnswers = new Array(quizQuestions.length).fill(null);
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
+        // 移除：shuffleArray 已不需要
 
         function renderQuestion() {
             const question = quizQuestions[currentQuestionIndex];
@@ -422,8 +401,6 @@
             const hasAnswered = !!answerState;
 
             questionText.textContent = question.question;
-            const progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
-            progressBar.style.width = `${progress}%`;
 
             optionsContainer.innerHTML = question.options.map((option, index) => {
                 const btnIndex = index + 1;
@@ -505,6 +482,12 @@
             const isCorrect = selectedIndex === question.correctAnswer;
 
             userAnswers[currentQuestionIndex] = { selectedIndex, isCorrect };
+
+            // 如果答對，顯示 +100 XP 動畫
+            if (isCorrect) {
+                showXPAnimation(100);
+            }
+
             renderQuestion();
 
             if (currentQuestionIndex < quizQuestions.length - 1) {
@@ -514,25 +497,35 @@
             }
         }
 
+        // 顯示 XP 飄動動畫
+        function showXPAnimation(xp) {
+            const xpElement = document.createElement('div');
+            xpElement.className = 'xp-float';
+            xpElement.textContent = `+${xp} XP`;
+
+            // 定位在畫面中央
+            xpElement.style.left = '50%';
+            xpElement.style.top = '50%';
+            xpElement.style.transform = 'translateX(-50%)';
+
+            document.body.appendChild(xpElement);
+
+            // 1秒後移除元素
+            setTimeout(() => {
+                xpElement.remove();
+            }, 1000);
+        }
+
         function updateButtons(hasAnswered) {
-            if (currentQuestionIndex === 0) {
-                prevBtn.classList.add('hidden');
-                prevBtn.classList.remove('flex');
-            } else {
-                prevBtn.classList.remove('hidden');
-                prevBtn.classList.add('flex');
-            }
+            // 固定隱藏上一題按鈕（只有1題）
+            prevBtn.classList.add('hidden');
+            prevBtn.classList.remove('flex');
 
             nextBtn.disabled = !hasAnswered;
 
-            const isLastQuestion = currentQuestionIndex === quizQuestions.length - 1;
-            if (isLastQuestion) {
-                nextBtnText.textContent = '查看結果';
-                nextBtn.querySelector('.material-symbols-outlined').textContent = 'emoji_events';
-            } else {
-                nextBtnText.textContent = '下一題';
-                nextBtn.querySelector('.material-symbols-outlined').textContent = 'arrow_forward';
-            }
+            // 固定顯示"下一題"（因為只有1題，點擊後會到結果頁）
+            nextBtnText.textContent = '下一題';
+            nextBtn.querySelector('.material-symbols-outlined').textContent = 'arrow_forward';
         }
 
         function handlePrevClick() {
@@ -579,13 +572,6 @@
             };
             localStorage.setItem('quizResults', JSON.stringify(resultData));
 
-            // 儲存 review state
-            localStorage.setItem('quizReviewState', JSON.stringify({
-                questions: quizQuestions,
-                answers: userAnswers,
-                timestamp: timestamp
-            }));
-
             // 呼叫 API 紀錄分數與獎勵
             const urlParams = new URLSearchParams(window.location.search);
             const cardId = urlParams.get('id');
@@ -596,27 +582,20 @@
             }
 
             if (apiService.currentUser && cardId) {
-                // 顯示簡單的 loading (Optional，或者直接跳轉)
+                // 顯示簡單的 loading
                 const nextBtn = document.getElementById('next-btn');
                 if (nextBtn) nextBtn.textContent = '計算獎勵中...';
 
-                // 找出答對的題目【原始索引】（來自資料庫的 0-4）
-                // 這樣才能正確追蹤大師勛章進度
-                const answeredIndices = resultsBoolean
-                    .map((isCorrect, localIndex) => {
-                        if (isCorrect && quizQuestions[localIndex]) {
-                            // 使用原始索引，如果沒有則用本地索引
-                            return quizQuestions[localIndex].originalIndex ?? localIndex;
-                        }
-                        return -1;
-                    })
-                    .filter(index => index !== -1);
+                // 只有1題，如果答對就記錄原始索引
+                const answeredIndices = [];
+                if (resultsBoolean[0] && quizQuestions[0]) {
+                    answeredIndices.push(quizQuestions[0].originalIndex ?? 0);
+                }
 
-                console.log('=== Quiz Debug ===');
-                console.log('resultsBoolean:', resultsBoolean);
+                console.log('=== Quiz Debug (Single Question) ===');
+                console.log('isCorrect:', resultsBoolean[0]);
                 console.log('correctCount:', correctCount);
-                console.log('answeredIndices (original):', answeredIndices);
-                console.log('quizQuestions:', quizQuestions.map(q => ({ question: q.question.substring(0, 20), originalIndex: q.originalIndex })));
+                console.log('answeredIndex (original):', answeredIndices);
 
                 try {
                     const apiResult = await apiService.submitQuizResult(
@@ -634,7 +613,6 @@
                         console.log('XP earned:', apiResult.xpEarned);
                         console.log('Bonuses:', apiResult.bonuses);
                         sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
-                        console.log('Saved to sessionStorage! Verifying:', !!sessionStorage.getItem('quizApiResult'));
 
                         // 更新用戶緩存，讓 result.html 顯示最新的 XP
                         if (apiResult.newUserData) {
@@ -642,7 +620,6 @@
                         }
                     } else {
                         console.error('Quiz submission failed:', apiResult.error);
-                        // 即使失敗也存儲結果，讓 result.html 知道發生了什麼
                         sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
                     }
                 } catch (err) {
@@ -652,7 +629,6 @@
                 console.warn('=== Skipping API call ===');
                 console.warn('currentUser:', apiService.currentUser);
                 console.warn('cardId:', cardId);
-                console.warn('請確認已登入並有 cardId！');
             }
 
             // Ensure flags are cleared for result page to process them fresh

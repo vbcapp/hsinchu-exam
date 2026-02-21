@@ -27,10 +27,11 @@ const ERROR_CODES = {
 
 // ==================== 管理員配置 ====================
 // 管理員 UUID 配置
-const MASTER_ADMIN_ID = '17da7d22-17ad-4d40-a5d2-9c2ce9216cf0'; // 原始管理員 (母版卡片來源)
+const MASTER_ADMIN_ID = '68b72a80-57d8-40ee-811e-be58bea1e69f'; // 原始管理員 (母版卡片來源)
 const ADMIN_UUIDS = [
     '17da7d22-17ad-4d40-a5d2-9c2ce9216cf0', // Original Admin
-    '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b'  // New Admin
+    '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b', // New Admin
+    '68b72a80-57d8-40ee-811e-be58bea1e69f'  // ceceloveye@gmail.com
 ];
 
 // ==================== 學員白名單 ====================
