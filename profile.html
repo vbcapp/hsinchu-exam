@@ -95,7 +95,8 @@
 </head>
 
 <body
-    class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen flex flex-col">
+    class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen">
+    <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
     <section class="bg-primary pt-12 pb-10 px-6 border-b-8 border-black relative overflow-hidden">
         <div class="absolute top-4 left-6 right-6 flex justify-between items-center">
             <div class="flex items-center gap-2">
@@ -278,7 +279,7 @@
         </div>
     </main>
     <nav
-        class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t-thick border-black flex justify-around items-center px-2 py-4 pb-8 z-50">
+        class="fixed bottom-0 w-full max-w-[430px] bg-white dark:bg-zinc-900 border-t-thick border-black flex justify-around items-center px-2 py-4 pb-8 z-50">
         <button onclick="window.location.href='index.html'" class="flex flex-col items-center gap-1 group">
             <div
                 class="size-11 flex items-center justify-center neo-border neo-shadow-sm bg-white group-active:translate-y-0.5 group-active:translate-x-0.5 group-active:shadow-none">
@@ -308,6 +309,7 @@
             <span class="text-[9px] font-black uppercase">個人</span>
         </button>
     </nav>
+    </div>
 
     <!-- Crop Modal -->
     <div id="crop-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
