@@ -309,7 +309,7 @@
             document.getElementById(`rank-${rank}-avatar`).querySelector('img').src = avatar;
             document.getElementById(`rank-${rank}-name`).textContent = name;
             document.getElementById(`rank-${rank}-level`).textContent = user.actualLevel;
-            document.getElementById(`rank-${rank}-cards`).textContent = `${user.total_cards || 0} 張卡片`;
+            document.getElementById(`rank-${rank}-cards`).textContent = `${user.total_questions || 0} 張卡片`;
 
             // 如果是當前用戶，加上閃爍效果
             if (isCurrentUser) {
@@ -357,7 +357,7 @@
                     </div>
                     <div class="flex-1">
                         <h3 class="font-black text-lg ${shimmerClass}">${name}</h3>
-                        <p class="text-xs font-bold ${cardsColorClass} ${shimmerClass}">${user.total_cards || 0} 張卡片</p>
+                        <p class="text-xs font-bold ${cardsColorClass} ${shimmerClass}">${user.total_questions || 0} 張卡片</p>
                     </div>
                     <div class="text-4xl font-black italic pr-2">${user.actualLevel}</div>
                 </div>

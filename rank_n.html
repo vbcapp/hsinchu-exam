@@ -314,8 +314,8 @@
             const name = isCurrentUser ? `${user.username} (你)` : user.username;
 
             document.getElementById(`rank-${rank}-avatar`).querySelector('img').src = avatar;
-            document.getElementById(`rank-${rank}-name`).textContent = name;
-            document.getElementById(`rank-${rank}-cards`).textContent = user.total_cards;
+            document.getElementById(`rank-${rank}-name`).textContent = user.username || '無名氏';
+            document.getElementById(`rank-${rank}-cards`).textContent = user.total_questions;
             document.getElementById(`rank-${rank}-level`).textContent = `Lv.${user.actualLevel}`;
 
             // 如果是當前用戶，加上閃爍效果
@@ -363,7 +363,10 @@
                         <h3 class="font-black text-lg leading-none mb-1 ${shimmerClass}">${name}</h3>
                         <p class="text-xs font-bold ${levelColorClass} ${shimmerClass}">Lv.${user.actualLevel}</p>
                     </div>
-                    <div class="text-4xl font-black italic pr-2 tracking-tighter">${user.total_cards}</div>
+                    <div class="flex items-center gap-2 relative z-10">
+                        <div class="text-4xl font-black italic pr-2 tracking-tighter">${user.total_questions}</div>
+                        <span class="text-[10px] font-black italic uppercase -rotate-90 origin-left translate-x-3 translate-y-3 opacity-80">CARDS</span>
+                    </div>
                 </div>
             `;
         }

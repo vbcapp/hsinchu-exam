@@ -335,7 +335,7 @@ class ApiService {
                     ...user,
                     actualLevel: levelState.actualLevel,
                     isCapped: levelState.isCapped,
-                    total_cards: user.total_cards || 0 // 對應前端需要的欄位
+                    total_questions: user.total_questions || 0 // 對應前端需要的欄位
                 };
             });
 
@@ -397,12 +397,12 @@ class ApiService {
     async getCardLeaderboard(currentUserId) {
         try {
             // 1. 取得所有用戶 (Top 100)，依卡片數量排序
-            // 注意：這裡假設 users 表有 total_cards 欄位。如果不準確，可能需要 join flashcards count，但那樣效能較差。
-            // 我們先信任 users.total_cards (由 createCard/deleteCard 維護)
+            // 注意：這裡假設 users 表有 total_questions 欄位。如果不準確，可能需要 join flashcards count，但那樣效能較差。
+            // 我們先信任 users.total_questions (由 createCard/deleteCard 維護)
             const { data: users, error, count } = await this.supabase
                 .from('users')
                 .select('*', { count: 'exact' })
-                .order('total_cards', { ascending: false })
+                .order('total_questions', { ascending: false })
                 .limit(100);
 
             if (error) throw error;
@@ -420,7 +420,7 @@ class ApiService {
                 return {
                     ...user,
                     actualLevel: levelState.actualLevel,
-                    total_cards: user.total_cards || 0
+                    total_questions: user.total_questions || 0
                 };
             });
 
@@ -445,14 +445,14 @@ class ApiService {
                         currentUserData = {
                             ...myProfile.data,
                             actualLevel: myLevelState.actualLevel,
-                            total_cards: myProfile.data.total_cards || 0
+                            total_questions: myProfile.data.total_questions || 0
                         };
 
                         // 計算排名
                         const { count: higherCount, error: rankError } = await this.supabase
                             .from('users')
                             .select('*', { count: 'exact', head: true })
-                            .gt('total_cards', currentUserData.total_cards);
+                            .gt('total_questions', currentUserData.total_questions);
 
                         if (!rankError) {
                             currentUserRank = higherCount + 1;
