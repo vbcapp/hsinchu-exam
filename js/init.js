@@ -281,10 +281,27 @@ async function loadUserCards() {
 /**
  * 初始化篩選按鈕事件
  */
-function initFilterButtons() {
+async function initFilterButtons() {
     const filterContainer = document.getElementById('filter-buttons');
     if (!filterContainer) return;
 
+    // 動態載入章節按鈕
+    try {
+        const result = await apiService.getUniqueChapters();
+        if (result.success && result.data.length > 0) {
+            result.data.forEach(chapter => {
+                const btn = document.createElement('button');
+                btn.setAttribute('data-filter', `chapter:${chapter}`);
+                btn.className = 'filter-btn flex-none px-4 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm';
+                btn.textContent = chapter;
+                filterContainer.appendChild(btn);
+            });
+        }
+    } catch (error) {
+        console.error('載入章節按鈕失敗:', error);
+    }
+
+    // 綁定所有篩選按鈕事件
     filterContainer.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const filter = this.getAttribute('data-filter');
@@ -313,16 +330,10 @@ function applyFilter(filter) {
 
     if (filter === 'unfamiliar') {
         filteredCards = allCards.filter(card => card.progress && card.progress.mastery_level === 0);
-    } else if (filter === 'lv1') {
-        filteredCards = allCards.filter(card => card.level === 1);
-    } else if (filter === 'lv2') {
-        filteredCards = allCards.filter(card => card.level === 2);
-    } else if (filter === 'lv3') {
-        filteredCards = allCards.filter(card => card.level === 3);
-    } else if (filter === 'lv4') {
-        filteredCards = allCards.filter(card => card.level === 4);
-    } else if (filter === 'lv5') {
-        filteredCards = allCards.filter(card => card.level === 5);
+    } else if (filter.startsWith('chapter:')) {
+        // 依照章節篩選
+        const chapter = filter.replace('chapter:', '');
+        filteredCards = allCards.filter(card => card.chapter === chapter);
     }
 
     renderCards(filteredCards, container);

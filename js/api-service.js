@@ -725,6 +725,29 @@ class ApiService {
     }
 
     /**
+     * 取得所有不重複的章節列表（用於首頁篩選按鈕）
+     */
+    async getUniqueChapters() {
+        try {
+            const { data, error } = await this.supabase
+                .from('questions')
+                .select('chapter');
+
+            if (error) throw error;
+
+            const uniqueChapters = [...new Set(data.map(item => item.chapter).filter(Boolean))];
+
+            // 自然排序（數字優先）
+            const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+            uniqueChapters.sort(collator.compare);
+
+            return { success: true, data: uniqueChapters };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 根據大科目，取得不重複的章節列表
      */
     async getUniqueChaptersBySubject(subject) {
