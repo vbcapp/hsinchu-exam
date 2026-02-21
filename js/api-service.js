@@ -1322,6 +1322,44 @@ class ApiService {
     }
 
     /**
+     * 新增：取得學員熟練度 (等級) 分佈
+     * 回傳長度 6 的陣列，對應：未熟悉、初學、進階、熟練、精通、大師
+     */
+    async getAdminMasteryDistribution() {
+        try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .select('current_level');
+
+            if (error) throw error;
+
+            // 初始化 6 個區間
+            const distribution = [0, 0, 0, 0, 0, 0];
+
+            data.forEach(user => {
+                const level = user.current_level || 1;
+                if (level <= 2) {
+                    distribution[0]++; // 未熟悉 (Lv. 1-2)
+                } else if (level <= 5) {
+                    distribution[1]++; // 初學 (Lv. 3-5)
+                } else if (level <= 10) {
+                    distribution[2]++; // 進階 (Lv. 6-10)
+                } else if (level <= 15) {
+                    distribution[3]++; // 熟練 (Lv. 11-15)
+                } else if (level <= 20) {
+                    distribution[4]++; // 精通 (Lv. 16-20)
+                } else {
+                    distribution[5]++; // 大師 (Lv. 21+)
+                }
+            });
+
+            return { success: true, data: distribution };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 新增：隨機出題配置與儲存紀錄 (寫入 random_test_sessions)
      * @param {string} userId
      * @param {string} sessionName 自訂名稱
