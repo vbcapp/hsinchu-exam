@@ -714,13 +714,13 @@
                             </div>
                             <!-- 數據區塊 -->
                             <div class="mt-2 border-t-2 border-black pt-2 flex flex-wrap gap-2 text-xs font-black w-full">
-                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center truncate" style="color: ${borderColor};">
+                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap" style="color: ${borderColor};">
                                     錯誤率: ${errorRate}%
                                 </span>
-                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center truncate text-zinc-700">
-                                    全局作答: ${q.total_reviewed} 
+                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap text-zinc-700">
+                                    全局作答: ${q.total_reviewed}
                                 </span>
-                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center truncate text-red-600">
+                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap text-red-600">
                                     全局答錯: ${q.total_incorrect}
                                 </span>
                             </div>
