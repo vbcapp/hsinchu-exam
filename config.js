@@ -1,8 +1,8 @@
 // ==================== Supabase 配置 ====================
 // ✅ 已自動配置為你的 Supabase 專案
 const SUPABASE_CONFIG = {
-    url: 'https://izkduljyuscydklvagxm.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6a2R1bGp5dXNjeWRrbHZhZ3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwNzM0NzYsImV4cCI6MjA4NDY0OTQ3Nn0.LsFTCFriM6Ro4HhQ0bwfPT472RP3Ml5eiQx5IUmdrrg'
+    url: 'https://vryyyyivmbbqahlaafdn.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyeXl5eWl2bWJicWFobGFhZmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MTU4MzMsImV4cCI6MjA4NzE5MTgzM30.CuBBkWyFSh9vpIYX5CdgZ01qH3YkTIdl-ewOQcmVa3U'
 };
 
 // ==================== XP 系統常數 ====================
