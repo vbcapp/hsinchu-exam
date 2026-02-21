@@ -137,6 +137,69 @@
             pointer-events: none;
             z-index: 9999;
         }
+
+        /* 爆擊動畫 */
+        @keyframes criticalPulse {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            30% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.3);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        @keyframes criticalXpFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.8);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1.3);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1);
+            }
+        }
+
+        .critical-banner {
+            animation: criticalPulse 3s ease-out forwards;
+            position: fixed;
+            left: 50%;
+            top: 40%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 900;
+            color: #EF4444;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4), 0 0 20px rgba(239, 68, 68, 0.6);
+            pointer-events: none;
+            z-index: 10000;
+            white-space: nowrap;
+        }
+
+        .critical-xp {
+            animation: criticalXpFloat 2.4s ease-out forwards;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #F97316;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3), 0 0 10px rgba(249, 115, 22, 0.5);
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+        }
     </style>
     <style>
         body {
@@ -179,9 +242,10 @@
 
     <main class="flex-grow overflow-y-auto px-6 py-4 flex flex-col">
         <!-- 題目卡 -->
-        <div class="bg-white dark:bg-zinc-900 neo-border rounded-2xl shadow-neo overflow-hidden mb-4">
+        <div class="bg-white dark:bg-zinc-900 neo-border rounded-2xl shadow-neo overflow-hidden mb-4 relative">
             <div class="h-4 bg-primary border-b-[3px] border-black"></div>
-            <div class="p-6">
+            <div class="px-6 py-1 relative">
+                <div id="stats-badge-container" class="flex justify-end mb-2 empty:hidden"></div>
                 <h3 id="question-text" class="text-2xl font-black text-center leading-tight">
                     載入中...
                 </h3>
@@ -271,15 +335,28 @@
         // 從資料庫載入題目（新架構：questions 資料表）
         async function loadCardQuestions(cardId) {
             try {
-                // 使用 apiService 的 supabase 實例直接查詢題目
-                const { data, error } = await apiService.supabase
-                    .from('questions')
-                    .select('*')
-                    .eq('id', cardId)
-                    .single();
+                let data = null;
+                let progress = null;
 
-                if (error) {
-                    console.error('載入題目失敗:', error);
+                // 若已登入，使用 API 取得題目和答題進度
+                if (apiService.currentUser) {
+                    const result = await apiService.getQuestionWithProgress(cardId, apiService.currentUser.id);
+                    if (result.success && result.data.question) {
+                        data = result.data.question;
+                        progress = result.data.progress;
+                    }
+                } else {
+                    // 若未登入，僅查詢題目
+                    const { data: qData, error } = await apiService.supabase
+                        .from('questions')
+                        .select('*')
+                        .eq('id', cardId)
+                        .single();
+                    if (!error) data = qData;
+                }
+
+                if (!data) {
+                    console.error('載入題目失敗');
                     quizQuestions = defaultQuizQuestions;
                     return;
                 }
@@ -326,7 +403,8 @@
                         correctAnswer: correctAnswer,
                         explanation: data.explanation || '此題目尚無解析',
                         originalIndex: 0,
-                        questionType: data.question_type || '單選'
+                        questionType: data.question_type || '單選',
+                        progress: progress
                     }];
 
                     console.log(`成功載入題目: ${data.question}`);
@@ -429,6 +507,34 @@
 
             questionText.textContent = question.question;
 
+            // 渲染統計標籤 (Badge)
+            const badgeContainer = document.getElementById('stats-badge-container');
+            if (badgeContainer && question.progress !== undefined) {
+                const progress = question.progress;
+                let badgeHTML = '';
+                if (!progress || progress.times_reviewed === 0) {
+                    badgeHTML = `<span class="bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-1 rounded text-xs font-bold border border-zinc-200 dark:border-zinc-700 shadow-sm">尚無作答紀錄</span>`;
+                } else {
+                    const timesReviewed = progress.times_reviewed || 0;
+                    const timesCorrect = progress.times_correct || 0;
+
+                    let accuracy = Math.round((timesCorrect / timesReviewed) * 100);
+                    // 滿分控成就：達7次以上答對直接顯示 100%
+                    if (timesCorrect >= 7) {
+                        accuracy = 100;
+                    }
+
+                    if (accuracy >= 80) {
+                        badgeHTML = `<span class="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-2 py-1 rounded text-xs font-bold border border-green-200 dark:border-green-800 shadow-sm">精熟 (${accuracy}%) - 作答 ${timesReviewed} 次</span>`;
+                    } else if (accuracy >= 50) {
+                        badgeHTML = `<span class="bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300 px-2 py-1 rounded text-xs font-bold border border-yellow-200 dark:border-yellow-800 shadow-sm">學習中 (${accuracy}%) - 作答 ${timesReviewed} 次</span>`;
+                    } else {
+                        badgeHTML = `<span class="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 px-2 py-1 rounded text-xs font-bold border border-red-200 dark:border-red-800 shadow-sm">需加強 (${accuracy}%) - 作答 ${timesReviewed} 次</span>`;
+                    }
+                }
+                badgeContainer.innerHTML = badgeHTML;
+            }
+
             optionsContainer.innerHTML = question.options.map((option, index) => {
                 const btnIndex = index + 1;
                 // HTML Escape helper
@@ -512,9 +618,14 @@
 
             userAnswers[currentQuestionIndex] = { selectedIndex, isCorrect };
 
-            // 如果答對，顯示 +100 XP 動畫
+            // 如果答對，檢查爆擊並顯示 XP 動畫
             if (isCorrect) {
-                showXPAnimation(100);
+                const criticalResult = checkCriticalHit();
+                if (criticalResult) {
+                    showCriticalAnimation(criticalResult);
+                } else {
+                    showXPAnimation(100);
+                }
             }
 
             renderQuestion();
@@ -568,6 +679,64 @@
             setTimeout(() => {
                 xpElement.remove();
             }, 1000);
+        }
+
+        // 爆擊機率檢查
+        function checkCriticalHit() {
+            const roll = Math.random() * 100; // 0-100 的隨機數
+
+            // 按照機率從低到高檢查（先檢查稀有的）
+            if (roll < 1) {
+                // 1% - 5階爆擊
+                return { level: 5, xpList: [1000] };
+            } else if (roll < 3) {
+                // 2% - 4階爆擊
+                return { level: 4, xpList: [500] };
+            } else if (roll < 8) {
+                // 5% - 3階爆擊
+                return { level: 3, xpList: [100, 100, 100, 100] };
+            } else if (roll < 18) {
+                // 10% - 2階爆擊
+                return { level: 2, xpList: [100, 100, 100] };
+            } else if (roll < 38) {
+                // 20% - 1階爆擊
+                return { level: 1, xpList: [100, 100] };
+            }
+
+            return null; // 沒有觸發爆擊
+        }
+
+        // 顯示爆擊動畫
+        function showCriticalAnimation(criticalResult) {
+            // 顯示「爆擊！！！」橫幅
+            const banner = document.createElement('div');
+            banner.className = 'critical-banner';
+            banner.textContent = '爆擊！！！';
+            document.body.appendChild(banner);
+
+            // 依序顯示 XP 獎勵
+            const baseTop = 55; // 起始位置（百分比）
+            const spacing = 8;  // 每行間距
+
+            criticalResult.xpList.forEach((xp, index) => {
+                setTimeout(() => {
+                    const xpElement = document.createElement('div');
+                    xpElement.className = 'critical-xp';
+                    xpElement.textContent = `+++ ${xp}px ！！`;
+                    xpElement.style.top = `${baseTop + index * spacing}%`;
+                    document.body.appendChild(xpElement);
+
+                    // 2.4秒後移除
+                    setTimeout(() => {
+                        xpElement.remove();
+                    }, 2400);
+                }, index * 400); // 每個間隔400ms出現
+            });
+
+            // 3秒後移除橫幅
+            setTimeout(() => {
+                banner.remove();
+            }, 3000);
         }
 
         function updateButtons(hasAnswered) {
