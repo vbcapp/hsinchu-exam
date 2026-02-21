@@ -441,7 +441,7 @@ function renderCardItem(card) {
                     ${publishedTag}
                 </div>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 overflow-y-auto min-h-0 pr-1 custom-scrollbar">
                 <h3 class="text-xl font-black italic tracking-tighter uppercase leading-tight mb-1 break-words hyphens-none ${(card.question && card.question.length > 15) ? 'text-small' : ''}" style="word-break: break-word; -webkit-hyphens: none;">${card.question || ''}</h3>
                 <p class="text-[10px] leading-tight opacity-70 line-clamp-2">${description}</p>
             </div>
