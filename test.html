@@ -343,6 +343,18 @@
             }
         }
 
+        // 題型代碼轉換為中文
+        function getQuestionTypeDisplay(typeCode) {
+            const typeMap = {
+                'single': '單選',
+                'multiple': '複選',
+                'true_false': '是非',
+                'fill_in': '填空',
+                'short_answer': '簡答'
+            };
+            return typeMap[typeCode] || typeCode || '單選';
+        }
+
         // 更新卡片資訊顯示
         function updateCardInfo() {
             if (!currentCardData) return;
@@ -354,7 +366,8 @@
             if (categoryEl) categoryEl.textContent = currentCardData.subject || '未分類';
             if (chapterEl) chapterEl.textContent = currentCardData.chapter || '通用';
             if (questionTypeEl && quizQuestions[0]) {
-                questionTypeEl.textContent = quizQuestions[0].questionType || '單選';
+                const rawType = quizQuestions[0].questionType || currentCardData.question_type || 'single';
+                questionTypeEl.textContent = getQuestionTypeDisplay(rawType);
             }
         }
 
@@ -428,7 +441,9 @@
                         .replace(/'/g, "&#039;");
                 };
 
-                const safeOption = escapeHtml(option);
+                // 移除選項中的 （A）（B）（C）（D） 標記
+                const cleanOption = option.replace(/^[（(][A-D][）)]\s*/, '');
+                const safeOption = escapeHtml(cleanOption);
 
                 let btnClass = "option-btn w-full text-left bg-white dark:bg-zinc-800/50 neo-border p-3.5 rounded-2xl shadow-neo relative";
                 let btnContent = `<p class="font-bold text-lg leading-snug">${String.fromCharCode(65 + index)}. ${safeOption}</p>`;
@@ -550,13 +565,94 @@
             }
         }
 
-        function handleNextClick() {
+        async function handleNextClick() {
             if (autoNextTimeout) clearTimeout(autoNextTimeout);
 
             if (currentQuestionIndex === quizQuestions.length - 1) {
-                saveResultsAndRedirect();
+                // 先儲存當前題目的結果到資料庫
+                await saveCurrentQuestionResult();
+
+                // 檢查是否有下一張卡片
+                const nextCardId = await getNextCardId();
+
+                if (nextCardId) {
+                    // 跳轉到下一張卡片的測驗
+                    window.location.href = `test.html?id=${nextCardId}`;
+                } else {
+                    // 沒有下一張卡片時才跳轉到結果頁
+                    saveResultsAndRedirect();
+                }
             } else {
                 goToNextQuestion();
+            }
+        }
+
+        // 儲存當前題目的結果
+        async function saveCurrentQuestionResult() {
+            const resultsBoolean = userAnswers.map(ans => ans ? ans.isCorrect : false);
+            const correctCount = resultsBoolean.filter(r => r === true).length;
+            const cardId = sessionStorage.getItem('currentCardId');
+
+            if (apiService.currentUser && cardId) {
+                const answeredIndices = [];
+                if (resultsBoolean[0] && quizQuestions[0]) {
+                    answeredIndices.push(quizQuestions[0].originalIndex ?? 0);
+                }
+
+                try {
+                    const apiResult = await apiService.submitQuizResult(
+                        apiService.currentUser.id,
+                        cardId,
+                        correctCount,
+                        answeredIndices
+                    );
+
+                    if (apiResult.success && apiResult.newUserData) {
+                        // 更新用戶緩存
+                        sessionStorage.setItem('userData', JSON.stringify(apiResult.newUserData));
+                    }
+                } catch (err) {
+                    console.error('儲存結果時發生錯誤:', err);
+                }
+            }
+        }
+
+        // 取得下一張卡片 ID（從 sessionStorage 的卡片列表中按順序取得）
+        async function getNextCardId() {
+            try {
+                const currentCardId = sessionStorage.getItem('currentCardId');
+                const currentIdsJson = sessionStorage.getItem('currentCardIds');
+
+                if (!currentCardId || !currentIdsJson) {
+                    console.log('找不到 currentCardId 或 currentCardIds');
+                    return null;
+                }
+
+                // 解析卡片 ID 列表
+                const currentIds = JSON.parse(currentIdsJson);
+
+                // 找到當前卡片在列表中的索引（需要處理數字/字串類型）
+                let currentIndex = currentIds.findIndex(id =>
+                    String(id) === String(currentCardId)
+                );
+
+                if (currentIndex === -1) {
+                    console.log('當前卡片不在列表中:', currentCardId);
+                    return null;
+                }
+
+                // 檢查是否有下一張卡片
+                if (currentIndex < currentIds.length - 1) {
+                    const nextId = currentIds[currentIndex + 1];
+                    console.log(`找到下一張卡片: ${nextId} (${currentIndex + 1}/${currentIds.length})`);
+                    return nextId;
+                } else {
+                    console.log('已經是最後一張卡片');
+                    return null;
+                }
+            } catch (err) {
+                console.error('取得下一張卡片時發生錯誤:', err);
+                return null;
             }
         }
 

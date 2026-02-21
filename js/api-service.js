@@ -567,8 +567,9 @@ class ApiService {
             let query = this.supabase
                 .from('questions')
                 .select('*, user_question_progress!left(*)', { count: 'exact' })
-                .order('subject', { ascending: true })
-                .order('chapter', { ascending: true });
+                .order('subject_no', { ascending: true })
+                .order('chapter_no', { ascending: true })
+                .order('question_no', { ascending: true });
 
             // 如果要過濾當前用戶的進度，Supabase JS SDK 沒辦法在 outer join 的 on 條件輕易加上 userId，
             // 通常在 !inner 或透過 RPC 會更好。

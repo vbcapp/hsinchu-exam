@@ -35,8 +35,11 @@
 | --- | --- | --- | --- |
 | `id` | `uuid` | PK, DEFAULT gen_random_uuid() | 題目唯一識別碼 |
 | `user_id` | `uuid` | FK (`users.id`), NULLABLE | 建立此題目的管理員或使用者 |
+| `subject_no` | `integer` | | 排序用：大科目編號 |
 | `subject` | `varchar` | | 大科目 (例如：勞動基準法) |
+| `chapter_no` | `integer` | | 排序用：章節標號 |
 | `chapter` | `varchar` | | 章節或主題 |
+| `question_no` | `integer` | | 排序用：題目編號 |
 | `question` | `text` | | 題目敘述內容 |
 | `options` | `jsonb` | | 選項 (陣列格式，如 `["選項A", "選項B"]`) |
 | `correct_answer` | `jsonb` | | 正確答案 |
