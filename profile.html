@@ -178,15 +178,26 @@
                     </div>
                 </div>
 
-                <!-- Chart 2: Top Incorrect Cards -->
+                <!-- Chart 2: Top Error Questions (全站魔王題 Top 10) -->
                 <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
                     <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">error</span>
-                        <h3 class="text-xl font-black italic uppercase">內容待優化</h3>
-                        <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">(錯誤次數最多的 Top 5 卡片)</span>
+                        <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
+                        <h3 class="text-xl font-black italic uppercase">全站魔王題 Top 10</h3>
                     </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="incorrect-cards-chart"></canvas>
+                    <div class="space-y-3">
+                        <!-- Loading state -->
+                        <div id="top-incorrect-cards-loading" class="text-center py-8">
+                            <span class="text-sm font-bold">載入中...</span>
+                        </div>
+                        <!-- Content container -->
+                        <div id="top-incorrect-cards-list" class="hidden space-y-3"></div>
+                        <!-- Empty state -->
+                        <div id="top-incorrect-cards-empty" class="hidden text-center py-8">
+                            <span
+                                class="material-symbols-outlined text-6xl text-zinc-300 dark:text-zinc-600">check_circle</span>
+                            <p class="mt-2 text-sm font-bold text-zinc-500 dark:text-zinc-400">目前沒有足夠的全局答題數據</p>
+                            <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">累積作答次數 > 5 次才會被列入統計</p>
+                        </div>
                     </div>
                 </div>
 
@@ -198,29 +209,6 @@
                     </div>
                     <div class="bg-white p-4 border-2 border-black flex justify-center">
                         <canvas id="mastery-chart" style="max-width: 400px; max-height: 400px;"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 4: Top Error Questions (魔王陷阱題) -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
-                        <h3 class="text-xl font-black italic uppercase">魔王陷阱題</h3>
-                        <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">(錯誤率最高的 Top 5 題目)</span>
-                    </div>
-                    <div class="space-y-3">
-                        <!-- Loading state -->
-                        <div id="error-questions-loading" class="text-center py-8">
-                            <span class="text-sm font-bold">載入中...</span>
-                        </div>
-                        <!-- Content container -->
-                        <div id="error-questions-list" class="hidden space-y-3"></div>
-                        <!-- Empty state -->
-                        <div id="error-questions-empty" class="hidden text-center py-8">
-                            <span
-                                class="material-symbols-outlined text-6xl text-zinc-300 dark:text-zinc-600">check_circle</span>
-                            <p class="mt-2 text-sm font-bold text-zinc-500 dark:text-zinc-400">目前沒有足夠的答題數據</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -560,7 +548,7 @@
         });
 
         // ==================== Admin Dashboard Functions ====================
-        let registrationsChart, incorrectCardsChart, masteryChart;
+        let registrationsChart, masteryChart;
 
         async function initAdminDashboard() {
             try {
@@ -570,11 +558,10 @@
                     dashboardEl.classList.remove('hidden');
                 }
 
-                // 載入並渲染四個圖表/區塊
+                // 載入並渲染圖表/區塊
                 await renderRegistrationsChart();
-                await renderIncorrectCardsChart();
+                await renderTopIncorrectCardsDashboard();
                 await renderMasteryChart();
-                await renderErrorQuestionsChart();
             } catch (error) {
                 console.error('初始化管理員儀表板失敗:', error);
             }
@@ -658,82 +645,89 @@
             });
         }
 
-        async function renderIncorrectCardsChart() {
-            const result = await apiService.getAdminTopIncorrectCards(5);
+        async function renderTopIncorrectCardsDashboard() {
+            const result = await apiService.getAdminTopIncorrectCards(10); // 取前 10 名
+
+            const loadingEl = document.getElementById('top-incorrect-cards-loading');
+            const listEl = document.getElementById('top-incorrect-cards-list');
+            const emptyEl = document.getElementById('top-incorrect-cards-empty');
+
+            // 隱藏載入狀態
+            if (loadingEl) loadingEl.classList.add('hidden');
+
             if (!result.success) {
-                console.error('取得錯誤卡片數據失敗:', result.error);
+                console.error('取得錯誤題目數據失敗:', result.error);
+                if (emptyEl) emptyEl.classList.remove('hidden');
                 return;
             }
 
-            const ctx = document.getElementById('incorrect-cards-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item =>
-                `${item.chinese_translation} (${item.english_term})`
-            );
-            const data = result.data.map(item => item.total_incorrect);
-
-            // 銷毀舊圖表（如果存在）
-            if (incorrectCardsChart) {
-                incorrectCardsChart.destroy();
+            if (!result.data || result.data.length === 0) {
+                // 沒有數據，顯示空狀態
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                return;
             }
 
-            incorrectCardsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '累計錯誤次數',
-                        data: data,
-                        backgroundColor: [
-                            '#FF6B6B',
-                            '#FFA94D',
-                            '#FFD93D',
-                            '#6BCF7F',
-                            '#4ECDC4'
-                        ],
-                        borderColor: '#000000',
-                        borderWidth: 3
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: { family: 'Inter', weight: 'bold', size: 12 },
-                                color: '#000000'
-                            }
-                        },
-                        title: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                font: { family: 'Inter', weight: 'bold' }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                font: { family: 'Inter', weight: 'bold', size: 10 }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
+            // 有數據，渲染列表
+            if (listEl) {
+                listEl.classList.remove('hidden');
+                listEl.innerHTML = result.data.map((q, index) => {
+                    const errorRate = (q.error_rate * 100).toFixed(1);
+                    const subject = q.subject || '未分類';
+                    const chapter = q.chapter || '';
+                    const questionNo = q.question_no || '';
+                    const questionText = q.question_text || '題目內容未知';
+
+                    // 根據錯誤率決定顏色
+                    let bgColor = '#FFF3E0'; // 預設橘色
+                    let borderColor = '#FF9800';
+                    if (errorRate >= 80) {
+                        bgColor = '#FFEBEE'; // 紅色
+                        borderColor = '#F44336';
+                    } else if (errorRate >= 60) {
+                        bgColor = '#FFF3E0'; // 橘色
+                        borderColor = '#FF9800';
+                    } else if (errorRate >= 40) {
+                        bgColor = '#FFF9C4'; // 黃色
+                        borderColor = '#FBC02D';
+                    } else {
+                        bgColor = '#F5F5F5'; // 灰色 (錯誤率低)
+                        borderColor = '#9E9E9E';
                     }
-                }
-            });
+
+                    // 確保章節與題號顯示格式美觀
+                    let questionIdDisplay = subject;
+                    if (chapter) questionIdDisplay += ` - ${chapter}`;
+                    if (questionNo) questionIdDisplay += ` - Q${questionNo}`;
+
+                    return `
+                        <div class="bg-white border-4 border-black p-4 neo-shadow-sm flex flex-col gap-2" style="background-color: ${bgColor};">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-lg">
+                                    ${index + 1}
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex flex-col mb-1">
+                                        <span class="font-black text-sm text-black truncate w-full" title="${questionIdDisplay}">${questionIdDisplay}</span>
+                                    </div>
+                                    <p class="text-sm font-bold text-gray-800 line-clamp-2 md:line-clamp-none w-full">${questionText}</p>
+                                </div>
+                            </div>
+                            <!-- 數據區塊 -->
+                            <div class="mt-2 border-t-2 border-black pt-2 flex flex-wrap gap-2 text-xs font-black w-full">
+                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center truncate" style="color: ${borderColor};">
+                                    錯誤率: ${errorRate}%
+                                </span>
+                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center truncate text-zinc-700">
+                                    全局作答: ${q.total_reviewed} 
+                                </span>
+                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center truncate text-red-600">
+                                    全局答錯: ${q.total_incorrect}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
         async function renderMasteryChart() {
@@ -801,84 +795,7 @@
             });
         }
 
-        async function renderErrorQuestionsChart() {
-            const result = await apiService.getAdminTopErrorQuestions(5);
 
-            const loadingEl = document.getElementById('error-questions-loading');
-            const listEl = document.getElementById('error-questions-list');
-            const emptyEl = document.getElementById('error-questions-empty');
-
-            // 隱藏載入狀態
-            if (loadingEl) loadingEl.classList.add('hidden');
-
-            if (!result.success) {
-                console.error('取得錯誤題目數據失敗:', result.error);
-                if (emptyEl) emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            if (!result.data || result.data.length === 0) {
-                // 沒有數據，顯示空狀態
-                if (emptyEl) emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            // 有數據，渲染列表
-            if (listEl) {
-                listEl.classList.remove('hidden');
-                listEl.innerHTML = result.data.map((q, index) => {
-                    const errorRate = (q.error_rate * 100).toFixed(1);
-                    const cardName = q.flashcards?.chinese_translation || '未知卡片';
-                    const englishTerm = q.flashcards?.english_term || '';
-                    const questionText = q.question || '題目內容未知';
-
-                    // 根據錯誤率決定顏色
-                    let bgColor = '#FFF3E0'; // 預設橘色
-                    let borderColor = '#FF9800';
-                    if (errorRate >= 80) {
-                        bgColor = '#FFEBEE'; // 紅色
-                        borderColor = '#F44336';
-                    } else if (errorRate >= 60) {
-                        bgColor = '#FFF3E0'; // 橘色
-                        borderColor = '#FF9800';
-                    } else if (errorRate >= 40) {
-                        bgColor = '#FFF9C4'; // 黃色
-                        borderColor = '#FBC02D';
-                    }
-
-                    return `
-                        <div class="bg-white border-4 border-black p-4 neo-shadow-sm" style="background-color: ${bgColor};">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-lg">
-                                    ${index + 1}
-                                </div>
-                                <div class="flex-grow">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="font-black text-sm uppercase">${cardName}</span>
-                                        ${englishTerm ? `<span class="text-xs font-bold text-zinc-600">(${englishTerm})</span>` : ''}
-                                        <span class="ml-auto px-2 py-1 bg-black text-white text-xs font-black">
-                                            第 ${q.question_index + 1} 題
-                                        </span>
-                                    </div>
-                                    <p class="text-sm font-bold mb-2 leading-relaxed">${questionText}</p>
-                                    <div class="flex items-center gap-4 text-xs font-black">
-                                        <span style="color: ${borderColor};">
-                                            錯誤率: ${errorRate}%
-                                        </span>
-                                        <span class="text-zinc-600">
-                                            作答: ${q.total_attempts} 次
-                                        </span>
-                                        <span class="text-zinc-600">
-                                            答錯: ${q.wrong_count} 次
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        }
 
         function updateProfilePageUI(userData) {
             // 使用 LevelSystem 計算顯示狀態

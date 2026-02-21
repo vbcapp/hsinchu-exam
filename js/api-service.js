@@ -1264,36 +1264,55 @@ class ApiService {
     }
 
     /**
-     * 取得錯誤次數最多的前 N 張卡片 (改版：取得錯誤率最高的題目)
+     * 取得錯誤次數最多的前 N 張卡片 (改版：取得全站錯誤率最高的 Top N 魔王題)
      */
-    async getAdminTopIncorrectCards(limit = 5) {
+    async getAdminTopIncorrectCards(limit = 10) {
         try {
-            // 使用 user_question_progress 進行錯題統計
+            // 從 user_question_progress 撈取所有作答紀錄，並 join 題目題幹
+            // 因為我們要聚合全站數據，所以不限制 user_id
             const { data, error } = await this.supabase
                 .from('user_question_progress')
-                .select('question_id, times_incorrect, questions!inner(question)')
-                .order('times_incorrect', { ascending: false })
-                .limit(100);
+                .select('question_id, times_reviewed, times_incorrect, questions!inner(question, subject, chapter, question_no)')
+                .order('question_id'); // 沒加條件就是全撈
 
             if (error) throw error;
 
-            // 手動聚合
+            // 手動聚合每個題目的總作答數與總錯誤數
             const questionStats = {};
             data.forEach(progress => {
                 const qId = progress.question_id;
                 if (!questionStats[qId]) {
+                    // 初始化結構
                     questionStats[qId] = {
                         question_id: qId,
                         question_text: progress.questions?.question || 'Unknown',
+                        subject: progress.questions?.subject || '未分類',
+                        chapter: progress.questions?.chapter || '',
+                        question_no: progress.questions?.question_no || '',
+                        total_reviewed: 0,
                         total_incorrect: 0
                     };
                 }
-                questionStats[qId].total_incorrect += progress.times_incorrect || 0;
+                questionStats[qId].total_reviewed += (progress.times_reviewed || 0);
+                questionStats[qId].total_incorrect += (progress.times_incorrect || 0);
             });
 
-            // 轉換為陣列並排序
+            // 計算錯誤率、過濾與排序
+            const minReviewsRequired = 5; // 門檻: 全站總作答次數 > 5 才列入統計
             const sortedQuestions = Object.values(questionStats)
-                .sort((a, b) => b.total_incorrect - a.total_incorrect)
+                .filter(q => q.total_reviewed > minReviewsRequired)
+                .map(q => {
+                    q.error_rate = q.total_reviewed > 0 ? (q.total_incorrect / q.total_reviewed) : 0;
+                    return q;
+                })
+                .sort((a, b) => {
+                    // 優先依錯誤率降冪排序
+                    if (b.error_rate !== a.error_rate) {
+                        return b.error_rate - a.error_rate;
+                    }
+                    // 錯誤率相同時，依總錯次降冪排序
+                    return b.total_incorrect - a.total_incorrect;
+                })
                 .slice(0, limit);
 
             return { success: true, data: sortedQuestions };
