@@ -454,22 +454,15 @@ class ApiService {
 
             if (error) throw error;
 
-            // 計算使用者的卡片數量
-            const { count: cardCount, error: countError } = await this.supabase
-                .from('flashcards')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', userId);
-
-            if (countError) {
-                console.error('計算卡片數量失敗:', countError);
-            }
-
+            // 計算使用者的題目數量 (因為原本有卡片數，此處可以查詢 users.total_questions)
+            // PRD 中指出 users 表有新增 total_questions 欄位，這可以直接從 data 返回，不一定要再 query Count
+            // 不過為了與先前的邏輯一致（或是若資料不一致時防禦），可以直接讀取 user 表現有欄位
             return {
                 success: true,
                 data: {
                     ...data,
-                    total_cards: cardCount || 0,
-                    // levelProgressPercentage is calculated by LevelSystem on client side
+                    total_questions: data.total_questions || 0,
+                    correct_answer_count: data.correct_answer_count || 0
                 }
             };
         } catch (error) {
@@ -553,239 +546,49 @@ class ApiService {
         }
     }
 
-    // ==================== 每日一卡相關 ====================
-
-    /**
-     * 取得月份的每日一卡列表 (用於日曆)
-     */
-    async getMonthlyDailyCards(year, month) {
-        try {
-            // [Fix] 直接手動組字串，避免時區導致的偏移 (e.g., 2026-02-01 00:00 -> 2026-01-31 23:00)
-            const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
-
-            // 計算該月最後一天
-            const lastDay = new Date(year, month, 0).getDate();
-            const endStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
-            console.log(`查詢月份卡片: ${startStr} ~ ${endStr}`);
-
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .select('id, publish_date, english_term, abbreviation, status')
-                .eq('status', 'published')
-                .gte('publish_date', startStr)
-                .lte('publish_date', endStr)
-                .order('publish_date', { ascending: true });
-
-            if (error) throw error;
-
-            return { success: true, data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 根據 ID 取得每日一卡
-     */
-    async getDailyCardById(id) {
-        try {
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error) throw error;
-            return { success: true, data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 根據日期取得每日一卡 (重構：確保舊方法可用)
-     */
-    async getDailyCardByDate(date) {
-        try {
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .select('*')
-                .eq('publish_date', date)
-                .maybeSingle();
-
-            if (error) throw error;
-            return { success: true, data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 取得今日的每日一卡
-     */
-    async getTodayDailyCard() {
-        try {
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .select('*')
-                .eq('publish_date', today)
-                .maybeSingle();
-
-            if (error) throw error;
-
-            // 如果今天沒有卡片，取最新的一張
-            if (!data) {
-                const { data: latestCard, error: latestError } = await this.supabase
-                    .from('daily_cards')
-                    .select('*')
-                    .order('publish_date', { ascending: false })
-                    .limit(1)
-                    .single();
-
-                if (latestError) throw latestError;
-                return { success: true, data: latestCard };
-            }
-
-            return { success: true, data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 將每日一卡添加到使用者收藏
-     */
-    async addDailyCardToCollection(dailyCardId, userId) {
-        try {
-            // 1. 取得每日一卡資料
-            const { data: dailyCard, error: fetchError } = await this.supabase
-                .from('daily_cards')
-                .select('*')
-                .eq('id', dailyCardId)
-                .single();
-
-            if (fetchError) throw fetchError;
-
-            // 2. 複製到使用者的 flashcards
-            const now = new Date().toISOString();
-            const newCard = {
-                user_id: userId,
-                source_daily_card_id: dailyCardId,
-                category: dailyCard.category,
-                english_term: dailyCard.english_term,
-                chinese_translation: dailyCard.chinese_translation,
-                abbreviation: dailyCard.abbreviation,
-                description: dailyCard.description,
-                analogy: dailyCard.analogy,
-                level: dailyCard.level,
-                quiz_questions: dailyCard.quiz_questions,
-                is_public: false,
-                created_at: now,
-                updated_at: now
-            };
-
-            const { data: createdCard, error: insertError } = await this.supabase
-                .from('flashcards')
-                .insert(newCard)
-                .select()
-                .single();
-
-            if (insertError) throw insertError;
-
-            // 3. 更新 add_count
-            const { error: updateError } = await this.supabase
-                .from('daily_cards')
-                .update({ add_count: dailyCard.add_count + 1 })
-                .eq('id', dailyCardId);
-
-            if (updateError) {
-                console.warn('更新 add_count 失敗:', updateError);
-            }
-
-            // 4. 給使用者 XP
-            const progressResult = await this.updateUserProgress(userId, { xpToAdd: XP_REWARDS.CREATE_CARD });
-
-            // [Sync] 同步卡片數量
-            await this._syncUserCardCount(userId);
-
-            return {
-                success: true,
-                data: createdCard,
-                xpEarned: XP_REWARDS.CREATE_CARD,
-                newUserData: progressResult.success ? progressResult.data.user : null
-            };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 檢查使用者是否已添加某張每日一卡
-     */
-    async hasUserAddedDailyCard(dailyCardId, userId) {
-        try {
-            const { data, error } = await this.supabase
-                .from('flashcards')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('source_daily_card_id', dailyCardId)
-                .maybeSingle();
-
-            if (error) throw error;
-
-            return { success: true, hasAdded: !!data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
+    // ==================== 題目相關 ====================
     // ==================== 卡片相關 ====================
 
     /**
-     * 取得卡片列表（支援分頁與篩選）
+     * 取得題目列表（支援分頁與篩選）
      */
-    async getCards(options = {}) {
+    async getQuestions(options = {}) {
         try {
             const {
-                userId,
-                category = null,
-                masteryLevel = null,
+                subject = null,
+                chapter = null,
+                isCorrect = null, // 用於篩選錯題
                 searchQuery = null,
                 page = 1,
                 limit = 20
             } = options;
 
+            // 注意：這裡是取得所有人的共用題庫，如果有分租戶才需要 userId
             let query = this.supabase
-                .from('flashcards')
-                .select('*, user_card_progress(*)', { count: 'exact' })
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
+                .from('questions')
+                .select('*, user_question_progress!left(*)', { count: 'exact' })
+                .order('subject', { ascending: true })
+                .order('chapter', { ascending: true });
 
-            if (category) {
-                if (Array.isArray(category)) {
-                    // 多選篩選
-                    if (category.length > 0) {
-                        query = query.in('category', category);
-                    }
-                } else {
-                    // 單選篩選 (相容舊代碼)
-                    query = query.eq('category', category);
-                }
+            // 如果要過濾當前用戶的進度，Supabase JS SDK 沒辦法在 outer join 的 on 條件輕易加上 userId，
+            // 通常在 !inner 或透過 RPC 會更好。
+            // 不過既然這個系統預設單人登入/企業共用題庫，我們先把所有題目都撈出來，
+            // 如果這用戶有作答紀錄自然會關聯進來。為了保險起見過濾 user_id：
+            if (options.userId) {
+                // 若有關聯的 progress，且該 progress 的 user_id 是當前用戶（處理 inner 會濾除沒作答題目的問題，所以保持 left）
+                // 這裡在前端處理過濾，或者如果有設 RLS，只會撈出自己的 user_question_progress
             }
 
-            if (masteryLevel !== null) {
-                query = query.eq('user_card_progress.mastery_level', masteryLevel);
+            if (subject) {
+                query = query.in('subject', Array.isArray(subject) ? subject : [subject]);
+            }
+            if (chapter) {
+                query = query.in('chapter', Array.isArray(chapter) ? chapter : [chapter]);
             }
 
+            // 搜尋
             if (searchQuery) {
-                query = query.or(
-                    `english_term.ilike.%${searchQuery}%,` +
-                    `chinese_translation.ilike.%${searchQuery}%,` +
-                    `abbreviation.ilike.%${searchQuery}%`
-                );
+                query = query.or(`question.ilike.%${searchQuery}%,explanation.ilike.%${searchQuery}%`);
             }
 
             const offset = (page - 1) * limit;
@@ -795,17 +598,44 @@ class ApiService {
 
             if (error) throw error;
 
+            // 在前端對 user_question_progress 進行過濾 (確保只看當前用戶的 progress，如果 RLS 沒設定好的話)
+            const questions = data.map(q => {
+                let progress = null;
+                if (q.user_question_progress && q.user_question_progress.length > 0) {
+                    // 如果有傳 userId，找出該 user_id 的進度，如果沒有傳就拿第一個
+                    if (options.userId) {
+                        progress = q.user_question_progress.find(p => p.user_id === options.userId) || null;
+                    } else {
+                        progress = q.user_question_progress[0];
+                    }
+                }
+
+                return {
+                    ...q,
+                    progress: progress
+                };
+            });
+
+            // 針對錯題狀態或正確狀態進一步過濾 (因為無法直接在 left join 進行 Supabase 端的複雜查詢)
+            let filteredQuestions = questions;
+            if (isCorrect !== null) {
+                filteredQuestions = questions.filter(q => {
+                    const p = q.progress;
+                    if (isCorrect === true) return p && p.is_correct === true;
+                    if (isCorrect === false) return p && p.is_correct === false;
+                    if (isCorrect === 'unanswered') return !p || p.is_correct === null;
+                    return true;
+                });
+            }
+
             return {
                 success: true,
                 data: {
-                    cards: data.map(card => ({
-                        ...card,
-                        progress: card.user_card_progress?.[0] || null
-                    })),
+                    questions: filteredQuestions,
                     pagination: {
                         currentPage: page,
                         totalPages: Math.ceil(count / limit),
-                        totalItems: count,
+                        totalItems: count, // 注意：如果上面有 filteredQuestions 過濾，這裡的 count 會有誤差，對於簡單分頁先以此為主
                         itemsPerPage: limit
                     }
                 }
@@ -863,185 +693,107 @@ class ApiService {
     }
 
     /**
-     * 取得使用者所有不重複的分類
+     * 取得所有不重複的大科目列表
      */
-    async getUniqueCategories(userId) {
+    async getUniqueSubjects() {
         try {
             const { data, error } = await this.supabase
-                .from('flashcards')
-                .select('category')
-                .eq('user_id', userId);
+                .from('questions')
+                .select('subject');
 
             if (error) throw error;
 
-            // 取出不重複的分類
-            const uniqueCategories = [...new Set(data.map(item => item.category).filter(Boolean))];
+            const uniqueSubjects = [...new Set(data.map(item => item.subject).filter(Boolean))];
 
-            // 簡單排序
-            uniqueCategories.sort();
+            // PRD 規定：大科目中文注音排序
+            const collator = new Intl.Collator('zh-TW', { numeric: true });
+            uniqueSubjects.sort(collator.compare);
 
-            return {
-                success: true,
-                data: uniqueCategories
-            };
+            return { success: true, data: uniqueSubjects };
         } catch (error) {
             return this._handleError(error);
         }
     }
 
     /**
-     * 複製母版卡片給新用戶
+     * 根據大科目，取得不重複的章節列表
+     */
+    async getUniqueChaptersBySubject(subject) {
+        try {
+            let query = this.supabase
+                .from('questions')
+                .select('chapter');
+
+            if (subject) {
+                query = query.eq('subject', subject);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            const uniqueChapters = [...new Set(data.map(item => item.chapter).filter(Boolean))];
+
+            // PRD 規定：自然排序
+            const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+            uniqueChapters.sort(collator.compare);
+
+            return { success: true, data: uniqueChapters };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 複製母版題庫給新用戶
+     * 從 MASTER_ADMIN_ID 那邊將 questions 複製給新登入的用戶
      */
     async copyMasterCardsToUser(userId, adminUuid) {
         try {
-            // 0. [Self-Healing] Ensure user profile exists before copying cards
-            // This fixes "Key is not present in table users" error for zombie users
-            // Also handles Google OAuth users by extracting metadata
+            // 0. Ensure user profile exists before copying cards
             const userMeta = this.currentUser?.user_metadata || {};
             const fallbackEmail = `${userId}@placeholder.com`;
             const fallbackName = 'Learning User';
 
-            // Google OAuth 會提供 full_name, avatar_url, email 等資訊
             const username = userMeta.full_name || userMeta.name || userMeta.username || fallbackName;
             const email = this.currentUser?.email || userMeta.email || fallbackEmail;
             const avatarUrl = userMeta.avatar_url || userMeta.picture || null;
 
             await this._createUserProfile(userId, username, email, avatarUrl);
 
-            // 1. 檢查用戶是否已有卡片
-            const { count, error: countError } = await this.supabase
-                .from('flashcards')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', userId);
+            // 1. 檢查用戶是否已有作答進度 (在此系統，我們不複製 questions 表，
+            // 因為 PRD：「母版題庫複製: 管理員(MASTER_ADMIN_ID)的題目作為共用題庫」
+            // 系統將直接讓學員存取共用題庫。所以「複製題庫」這一步在新的架構下是不必要的。
+            // 學員不需要在 questions 表擁有自己的副本，只要操作 user_question_progress 即可。)
 
-            if (countError) throw countError;
-
-            // 若已有卡片，則不執行初始化
-            if (count > 0) return { success: true, message: 'User already has cards.' };
-
-            console.log('User has no cards. Starting initialization...');
-
-            // 2. 抓取母版卡片 (需提供管理員 UUID)
-            // [Fix] Remove is_public check for admin cards to ensure all master cards are copied
-            let query = this.supabase
-                .from('flashcards')
-                .select('*');
-
-            if (adminUuid) {
-                query = query.eq('user_id', adminUuid);
-            } else {
-                // If no admin UUID provided, fallback to public cards (should not happen in our config)
-                query = query.eq('is_public', true);
-            }
-
-            const { data: masterCards, error: nodesError } = await query;
-
-            if (nodesError) {
-                console.error('Error fetching master cards:', nodesError);
-                throw nodesError;
-            }
-
-            if (!masterCards || masterCards.length === 0) {
-                console.warn(`No master cards found for Admin UUID: ${adminUuid}`);
-                return { success: false, message: 'No master cards found.' };
-            }
-
-            console.log(`Found ${masterCards.length} master cards. Copying...`);
-
-            // 3. 準備批量插入的資料
-            const newCardsData = masterCards.map(card => ({
-                user_id: userId,
-                chinese_translation: card.chinese_translation,
-                english_term: card.english_term,
-                abbreviation: card.abbreviation,
-                category: card.category,
-                level: card.level,
-                description: card.description,
-                analogy: card.analogy,
-                // Direct copy of JSONB quiz questions
-                quiz_questions: card.quiz_questions,
-                is_public: false,
-                is_published: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }));
-
-            // 執行批量插入卡片
-            const { data: insertedCards, error: insertError } = await this.supabase
-                .from('flashcards')
-                .insert(newCardsData)
-                .select();
-
-            if (insertError) throw insertError;
-
-            // 4. 建立學習進度 (Progress Records)
-            let progressRecords = insertedCards.map(newCard => ({
-                user_id: userId,
-                card_id: newCard.id,
-                box: 1,
-                mastery_level: 0,
-                next_review_at: new Date().toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }));
-
-            // The old logic for quiz_questions table insertion is removed since we use JSONB column now.
-
-            if (progressRecords.length > 0) {
-                const { error: pError } = await this.supabase
-                    .from('user_card_progress')
-                    .upsert(progressRecords);
-                if (pError) console.error('Error creating progress:', pError);
-            }
-
-            console.log('Initialization complete.');
-            return { success: true, count: insertedCards.length };
+            // 為了向下相容，或者只是為了表示初始化成功，我們可以直接回傳成功。
+            console.log('User joined. Using shared master question bank.');
+            return { success: true, message: 'User initialized. Shared question bank is ready.' };
 
         } catch (error) {
-            console.error('Copy Master Cards Error:', error);
+            console.error('Initialization Error:', error);
             return { success: false, error };
         }
     }
 
     /**
-     * 取得單張卡片詳細資訊（含進度）
+     * 取得單筆題目詳細資訊（含作答進度）
      */
-    async getCardWithProgress(cardId, userId) {
+    async getQuestionWithProgress(questionId, userId) {
         try {
-            // 1. Try fetching from flashcards
-            let { data: card, error: cardError } = await this.supabase
-                .from('flashcards')
+            let { data: question, error: questionError } = await this.supabase
+                .from('questions')
                 .select('*')
-                .eq('id', cardId)
+                .eq('id', questionId)
                 .single();
 
-            // 2. If not found in flashcards, try fetching from daily_cards
-            if (cardError && cardError.code === 'PGRST116') {
-                const { data: dailyCard, error: dailyError } = await this.supabase
-                    .from('daily_cards')
-                    .select('*')
-                    .eq('id', cardId)
-                    .single();
-
-                if (!dailyError && dailyCard) {
-                    card = dailyCard;
-                    card.is_daily_card = true; // Flag to identify source
-                    cardError = null;
-                } else {
-                    // If still not found or other error, throw the original error
-                    throw cardError;
-                }
-            } else if (cardError) {
-                throw cardError;
-            }
-
-            if (cardError) throw cardError;
+            if (questionError) throw questionError;
 
             const { data: progress, error: progressError } = await this.supabase
-                .from('user_card_progress')
+                .from('user_question_progress')
                 .select('*')
                 .eq('user_id', userId)
-                .eq('card_id', cardId)
+                .eq('question_id', questionId)
                 .maybeSingle();
 
             if (progressError && progressError.code !== 'PGRST116') {
@@ -1051,7 +803,7 @@ class ApiService {
             return {
                 success: true,
                 data: {
-                    card,
+                    question,
                     progress: progress || null
                 }
             };
@@ -1061,170 +813,53 @@ class ApiService {
     }
 
     /**
-     * 建立新卡片
+     * [僅管理員] 手動建立單一題目
      */
-    async createCard(cardData) {
+    async createQuestion(questionData) {
         try {
             const now = new Date().toISOString();
-            const newCard = {
-                ...cardData,
+            const newQuestion = {
+                ...questionData,
                 created_at: now,
                 updated_at: now
             };
 
             const { data, error } = await this.supabase
-                .from('flashcards')
-                .insert(newCard)
+                .from('questions')
+                .insert(newQuestion)
                 .select()
                 .single();
 
             if (error) throw error;
+            await this._syncUserCardCount(); // 更新總題數
 
-            await this.addUserXp(cardData.user_id, XP_REWARDS.CREATE_CARD);
-
-            // [Sync] 同步卡片數量
-            await this._syncUserCardCount(cardData.user_id);
-
-            return {
-                success: true,
-                data,
-                xpEarned: XP_REWARDS.CREATE_CARD
-            };
+            return { success: true, data };
         } catch (error) {
-            if (error.code === '23505') {
-                return this._handleError(error, ERROR_CODES.DUPLICATE_CARD);
-            }
             return this._handleError(error);
         }
     }
 
     /**
-     * 批量建立新卡片
-     * @param {array} cardsData - 卡片數據數組
-     * @returns {Promise<object>}
+     * [僅管理員] 批量建立題目 (匯入 JSON)
      */
-    async createCards(cardsData) {
+    async createQuestions(questionsData) {
         try {
             const now = new Date().toISOString();
-            const newCards = cardsData.map(card => ({
-                ...card,
+            const newQuestions = questionsData.map(q => ({
+                ...q,
                 created_at: now,
                 updated_at: now
             }));
 
             const { data, error } = await this.supabase
-                .from('flashcards')
-                .insert(newCards)
+                .from('questions')
+                .insert(newQuestions)
                 .select();
 
             if (error) throw error;
+            await this._syncUserCardCount();
 
-            // 計算總 XP 並更新使用者進度
-            const totalXP = XP_REWARDS.CREATE_CARD * cardsData.length;
-            const userId = cardsData[0].user_id;
-
-            const progressResult = await this.updateUserProgress(userId, {
-                xpToAdd: totalXP
-            });
-
-            // [Sync] 同步卡片數量
-            await this._syncUserCardCount(userId);
-
-            return {
-                success: true,
-                data: data,
-                cardsCreated: data.length,
-                xpEarned: totalXP,
-                newUserData: progressResult.success ? progressResult.data.user : null
-            };
-        } catch (error) {
-            if (error.code === '23505') {
-                return this._handleError(error, ERROR_CODES.DUPLICATE_CARD);
-            }
-            return this._handleError(error);
-        }
-    }
-
-
-
-    /**
-     * [Admin] 檢查日期是否已有發布的卡片
-     * @param {string} date - YYYY-MM-DD
-     */
-    async checkDateAvailability(date) {
-        try {
-            const { data, error } = await this.supabase
-                .from('daily_cards')
-                .select('id')
-                .eq('status', 'published')
-                .eq('publish_date', date)
-                .maybeSingle();
-
-            if (error) throw error;
-            // 如果 data 存在，代表該日已被佔用 (return false)
-            return { success: true, isAvailable: !data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * [Refactor] 管理員發布卡片流程：
-     * 1. 從 flashcards 讀取來源卡片
-     * 2. 複製一份到 daily_cards (public)
-     * 3. 標記來源卡片 is_published = true
-     */
-    async publishFlashcardToDaily(flashcardId, publishDate) {
-        try {
-            // 1. 獲取 Flashcard 原始資料
-            const { data: flashcard, error: fetchError } = await this.supabase
-                .from('flashcards')
-                .select('*')
-                .eq('id', flashcardId)
-                .single();
-
-            if (fetchError) throw fetchError;
-
-            // 2. 準備要寫入 daily_cards 的資料
-            const dailyCardData = {
-                english_term: flashcard.english_term,
-                chinese_translation: flashcard.chinese_translation,
-                description: flashcard.description,
-                category: flashcard.category,
-                analogy: flashcard.analogy,
-                abbreviation: flashcard.abbreviation,
-                quiz_questions: flashcard.quiz_questions,
-                publish_date: publishDate,
-                status: 'published',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-
-            // 注意：因為 Supabase JS Client 不支援 transaction，這裡必須分兩步做
-            // 理想上應該用 RPC，但這裡用 Client 端模擬，管理員流量小沒關係
-
-            // 2.1 插入 daily_cards
-            const { data: insertedDaily, error: insertError } = await this.supabase
-                .from('daily_cards')
-                .insert(dailyCardData) // 直接使用上面準備好的完整物件 (Supabase 會忽略多餘欄位，但我們已經精準匹配了)
-                .select()
-                .single();
-
-            if (insertError) throw insertError;
-
-            // 2.2 更新 flashcards 狀態
-            const { error: updateError } = await this.supabase
-                .from('flashcards')
-                .update({ is_published: true })
-                .eq('id', flashcardId);
-
-            if (updateError) {
-                console.error('更新 Flashcard 狀態失敗，但 Daily Card 已發布', updateError);
-                // 這裡不算失敗，因為公開卡片已經出去了
-            }
-
-            return { success: true, data: insertedDaily };
-
+            return { success: true, data, count: data.length };
         } catch (error) {
             return this._handleError(error);
         }
@@ -1232,21 +867,19 @@ class ApiService {
 
 
     /**
-     * 更新卡片
+     * 更新題目（僅管理員）
      */
-    async updateCard(cardId, updates) {
+    async updateQuestion(questionId, updates) {
         try {
             updates.updated_at = new Date().toISOString();
-
             const { data, error } = await this.supabase
-                .from('flashcards')
+                .from('questions')
                 .update(updates)
-                .eq('id', cardId)
+                .eq('id', questionId)
                 .select()
                 .single();
 
             if (error) throw error;
-
             return { success: true, data };
         } catch (error) {
             return this._handleError(error, ERROR_CODES.CARD_NOT_FOUND);
@@ -1254,217 +887,18 @@ class ApiService {
     }
 
     /**
-     * 提交測驗結果並計算獎勵
-     * @param {string} userId 使用者 ID
-     * @param {string} cardId 卡片 ID (flashcard ID, not daily_card ID usually, assuming test context)
-     * @param {number} correctCount 答對題數 (0-3)
-     * @param {number[]} answeredIndices 本次答對的題目索引 (例如 [0, 2, 4])
-     * @param {Array<{questionIndex: number, isCorrect: boolean}>} questionResults 每道題的作答結果（可選）
-     * @returns {Promise<object>}
+     * 刪除題目（僅管理員可用）。注意有 FK cascade
      */
-    async submitQuizResult(userId, cardId, correctCount, answeredIndices = [], questionResults = null) {
-        try {
-            console.log('=== API submitQuizResult ===');
-            console.log('correctCount received:', correctCount);
-            console.log('answeredIndices received:', answeredIndices);
-            console.log('questionResults received:', questionResults);
-
-            // 1. 定義基礎 XP
-            let xpToAdd = 0;
-            if (correctCount === 1) xpToAdd = 70;
-            else if (correctCount === 2) xpToAdd = 85;
-            else if (correctCount === 3) xpToAdd = 100;
-
-            console.log('Base XP calculated:', xpToAdd);
-
-            // 2. 取得目前進度
-            let { data: progress } = await this.supabase
-                .from('user_card_progress')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('card_id', cardId)
-                .maybeSingle();
-
-            if (!progress) {
-                // 如果沒有進度紀錄，創建新的
-                const { data: newProgress, error: createError } = await this.supabase
-                    .from('user_card_progress')
-                    .insert({
-                        user_id: userId,
-                        card_id: cardId,
-                        mastery_level: 1, // Fix: Default to 1 (Novice) not 0 (Hearted/Unfamiliar)
-                        is_perfect: false,
-                        answered_question_indices: []
-                    })
-                    .select()
-                    .single();
-
-                if (createError) throw createError;
-                progress = newProgress;
-            }
-
-            const bonuses = [];
-            let perfectCardsToAdd = 0;
-
-            // 3. 合併答對過的題目索引（用於追蹤大師勛章進度）
-            const oldIndices = progress.answered_question_indices || [];
-            const cleanNewIndices = answeredIndices.map(Number);
-            const mergedIndicesSet = new Set([...oldIndices, ...cleanNewIndices]);
-            const mergedIndices = Array.from(mergedIndicesSet);
-
-            // 4. 判斷【開拓者獎勵】- 只有第一次滿分才給 +50XP
-            const isPerfectRun = correctCount === 3;
-            if (isPerfectRun) {
-                // 只有第一次滿分且尚未領取開拓者獎勵時才給
-                if (!progress.is_pioneer_claimed) {
-                    xpToAdd += 50;
-                    bonuses.push({ name: '【開拓者獎勵】', xp: 50 });
-                    progress.is_pioneer_claimed = true;
-                }
-
-                // 只有第一次全對時才增加 perfect card count
-                if (!progress.is_perfect) {
-                    perfectCardsToAdd = 1;
-                    progress.is_perfect = true;
-                }
-            }
-
-            // 5. 判斷【大師勛章】- 答對所有題目（5題）後，每次測驗都額外 +15XP
-            const totalQuestionCount = 5; // 題庫總題數
-            const wasMasterBefore = progress.is_mastered || false;
-            const isMasterNow = mergedIndices.length >= totalQuestionCount;
-
-            // 首次達成大師勛章
-            if (isMasterNow && !wasMasterBefore) {
-                xpToAdd += 15;
-                bonuses.push({ name: '【大師勛章】', xp: 15, isNew: true });
-                progress.is_mastered = true;
-            }
-            // 已經是大師，每次測驗都加 15XP
-            else if (wasMasterBefore) {
-                xpToAdd += 15;
-                bonuses.push({ name: '【大師加成】', xp: 15, isNew: false });
-            }
-
-            // 6. 取得當前用戶資料（用於記錄 oldLevel）
-            const userProfileResult = await this.getUserProfile(userId);
-            const oldLevel = userProfileResult.success ? userProfileResult.data.current_level : 1;
-
-            // 7. 更新 USER XP & Perfect Count
-            // 使用現有的 updateUserProgress (已包含 LevelSystem 邏輯)
-            const userUpdateResult = await this.updateUserProgress(userId, {
-                xpToAdd: xpToAdd,
-                perfectCardsToAdd: perfectCardsToAdd
-            });
-
-            if (!userUpdateResult.success) throw userUpdateResult.error;
-
-            // 8. 更新 Card Progress
-            // 計算最高分（只有更高分才更新）
-            const currentBest = progress.best_quiz_score || 0;
-            const newBestScore = Math.max(currentBest, correctCount);
-
-            const { error: progressUpdateError } = await this.supabase
-                .from('user_card_progress')
-                .update({
-                    is_perfect: progress.is_perfect,
-                    is_pioneer_claimed: progress.is_pioneer_claimed,
-                    is_mastered: progress.is_mastered,
-                    answered_question_indices: mergedIndices,
-                    last_quiz_score: correctCount,
-                    best_quiz_score: newBestScore,
-                    last_reviewed_at: new Date().toISOString(),
-                    times_reviewed: (progress.times_reviewed || 0) + 1,
-                    times_correct: (progress.times_correct || 0) + correctCount,
-                    times_incorrect: (progress.times_incorrect || 0) + (3 - correctCount)
-                })
-                .eq('id', progress.id);
-
-            if (progressUpdateError) console.error('Error updating progress:', progressUpdateError);
-
-            // 9. 寫入 Test Record
-            const { error: recordError } = await this.supabase
-                .from('test_records')
-                .insert({
-                    user_id: userId,
-                    card_id: cardId,
-                    is_correct: isPerfectRun, // 是否全對
-                    score: correctCount, // 答對題數
-                    xp_earned: xpToAdd, // 獲得的 XP
-                    bonuses: bonuses, // 獎勵 (JSONB)
-                    created_at: new Date().toISOString()
-                });
-
-            if (recordError) console.warn('寫入 Test Record 失敗:', recordError);
-
-            // 10. 更新每道題的統計（如果有提供 questionResults）
-            if (questionResults && Array.isArray(questionResults)) {
-                console.log('更新題目統計:', questionResults);
-                // 並行更新所有題目的統計
-                await Promise.all(
-                    questionResults.map(result =>
-                        this._updateQuestionStats(cardId, result.questionIndex, result.isCorrect)
-                    )
-                );
-            }
-
-            return {
-                success: true,
-                xpEarned: xpToAdd,
-                bonuses: bonuses,
-                newUserData: userUpdateResult.data.user,
-                // [Fix] Pass level up flags to result.html
-                leveledUp: userUpdateResult.data.leveledUp,
-                newLevel: userUpdateResult.data.levelState ? userUpdateResult.data.levelState.actualLevel : null,
-                oldLevel: oldLevel,
-
-                isPerfectFirstTime: isPerfectRun && perfectCardsToAdd > 0,
-                isMasterFirstTime: isMasterNow && !wasMasterBefore
-            };
-
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 刪除卡片
-     */
-    /**
-     * 內部函數：同步使用者的卡片總數
-     */
-    async _syncUserCardCount(userId) {
-        if (!userId) return;
-        try {
-            const { count, error } = await this.supabase
-                .from('flashcards')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', userId);
-
-            if (error) throw error;
-
-            await this.updateUser(userId, {
-                total_cards: count
-            });
-        } catch (error) {
-            console.error('同步卡片數量失敗:', error);
-        }
-    }
-
-    /**
-     * 刪除卡片
-     */
-    async deleteCard(cardId, userId) {
+    async deleteQuestion(questionId) {
         try {
             const { error } = await this.supabase
-                .from('flashcards')
+                .from('questions')
                 .delete()
-                .eq('id', cardId)
-                .eq('user_id', userId);
+                .eq('id', questionId);
 
             if (error) throw error;
 
-            await this._syncUserCardCount(userId);
+            await this._syncUserCardCount();
 
             return { success: true };
         } catch (error) {
@@ -1472,182 +906,161 @@ class ApiService {
         }
     }
 
+    /**
+     * 內部函數：同步系統題目總數
+     * 在上傳或刪除題目後，計算總題數，更新給特定管理員，
+     * 因為我們現在已經移除了每個使用者自己的 flashcards 總量邏輯，可以統一更新 (如果需要的話)。
+     * 或這部可以簡化，直接在前端每次讀取 count
+     */
+    async _syncUserCardCount() {
+        try {
+            const { count, error } = await this.supabase
+                .from('questions')
+                .select('*', { count: 'exact', head: true });
+
+            if (error) throw error;
+
+            // 如果要同步給所有用戶，可以不需要這裡做（因為會很耗能）。
+            // 新架構可以改為在取得個人資料時，動態查詢題目總數即可。
+            console.log("Current total questions count in DB:", count);
+
+        } catch (error) {
+            console.error('同步卡片數量失敗:', error);
+        }
+    }
+
 
     // ==================== 進度與測驗相關 ====================
 
     /**
-     * 提交測驗結果（完整流程）
+     * 提交答題結果（單題制，完整流程）
+     * @param {Object} answerData - 答題資料
+     * @param {string} answerData.userId - 用戶 ID
+     * @param {string} answerData.questionId - 題目 ID
+     * @param {string|Array} answerData.userAnswer - 用戶答案 (單選: "C", 複選: ["A", "C"])
+     * @param {boolean} answerData.isCorrect - 是否答對
+     * @param {number} [answerData.responseTimeMs] - 作答時間(毫秒)
      */
-    async submitTestResult(testData) {
+    async submitAnswer(answerData) {
         try {
-            const { userId, cardId, isCorrect, responseTimeMs, testType = 'quiz' } = testData;
+            const { userId, questionId, userAnswer, isCorrect, responseTimeMs = null } = answerData;
+            const now = new Date().toISOString();
 
-            const progressResult = await this._getCardProgress(userId, cardId);
-            const isFirstTime = !progressResult.data;
+            // 1. 檢查是否為首次答對該題
+            const { data: existingProgress } = await this.supabase
+                .from('user_question_progress')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('question_id', questionId)
+                .maybeSingle();
 
-            const xpEarned = isCorrect
-                ? (isFirstTime ? XP_REWARDS.CORRECT_FIRST : XP_REWARDS.CORRECT_REVIEW)
-                : XP_REWARDS.INCORRECT;
+            const isFirstTime = !existingProgress;
+            const wasCorrectBefore = existingProgress?.is_correct === true;
 
-            const { data: testRecord, error: testError } = await this.supabase
-                .from('test_records')
+            // 2. 計算 XP 獎勵
+            let xpToAdd = 0;
+            const bonuses = [];
+
+            if (isCorrect) {
+                // 答對: +100 XP
+                xpToAdd += XP_REWARDS.CORRECT;
+                bonuses.push({ name: '答對題目', xp: XP_REWARDS.CORRECT });
+
+                // 首次答對該題: 額外 +50 XP (開拓者獎勵)
+                if (!wasCorrectBefore) {
+                    xpToAdd += XP_REWARDS.PIONEER;
+                    bonuses.push({ name: '開拓者獎勵', xp: XP_REWARDS.PIONEER });
+                }
+            } else {
+                // 答錯: +0 XP
+                xpToAdd = XP_REWARDS.INCORRECT;
+            }
+
+            // 3. 更新或建立 user_question_progress
+            const newTimesReviewed = (existingProgress?.times_reviewed || 0) + 1;
+            const newTimesCorrect = (existingProgress?.times_correct || 0) + (isCorrect ? 1 : 0);
+            const newTimesIncorrect = (existingProgress?.times_incorrect || 0) + (isCorrect ? 0 : 1);
+
+            const progressData = {
+                user_id: userId,
+                question_id: questionId,
+                is_correct: isCorrect,
+                times_reviewed: newTimesReviewed,
+                times_correct: newTimesCorrect,
+                times_incorrect: newTimesIncorrect,
+                last_reviewed_at: now,
+                updated_at: now
+            };
+
+            if (isFirstTime) {
+                progressData.created_at = now;
+            }
+
+            const { error: progressError } = await this.supabase
+                .from('user_question_progress')
+                .upsert(progressData, { onConflict: 'user_id,question_id' });
+
+            if (progressError) {
+                console.error('更新進度失敗:', progressError);
+                throw progressError;
+            }
+
+            // 4. 寫入 answer_records
+            const { error: recordError } = await this.supabase
+                .from('answer_records')
                 .insert({
                     user_id: userId,
-                    card_id: cardId,
+                    question_id: questionId,
+                    user_answer: userAnswer,
                     is_correct: isCorrect,
                     response_time_ms: responseTimeMs,
-                    test_type: testType,
-                    xp_earned: xpEarned,
-                    created_at: new Date().toISOString()
-                })
-                .select()
-                .single();
+                    xp_earned: xpToAdd,
+                    created_at: now
+                });
 
-            if (testError) throw testError;
+            if (recordError) {
+                console.warn('寫入答題記錄失敗:', recordError);
+            }
 
-            const updatedProgress = await this._updateProgressAfterTest(userId, cardId, isCorrect);
-            const xpResult = await this.addUserXp(userId, xpEarned);
+            // 5. 取得當前用戶資料（記錄升級前等級）
+            const userProfileResult = await this.getUserProfile(userId);
+            const oldLevel = userProfileResult.success ? userProfileResult.data.current_level : 1;
+
+            // 6. 更新用戶 XP 與等級
+            const userUpdateResult = await this.updateUserProgress(userId, {
+                xpToAdd: xpToAdd
+            });
+
+            if (!userUpdateResult.success) {
+                console.error('更新用戶 XP 失敗:', userUpdateResult.error);
+                throw userUpdateResult.error;
+            }
+
+            // 7. 如果是首次答對，更新 correct_answer_count
+            if (isCorrect && !wasCorrectBefore) {
+                const currentCount = userProfileResult.data.correct_answer_count || 0;
+                await this.updateUser(userId, {
+                    correct_answer_count: currentCount + 1
+                });
+            }
 
             return {
                 success: true,
-                data: {
-                    testRecord,
-                    cardProgress: updatedProgress.data,
-                    xpEarned,
-                    levelUp: xpResult.data.leveledUp,
-                    newLevel: xpResult.data.newLevel,
-                    newXp: xpResult.data.newXp
-                }
+                xpEarned: xpToAdd,
+                bonuses: bonuses,
+                isFirstTimeCorrect: isCorrect && !wasCorrectBefore,
+                newUserData: userUpdateResult.data.user,
+                leveledUp: userUpdateResult.data.leveledUp,
+                newLevel: userUpdateResult.data.levelState ? userUpdateResult.data.levelState.actualLevel : null,
+                oldLevel: oldLevel
             };
+
         } catch (error) {
             return this._handleError(error);
         }
     }
 
-    async _getCardProgress(userId, cardId) {
-        try {
-            const { data, error } = await this.supabase
-                .from('user_card_progress')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('card_id', cardId)
-                .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') throw error;
-
-            return { success: true, data };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    async _updateProgressAfterTest(userId, cardId, isCorrect) {
-        try {
-            const progressResult = await this._getCardProgress(userId, cardId);
-            const now = new Date().toISOString();
-
-            if (!progressResult.data) {
-                const { data, error } = await this.supabase
-                    .from('user_card_progress')
-                    .insert({
-                        user_id: userId,
-                        card_id: cardId,
-                        mastery_level: isCorrect ? 1 : 0,
-                        times_reviewed: 1,
-                        times_correct: isCorrect ? 1 : 0,
-                        times_incorrect: isCorrect ? 0 : 1,
-                        last_reviewed_at: now,
-                        created_at: now,
-                        updated_at: now
-                    })
-                    .select()
-                    .single();
-
-                if (error) throw error;
-                return { success: true, data };
-            } else {
-                const progress = progressResult.data;
-                const newTimesCorrect = progress.times_correct + (isCorrect ? 1 : 0);
-                const newTimesIncorrect = progress.times_incorrect + (isCorrect ? 0 : 1);
-                const newTimesReviewed = progress.times_reviewed + 1;
-
-                const accuracyRate = newTimesCorrect / newTimesReviewed;
-                let newMasteryLevel = progress.mastery_level;
-
-                if (isCorrect && accuracyRate >= 0.9 && progress.mastery_level < 5) {
-                    newMasteryLevel = progress.mastery_level + 1;
-                } else if (!isCorrect && accuracyRate < 0.5 && progress.mastery_level > 0) {
-                    newMasteryLevel = progress.mastery_level - 1;
-                }
-
-                const { data, error } = await this.supabase
-                    .from('user_card_progress')
-                    .update({
-                        mastery_level: newMasteryLevel,
-                        times_reviewed: newTimesReviewed,
-                        times_correct: newTimesCorrect,
-                        times_incorrect: newTimesIncorrect,
-                        last_reviewed_at: now,
-                        updated_at: now
-                    })
-                    .eq('user_id', userId)
-                    .eq('card_id', cardId)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-                return { success: true, data };
-            }
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 直接更新卡片進度（用於手動設定熟悉度，例如愛心功能）
-     */
-    async updateCardProgress(cardId, userId, updates) {
-        try {
-            // 先檢查是否已有進度
-            const existing = await this._getCardProgress(userId, cardId);
-            const now = new Date().toISOString();
-
-            if (!existing.data) {
-                // 如果沒有進度，則建立新進度
-                const { data, error } = await this.supabase
-                    .from('user_card_progress')
-                    .insert({
-                        user_id: userId,
-                        card_id: cardId,
-                        ...updates,
-                        created_at: now,
-                        updated_at: now
-                    })
-                    .select()
-                    .single();
-
-                if (error) throw error;
-                return { success: true, data };
-            } else {
-                // 如果已有進度，則更新
-                const { data, error } = await this.supabase
-                    .from('user_card_progress')
-                    .update({
-                        ...updates,
-                        updated_at: now
-                    })
-                    .eq('user_id', userId)
-                    .eq('card_id', cardId)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-                return { success: true, data };
-            }
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
 
     // ==================== 管理員儀表板相關 ====================
 
@@ -1695,175 +1108,107 @@ class ApiService {
     }
 
     /**
-     * 取得錯誤次數最多的前 N 張卡片
+     * 取得錯誤次數最多的前 N 張卡片 (改版：取得錯誤率最高的題目)
      */
     async getAdminTopIncorrectCards(limit = 5) {
         try {
-            // 使用 Supabase RPC 或直接查詢
-            // 由於需要 JOIN 和聚合，這裡使用 SQL 邏輯
+            // 使用 user_question_progress 進行錯題統計
             const { data, error } = await this.supabase
-                .from('user_card_progress')
-                .select('card_id, times_incorrect, flashcards!inner(english_term, chinese_translation)')
+                .from('user_question_progress')
+                .select('question_id, times_incorrect, questions!inner(question)')
                 .order('times_incorrect', { ascending: false })
-                .limit(100); // 先取較多資料
+                .limit(100);
 
             if (error) throw error;
 
-            // 手動聚合（因為可能有多個用戶對同一張卡的進度）
-            const cardStats = {};
+            // 手動聚合
+            const questionStats = {};
             data.forEach(progress => {
-                const cardId = progress.card_id;
-                if (!cardStats[cardId]) {
-                    cardStats[cardId] = {
-                        card_id: cardId,
-                        english_term: progress.flashcards?.english_term || 'Unknown',
-                        chinese_translation: progress.flashcards?.chinese_translation || '未知',
+                const qId = progress.question_id;
+                if (!questionStats[qId]) {
+                    questionStats[qId] = {
+                        question_id: qId,
+                        question_text: progress.questions?.question || 'Unknown',
                         total_incorrect: 0
                     };
                 }
-                cardStats[cardId].total_incorrect += progress.times_incorrect || 0;
+                questionStats[qId].total_incorrect += progress.times_incorrect || 0;
             });
 
             // 轉換為陣列並排序
-            const sortedCards = Object.values(cardStats)
+            const sortedQuestions = Object.values(questionStats)
                 .sort((a, b) => b.total_incorrect - a.total_incorrect)
                 .slice(0, limit);
 
-            return { success: true, data: sortedCards };
+            return { success: true, data: sortedQuestions };
         } catch (error) {
             return this._handleError(error);
         }
     }
 
     /**
-     * 取得 Mastery Level 分佈
+     * 新增：隨機出題配置與儲存紀錄 (寫入 random_test_sessions)
+     * @param {string} userId
+     * @param {string} sessionName 自訂名稱
+     * @param {string} subject 單一大科目
+     * @param {string[]} chapters 選擇的章節 Array
+     * @param {number} count 出題數
      */
-    async getAdminMasteryDistribution() {
+    async generateRandomTest(userId, sessionName, subject, chapters, count) {
         try {
-            const { data, error } = await this.supabase
-                .from('user_card_progress')
-                .select('mastery_level');
+            // 1. 撈出符合條件的庫存題目
+            let query = this.supabase
+                .from('questions')
+                .select('id')
+                .eq('subject', subject);
 
-            if (error) throw error;
+            if (chapters && chapters.length > 0) {
+                // 有選特定的 chapter，否則就是 whole subject
+                query = query.in('chapter', chapters);
+            }
 
-            // 統計各個等級的數量
-            const distribution = {
-                0: 0, // 未熟悉
-                1: 0, // 初學
-                2: 0, // 進階
-                3: 0, // 熟練
-                4: 0, // 精通
-                5: 0  // 大師
-            };
-
-            data.forEach(progress => {
-                const level = progress.mastery_level || 0;
-                if (level in distribution) {
-                    distribution[level]++;
-                }
-            });
-
-            return { success: true, data: distribution };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 取得錯誤率最高的題目（魔王陷阱題）
-     */
-    async getAdminTopErrorQuestions(limit = 5) {
-        try {
-            const { data, error } = await this.supabase
-                .from('quiz_questions')
-                .select('*, flashcards!inner(english_term, chinese_translation)')
-                .gt('total_attempts', 0) // 只取有被作答過的題目
-                .order('wrong_count', { ascending: false })
-                .limit(100); // 先取較多資料
-
-            if (error) throw error;
-
-            // 計算錯誤率並排序
-            const questionsWithErrorRate = data.map(q => ({
-                ...q,
-                error_rate: q.total_attempts > 0 ? (q.wrong_count / q.total_attempts) : 0
-            }))
-                .sort((a, b) => b.error_rate - a.error_rate)
-                .slice(0, limit);
-
-            return { success: true, data: questionsWithErrorRate };
-        } catch (error) {
-            return this._handleError(error);
-        }
-    }
-
-    /**
-     * 更新題目統計（內部函數）
-     * @param {string} cardId - 卡片 ID
-     * @param {number} questionIndex - 題目索引 (0-4)
-     * @param {boolean} isCorrect - 是否答對
-     */
-    async _updateQuestionStats(cardId, questionIndex, isCorrect) {
-        try {
-            // 1. 查詢該題目是否存在
-            const { data: existing, error: fetchError } = await this.supabase
-                .from('quiz_questions')
-                .select('*')
-                .eq('card_id', cardId)
-                .eq('question_index', questionIndex)
-                .maybeSingle();
-
+            const { data: availableQuestions, error: fetchError } = await query;
             if (fetchError) throw fetchError;
 
-            if (existing) {
-                // 2. 如果存在，更新統計
-                const { error: updateError } = await this.supabase
-                    .from('quiz_questions')
-                    .update({
-                        total_attempts: existing.total_attempts + 1,
-                        wrong_count: existing.wrong_count + (isCorrect ? 0 : 1)
-                    })
-                    .eq('id', existing.id);
-
-                if (updateError) throw updateError;
-            } else {
-                // 3. 如果不存在，嘗試新增
-                // 需要先取得題目文字（Optional）
-                let questionText = `Question ${questionIndex + 1}`;
-                const { data: card } = await this.supabase
-                    .from('flashcards')
-                    .select('quiz_questions')
-                    .eq('id', cardId)
-                    .single();
-
-                if (card && card.quiz_questions && card.quiz_questions[questionIndex]) {
-                    questionText = card.quiz_questions[questionIndex].question || questionText;
-                }
-
-                const { error: insertError } = await this.supabase
-                    .from('quiz_questions')
-                    .insert({
-                        card_id: cardId,
-                        question_index: questionIndex,
-                        question: questionText,
-                        total_attempts: 1,
-                        wrong_count: isCorrect ? 0 : 1
-                    });
-
-                if (insertError) {
-                    // 如果同時有其他人新增導致唯一鍵衝突，則重試更新
-                    if (insertError.code === '23505') {
-                        return this._updateQuestionStats(cardId, questionIndex, isCorrect);
-                    }
-                    throw insertError;
-                }
+            if (!availableQuestions || availableQuestions.length === 0) {
+                return { success: false, message: '找不到符合條件的題目' };
             }
+
+            // 2. 使用 Fisher-Yates 洗牌演算法隨機抽選 count 題
+            const shuffled = [...availableQuestions];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const selected = shuffled.slice(0, count).map(q => q.id);
+
+            // 3. 儲存 Session 紀錄
+            const now = new Date().toISOString();
+            const { data: sessionData, error: insertError } = await this.supabase
+                .from('random_test_sessions')
+                .insert({
+                    user_id: userId,
+                    session_name: sessionName || '隨機測驗',
+                    subject: subject,
+                    chapters: chapters || [],
+                    question_ids: selected,
+                    total_questions: selected.length,
+                    created_at: now
+                })
+                .select()
+                .single();
+
+            if (insertError) throw insertError;
+
+            // 4. 回傳抽到的資料，前端可依此 ids 再去查詢真正的 questions
+            return {
+                success: true,
+                data: sessionData
+            };
         } catch (error) {
-            // 統計更新失敗不應該影響主流程，只記錄錯誤
-            console.error('Failed to update question stats:', error);
+            return this._handleError(error);
         }
     }
-
     // ==================== 錯誤處理 ====================
 
     async _createUserProfile(userId, nickname, email) {

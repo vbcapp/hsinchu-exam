@@ -7,12 +7,10 @@ const SUPABASE_CONFIG = {
 
 // ==================== XP 系統常數 ====================
 const XP_REWARDS = {
-    CREATE_CARD: 5,
-    CORRECT_FIRST: 10,
-    CORRECT_REVIEW: 5,
-    INCORRECT: 0,
-    STREAK_BONUS: 50,
-    MASTERY_MAX_BONUS: 25
+    CORRECT: 100,      // 單題答對
+    INCORRECT: 0,      // 單題答錯 (不扣分)
+    PIONEER: 50,       // 開拓者獎勵（首次答對該題）
+    DAILY_LOGIN: 50    // 每日登入
 };
 
 // ==================== 錯誤代碼 ====================
