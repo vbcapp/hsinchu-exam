@@ -510,27 +510,25 @@ class ApiService {
 
             const startDateISO = startDate.toISOString();
 
-            // 1. 從 answer_records 聚合每個用戶的答題次數
+            // 1. 透過後端 RPC 取得所有使用者的答題次數排行 (繞過 RLS 並提升效能)
             const { data: answerData, error: answerError } = await this.supabase
-                .from('answer_records')
-                .select('user_id')
-                .gte('created_at', startDateISO);
+                .rpc('get_leaderboard_answer_counts', { start_date: startDateISO });
 
             if (answerError) throw answerError;
 
-            // 2. 手動聚合計算每個用戶的答題次數
+            // 2. 建立對應字典供後續快速尋找當前使用者資料
             const userAnswerCount = {};
             answerData.forEach(record => {
                 if (record.user_id) {
-                    userAnswerCount[record.user_id] = (userAnswerCount[record.user_id] || 0) + 1;
+                    userAnswerCount[record.user_id] = Number(record.answer_count);
                 }
             });
 
-            // 3. 轉換為陣列並排序
-            const sortedUsers = Object.entries(userAnswerCount)
-                .map(([userId, count]) => ({ user_id: userId, answer_count: count }))
-                .sort((a, b) => b.answer_count - a.answer_count)
-                .slice(0, 100);
+            // 3. 取前 100 名
+            const sortedUsers = answerData.slice(0, 100).map(u => ({
+                user_id: u.user_id,
+                answer_count: Number(u.answer_count)
+            }));
 
             // 4. 取得用戶詳細資料
             const userIds = sortedUsers.map(u => u.user_id);
