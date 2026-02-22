@@ -31,7 +31,8 @@ const MASTER_ADMIN_ID = '68b72a80-57d8-40ee-811e-be58bea1e69f'; // 原始管理�
 const ADMIN_UUIDS = [
     '17da7d22-17ad-4d40-a5d2-9c2ce9216cf0', // Original Admin
     '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b', // New Admin
-    '68b72a80-57d8-40ee-811e-be58bea1e69f'  // ceceloveye@gmail.com
+    '68b72a80-57d8-40ee-811e-be58bea1e69f', // ceceloveye@gmail.com
+    '03ff6033-ce0e-41ee-9734-fce32c10b1bb'  // imnivek@gmail.com
 ];
 
 // ==================== 學員白名單 ====================
@@ -43,6 +44,7 @@ const STUDENT_EMAILS_OFF = [
     'ceceloveye@gmail.com',         // Admin 1
     'b1230463@ulive.pccu.edu.tw',   // Admin 2
     'boonling2003212@gmail.com',
+    'imnivek@gmail.com',            // Admin 3
     // 在此新增學員 Email，例如: 'student1@example.com',
 ];
 

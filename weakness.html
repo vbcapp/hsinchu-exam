@@ -90,6 +90,7 @@
             overflow: hidden;
             position: relative;
         }
+
         .ai-analysis-content::after {
             content: '';
             position: absolute;
@@ -100,10 +101,12 @@
             background: linear-gradient(transparent, white);
             pointer-events: none;
         }
+
         .ai-analysis-content.expanded {
             max-height: none;
             overflow: visible;
         }
+
         .ai-analysis-content.expanded::after {
             display: none;
         }
@@ -117,25 +120,31 @@
             border-bottom: 2px solid #000;
             padding-bottom: 0.25rem;
         }
+
         .markdown-body h3 {
             font-size: 0.875rem;
             font-weight: 700;
             margin-top: 0.75rem;
             margin-bottom: 0.25rem;
         }
+
         .markdown-body p {
             margin-bottom: 0.5rem;
             line-height: 1.6;
             font-size: 0.875rem;
         }
-        .markdown-body ul, .markdown-body ol {
+
+        .markdown-body ul,
+        .markdown-body ol {
             margin-left: 1.25rem;
             margin-bottom: 0.5rem;
         }
+
         .markdown-body li {
             margin-bottom: 0.25rem;
             font-size: 0.875rem;
         }
+
         .markdown-body strong {
             font-weight: 900;
         }
@@ -153,25 +162,29 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
+
         .modal-overlay.active {
             opacity: 1;
             visibility: visible;
         }
+
         .modal-content {
             background: white;
             width: 90%;
             max-width: 400px;
             max-height: 80vh;
             border: 4px solid black;
-            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+            box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
             transform: scale(0.9) translateY(20px);
             transition: transform 0.3s ease;
             display: flex;
             flex-direction: column;
         }
+
         .modal-overlay.active .modal-content {
             transform: scale(1) translateY(0);
         }
+
         .modal-header {
             padding: 1rem;
             border-bottom: 3px solid black;
@@ -180,11 +193,13 @@
             justify-content: space-between;
             background: #FFD600;
         }
+
         .modal-body {
             padding: 1rem;
             overflow-y: auto;
             flex: 1;
         }
+
         .modal-close {
             width: 32px;
             height: 32px;
@@ -197,6 +212,7 @@
             font-weight: 900;
             font-size: 1.25rem;
         }
+
         .modal-close:hover {
             background: #FF3B30;
             color: white;
@@ -357,13 +373,15 @@
                 </div>
 
                 <!-- AI 分析卡片 -->
-                <div id="ai-analysis-card" class="neo-brutalism-card bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-4">
+                <div id="ai-analysis-card"
+                    class="neo-brutalism-card bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-4">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-purple-600 text-xl">auto_awesome</span>
                             <span class="text-xs font-black uppercase">AI 智慧分析</span>
                         </div>
-                        <div id="ai-analysis-status" class="flex items-center gap-1 text-[10px] font-bold text-gray-400">
+                        <div id="ai-analysis-status"
+                            class="flex items-center gap-1 text-[10px] font-bold text-gray-400">
                             <!-- 狀態會由 JS 更新 -->
                         </div>
                     </div>
@@ -373,7 +391,8 @@
                         <div class="flex flex-col items-center justify-center py-6">
                             <span class="material-symbols-outlined text-4xl mb-3 text-purple-400">psychology</span>
                             <p class="text-sm font-bold text-gray-600 mb-4">讓 AI 幫你分析學習狀況</p>
-                            <button id="generate-ai-btn" onclick="startAIAnalysis()" class="px-6 py-2 neo-border neo-shadow-sm bg-purple-500 text-white font-black text-sm hover:bg-purple-600 active:translate-y-0.5 active:shadow-none transition-all">
+                            <button id="generate-ai-btn" onclick="startAIAnalysis()"
+                                class="px-6 py-2 neo-border neo-shadow-sm bg-purple-500 text-white font-black text-sm hover:bg-purple-600 active:translate-y-0.5 active:shadow-none transition-all">
                                 <span class="flex items-center gap-2">
                                     <span class="material-symbols-outlined text-lg">auto_awesome</span>
                                     生成 AI 分析
@@ -494,11 +513,37 @@
 
                 const userId = apiService.currentUser.id;
 
-                // 並行載入數據
-                const [statsResult, weaknessResult] = await Promise.all([
+                // 並行載入數據與今日 AI 分析狀態
+                const [statsResult, weaknessResult, analysisState] = await Promise.all([
                     apiService.getWeaknessStats(userId),
-                    apiService.getWeaknessList(userId, 30)
+                    apiService.getWeaknessList(userId, 30),
+                    apiService.checkTodayAnalysisExists(userId)
                 ]);
+
+                // 處理今日分析狀態
+                if (analysisState && analysisState.success && analysisState.exists) {
+                    globalAIAnalysis = analysisState.data.analysis_content;
+
+                    const contentEl = document.getElementById('ai-analysis-content');
+                    const statusEl = document.getElementById('ai-analysis-status');
+
+                    contentEl.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-4">
+                            <span class="material-symbols-outlined text-4xl mb-2 text-purple-400">task_alt</span>
+                            <p class="text-sm font-bold text-gray-600 mb-2">今日分析已完成</p>
+                            <button onclick="openAIAnalysisModal()" class="px-6 py-2 neo-border neo-shadow-sm bg-white text-black font-black text-sm hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all">
+                                <span class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">visibility</span>
+                                    查看今日分析
+                                </span>
+                            </button>
+                        </div>
+                    `;
+                    statusEl.innerHTML = `
+                        <span class="material-symbols-outlined text-sm text-green-500">check_circle</span>
+                        <span class="text-green-600">已產生</span>
+                    `;
+                }
 
                 // 渲染儀表板統計
                 if (statsResult.success) {
@@ -839,6 +884,17 @@
 
                 if (result.success) {
                     globalAIAnalysis = result.data;
+
+                    // 儲存至資料庫
+                    const saveResult = await apiService.saveAIAnalysis(
+                        apiService.currentUser.id,
+                        result.data,
+                        analysisData
+                    );
+
+                    if (!saveResult.success) {
+                        console.warn('儲存 AI 分析失敗', saveResult.error);
+                    }
 
                     // 使用 marked 渲染 Markdown
                     const htmlContent = marked.parse(result.data);

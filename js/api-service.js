@@ -1503,6 +1503,82 @@ class ApiService {
 
 
 
+    // ==================== AI 分析歷史相關 ====================
+
+    /**
+     * 檢查今天是否已生成分析
+     * @param {string} userId
+     * @returns {Promise<{exists: boolean, data?: object, success: boolean, error?: any}>}
+     */
+    async checkTodayAnalysisExists(userId) {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const { data, error } = await this.supabase
+                .from('user_ai_analyses')
+                .select('id, analysis_content, stats_snapshot, generated_at')
+                .eq('user_id', userId)
+                .gte('generated_at', today.toISOString())
+                .order('generated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (error) throw error;
+            return { exists: !!data, data, success: true };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 儲存 AI 分析結果
+     * @param {string} userId
+     * @param {string} analysisContent
+     * @param {object} statsSnapshot
+     * @returns {Promise<{success: boolean, data?: object, error?: any}>}
+     */
+    async saveAIAnalysis(userId, analysisContent, statsSnapshot) {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_ai_analyses')
+                .insert({
+                    user_id: userId,
+                    analysis_content: analysisContent,
+                    stats_snapshot: statsSnapshot
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得用戶歷史分析記錄
+     * @param {string} userId
+     * @param {number} limit
+     * @returns {Promise<{success: boolean, data?: array, error?: any}>}
+     */
+    async getUserAnalysisHistory(userId, limit = 10) {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_ai_analyses')
+                .select('*')
+                .eq('user_id', userId)
+                .order('generated_at', { ascending: false })
+                .limit(limit);
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
     // ==================== 權限管理相關 ====================
 
     /**
