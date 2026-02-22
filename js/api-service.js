@@ -2529,6 +2529,148 @@ class ApiService {
             return this._handleError(error);
         }
     }
+
+    // ==================== 考卷建立相關 ====================
+
+    /**
+     * [管理員] 取得所有類別與章節的題目數量統計
+     * 用於建立考卷時選擇來源
+     * @returns {Promise<{success: boolean, data: Array<{subject, chapter, question_count}>}>}
+     */
+    async getSubjectChapterStats() {
+        try {
+            // 取得所有題目的 subject 和 chapter
+            const { data, error } = await this.supabase
+                .from('questions')
+                .select('subject, chapter');
+
+            if (error) throw error;
+
+            // 按 subject -> chapter 分組統計
+            const statsMap = {};
+            data.forEach(q => {
+                const subject = q.subject || '未分類';
+                const chapter = q.chapter || '通用';
+                const key = `${subject}||${chapter}`;
+
+                if (!statsMap[key]) {
+                    statsMap[key] = { subject, chapter, question_count: 0 };
+                }
+                statsMap[key].question_count++;
+            });
+
+            // 轉換為陣列並依 subject, chapter 排序
+            const result = Object.values(statsMap).sort((a, b) => {
+                if (a.subject !== b.subject) {
+                    return a.subject.localeCompare(b.subject, 'zh-TW');
+                }
+                return a.chapter.localeCompare(b.chapter, 'zh-TW');
+            });
+
+            return { success: true, data: result };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * [管理員] 從指定的類別/章節隨機抽取題目
+     * @param {Array<{subject: string, chapter: string}>} sources - 來源陣列
+     * @param {number} count - 抽取題數
+     * @returns {Promise<{success: boolean, data: Array<QuestionObject>}>}
+     */
+    async getRandomQuestions(sources, count) {
+        try {
+            if (!sources || sources.length === 0) {
+                return { success: false, error: { message: '請選擇至少一個來源' } };
+            }
+
+            // 建立 OR 條件
+            const orConditions = sources.map(
+                src => `and(subject.eq."${src.subject}",chapter.eq."${src.chapter}")`
+            ).join(',');
+
+            // 取得所有符合條件的題目
+            const { data, error } = await this.supabase
+                .from('questions')
+                .select('*')
+                .or(orConditions);
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                return { success: false, error: { message: '選定的來源中沒有題目' } };
+            }
+
+            // 使用 Fisher-Yates 洗牌演算法隨機打亂
+            const shuffled = [...data];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            // 取出指定數量
+            const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+
+            return { success: true, data: selected, totalAvailable: data.length };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * [管理員] 複製題目到新的類別/章節
+     * @param {Array<Object>} questions - 原始題目陣列
+     * @param {string} newSubject - 新類別名稱
+     * @param {string} newChapter - 新章節名稱
+     * @returns {Promise<{success: boolean, count: number}>}
+     */
+    async copyQuestionsToNewExam(questions, newSubject, newChapter) {
+        try {
+            if (!questions || questions.length === 0) {
+                return { success: false, error: { message: '沒有題目可複製' } };
+            }
+
+            if (!newSubject || !newChapter) {
+                return { success: false, error: { message: '請填寫新類別和章節名稱' } };
+            }
+
+            const now = new Date().toISOString();
+
+            // 準備新題目資料（移除 id，更換 subject/chapter）
+            const newQuestions = questions.map((q, index) => {
+                // 解構移除不需要的欄位
+                const { id, user_id, created_at, updated_at, ...questionData } = q;
+
+                return {
+                    ...questionData,
+                    subject: newSubject,
+                    chapter: newChapter,
+                    question_no: index + 1,
+                    subject_no: 999,  // 自訂考卷排序靠後
+                    chapter_no: 999,
+                    created_at: now,
+                    updated_at: now
+                };
+            });
+
+            // 批量插入
+            const { data, error } = await this.supabase
+                .from('questions')
+                .insert(newQuestions)
+                .select();
+
+            if (error) throw error;
+
+            // 同步 chapter_access 表
+            await this.syncChapterAccess();
+
+            return { success: true, data, count: data.length };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
     // ==================== 錯誤處理 ====================
 
     _handleError(error, defaultCode = ERROR_CODES.INTERNAL_ERROR) {
