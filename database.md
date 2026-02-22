@@ -10,6 +10,8 @@
 - 每個 `user` 對應每個 `question` 會有特定的存取進度 (`user_question_progress`)。
 - 每次答題都會紀錄一筆 `answer_records`。
 - 隨機抽題後的清單，會儲存於 `random_test_sessions` 以供後續查找覆盤。
+- `chapter_access` 控制哪些標籤的學員可以存取哪些章節。
+- `tags` 管理所有可用的標籤（梯次、付費等級等）。
 
 ## 1. 使用者: `users`
 儲存使用者的基本資訊與目前的綜合等級數據。
@@ -29,6 +31,7 @@
 | `total_questions` | `integer` | DEFAULT 0 | 已作答的題目總數 |
 | `created_at` | `timestamptz` | DEFAULT now() | 帳號建立時間 |
 | `updated_at` | `timestamptz` | DEFAULT now() | 最後更新時間 |
+| `tags` | `jsonb` | DEFAULT '[]' | 學員標籤，如 `["第1梯", "VIP"]` |
 
 ## 2. 題庫: `questions`
 儲存所有的測驗題目。
@@ -93,3 +96,272 @@
 | `question_ids` | `jsonb` | | 所包含的題目清單 (ID Array) |
 | `total_questions` | `integer` | | 總題數 |
 | `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
+
+---
+
+# 權限管理系統
+
+> [!NOTE]
+> 此功能用於實現「標籤制章節權限控制」。
+>
+> **功能說明：**
+> - 管理者按章節匯入題目後，可透過勾選控制哪些學員可以存取
+> - 學員透過 `tags` 標籤（如梯次、付費等級）來決定可存取的章節
+> - 支援多標籤組合（一個學員可有多個標籤，一個章節可開放給多個標籤）
+
+## 實作進度
+
+| 項目 | 狀態 | 說明 |
+|------|------|------|
+| 資料庫結構 | ✅ 已完成 | SQL 腳本已執行，`users.tags`、`chapter_access`、`tags` 表已建立 |
+| API 函式 | ✅ 已完成 | `api-service.js` 已新增所有權限管理相關函式 |
+| 管理介面 - 章節權限 | ✅ 已完成 | `admin.html` - 按科目分組顯示章節，可設定公開/標籤權限 |
+| 管理介面 - 學員標籤 | ✅ 已完成 | `admin.html` - 學員列表、搜尋、單獨編輯、批量新增/移除標籤 |
+| 管理介面 - 標籤管理 | ✅ 已完成 | `admin.html` - 新增/編輯/刪除標籤（含顏色選擇） |
+
+## 6. 章節權限控制: `chapter_access`
+
+控制哪些標籤的學員可以存取哪些章節的題目。
+
+| 欄位名稱 (Column) | 資料型別 (Type) | 屬性與預設值 (Attributes & Default) | 說明 (Description) |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | 唯一識別碼 |
+| `subject` | `varchar` | NOT NULL | 大科目（對應 questions.subject） |
+| `chapter` | `varchar` | NOT NULL | 章節（對應 questions.chapter） |
+| `allowed_tags` | `jsonb` | DEFAULT '[]' | 可存取此章節的標籤，如 `["第1梯", "VIP"]` |
+| `is_public` | `boolean` | DEFAULT false | 是否公開給所有學員（不論標籤） |
+| `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
+| `updated_at` | `timestamptz` | DEFAULT now() | 更新時間 |
+
+**約束條件：**
+- `UNIQUE(subject, chapter)` - 每個科目+章節組合只能有一筆設定
+
+## 7. 標籤管理: `tags`
+
+管理所有可用的標籤，方便 UI 選擇並避免打字錯誤。
+
+| 欄位名稱 (Column) | 資料型別 (Type) | 屬性與預設值 (Attributes & Default) | 說明 (Description) |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | 唯一識別碼 |
+| `name` | `varchar` | UNIQUE, NOT NULL | 標籤名稱（如「第1梯」「VIP」） |
+| `color` | `varchar` | DEFAULT '#FFD600' | 標籤顯示顏色（UI 用） |
+| `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
+
+---
+
+## 📋 執行 SQL 腳本
+
+在 Supabase SQL Editor 中執行以下腳本：
+
+```sql
+-- =============================================
+-- 權限管理系統 - 資料庫變更
+-- 執行前請先備份資料庫
+-- =============================================
+
+-- 1. users 表新增 tags 欄位
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS tags jsonb DEFAULT '[]'::jsonb;
+
+-- 2. 建立 chapter_access 表
+CREATE TABLE IF NOT EXISTS chapter_access (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    subject varchar NOT NULL,
+    chapter varchar NOT NULL,
+    allowed_tags jsonb DEFAULT '[]'::jsonb,
+    is_public boolean DEFAULT false,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    UNIQUE(subject, chapter)
+);
+
+-- 建立索引加速查詢
+CREATE INDEX IF NOT EXISTS idx_chapter_access_subject ON chapter_access(subject);
+CREATE INDEX IF NOT EXISTS idx_chapter_access_public ON chapter_access(is_public);
+
+-- 3. 建立 tags 管理表
+CREATE TABLE IF NOT EXISTS tags (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name varchar UNIQUE NOT NULL,
+    color varchar DEFAULT '#FFD600',
+    created_at timestamptz DEFAULT now()
+);
+
+-- 4. 預設標籤（可依需求修改）
+INSERT INTO tags (name, color) VALUES
+    ('第1梯', '#FFD600'),
+    ('第2梯', '#4CAF50'),
+    ('第3梯', '#2196F3'),
+    ('VIP', '#9C27B0'),
+    ('試用', '#9E9E9E')
+ON CONFLICT (name) DO NOTHING;
+
+-- 5. 將現有的所有 subject + chapter 組合加入 chapter_access（預設不公開）
+INSERT INTO chapter_access (subject, chapter, is_public)
+SELECT DISTINCT subject, chapter, false
+FROM questions
+WHERE subject IS NOT NULL AND chapter IS NOT NULL
+ON CONFLICT (subject, chapter) DO NOTHING;
+```
+
+---
+
+## 🔄 權限查詢邏輯（供 API 實作參考）
+
+學員查詢可存取的題目時，邏輯如下：
+
+```sql
+-- 取得學員可存取的所有章節
+SELECT ca.subject, ca.chapter
+FROM chapter_access ca
+WHERE
+    ca.is_public = true  -- 公開章節
+    OR ca.allowed_tags ?| (  -- 或學員的 tags 與 allowed_tags 有交集
+        SELECT tags FROM users WHERE id = '學員UUID'
+    )::text[];
+
+-- 然後用這些 subject + chapter 去篩選 questions
+```
+
+**JavaScript 實作參考：**
+```javascript
+async getAccessibleQuestions(userId) {
+    // 1. 取得學員的 tags
+    const { data: user } = await supabase
+        .from('users')
+        .select('tags')
+        .eq('id', userId)
+        .single();
+
+    const userTags = user.tags || [];
+
+    // 2. 取得可存取的章節
+    const { data: accessibleChapters } = await supabase
+        .from('chapter_access')
+        .select('subject, chapter')
+        .or(`is_public.eq.true,allowed_tags.ov.${JSON.stringify(userTags)}`);
+
+    // 3. 用這些章節篩選題目...
+}
+```
+
+---
+
+## 📊 關聯結構圖
+
+```
+┌─────────────┐       ┌──────────────────┐       ┌─────────────┐
+│   users     │       │  chapter_access  │       │    tags     │
+├─────────────┤       ├──────────────────┤       ├─────────────┤
+│ id          │       │ id               │       │ id          │
+│ username    │       │ subject ─────────┼───┐   │ name        │
+│ tags[]  ◄───┼───────┼─► allowed_tags[] │   │   │ color       │
+│ ...         │       │ is_public        │   │   └─────────────┘
+└─────────────┘       └──────────────────┘   │
+                                             │
+                      ┌──────────────────────┘
+                      ▼
+              ┌─────────────────┐
+              │    questions    │
+              ├─────────────────┤
+              │ subject         │
+              │ chapter         │
+              │ question        │
+              │ ...             │
+              └─────────────────┘
+```
+
+---
+
+# 🚧 待實作：管理介面 (UI)
+
+> [!IMPORTANT]
+> 以下為**待建立**的管理介面，讓管理員可以操作權限設定。
+
+## 1. 章節權限管理介面
+
+**功能需求：**
+- 顯示所有章節列表（按科目分組）
+- 每個章節顯示：題目數量、目前開放的標籤、是否公開
+- 可勾選「公開」讓所有學員存取
+- 可選擇該章節開放給哪些標籤（多選）
+
+**使用的 API：**
+- `getAllChapterAccess()` - 取得所有章節權限設定
+- `setChapterAllowedTags(subject, chapter, tags)` - 設定章節允許的標籤
+- `setChapterPublic(subject, chapter, isPublic)` - 設定章節公開/非公開
+- `getAllTags()` - 取得所有可用標籤
+
+**UI 示意：**
+```
+┌─────────────────────────────────────────────────────┐
+│  📚 章節權限管理                                     │
+├─────────────────────────────────────────────────────┤
+│  勞動基準法                                          │
+│    ☑ 第一章 (120題)  開放給: [第1梯] [第2梯]         │
+│    ☑ 第二章 (85題)   開放給: [第1梯]                 │
+│    ☐ 第三章 (100題)  未開放                          │
+│                                                     │
+│  勞工保險條例                                        │
+│    ☐ 全部章節 (200題) 未開放                         │
+└─────────────────────────────────────────────────────┘
+```
+
+## 2. 學員標籤管理介面
+
+**功能需求：**
+- 顯示所有學員列表（含目前標籤）
+- 可單獨編輯學員的標籤
+- 可批量選取多個學員，一次新增/移除標籤
+- 支援搜尋學員
+
+**使用的 API：**
+- `getAllUsers()` - 取得所有學員列表
+- `setUserTags(userId, tags)` - 設定單一學員的標籤
+- `addTagsToUsers(userIds, tagsToAdd)` - 批量新增標籤
+- `removeTagsFromUsers(userIds, tagsToRemove)` - 批量移除標籤
+
+**UI 示意：**
+```
+┌─────────────────────────────────────────────────────┐
+│  👥 學員標籤管理                    [批量操作 ▼]     │
+├─────────────────────────────────────────────────────┤
+│  ☐ 王小明  [第1梯] [基礎班]           [編輯標籤]     │
+│  ☐ 李小華  [第2梯] [進階班] [VIP]     [編輯標籤]     │
+│  ☐ 張大偉  [第1梯]                    [編輯標籤]     │
+│  ☐ 陳美玲  (無標籤)                   [編輯標籤]     │
+└─────────────────────────────────────────────────────┘
+```
+
+## 3. 標籤管理介面
+
+**功能需求：**
+- 顯示所有標籤列表
+- 可新增標籤（名稱 + 顏色）
+- 可編輯標籤
+- 可刪除標籤（需確認）
+
+**使用的 API：**
+- `getAllTags()` - 取得所有標籤
+- `createTag(name, color)` - 建立新標籤
+- `updateTag(tagId, updates)` - 更新標籤
+- `deleteTag(tagId)` - 刪除標籤
+
+**UI 示意：**
+```
+┌─────────────────────────────────────────────────────┐
+│  🏷️ 標籤管理                         [+ 新增標籤]   │
+├─────────────────────────────────────────────────────┤
+│  ● 第1梯  (#FFD600)                  [編輯] [刪除]  │
+│  ● 第2梯  (#4CAF50)                  [編輯] [刪除]  │
+│  ● 第3梯  (#2196F3)                  [編輯] [刪除]  │
+│  ● VIP    (#9C27B0)                  [編輯] [刪除]  │
+│  ● 試用   (#9E9E9E)                  [編輯] [刪除]  │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## 建議的實作位置
+
+建議在 `profile.html` 的管理員儀表板區塊新增這些介面，或建立獨立的 `admin.html` 管理頁面。

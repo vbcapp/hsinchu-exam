@@ -756,6 +756,130 @@ class ApiService {
     // ==================== 卡片相關 ====================
 
     /**
+     * 取得學員可存取的章節清單，並回傳對應的題目
+     * 支援透過使用者身上的 tags 與 chapter_access 設定比對權限
+     */
+    async getAccessibleQuestions(userId, options = {}) {
+        try {
+            if (!userId) {
+                return { success: false, error: 'User ID is required' };
+            }
+
+            // 1. 取得學員的 tags
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('tags')
+                .eq('id', userId)
+                .single();
+
+            if (userError) throw userError;
+
+            // 確保 tags 為陣列格式，若無則預設為空陣列
+            const userTags = user.tags || [];
+
+            // 2. 取得可存取的章節
+            // 條件：(is_public = true) 或是 (學員的 tags 有包含在 allowed_tags 內)
+            // 在 Supabase 中要比對 JSONB 陣列是否有交集，可透過 PostgREST 的過濾條件
+
+            // 如果 `userTags` 是空陣列，呼叫 filter 會出問題。
+            // 我們可以透過 `or` 條件實作。若沒有 tag，只找 `is_public.eq.true`。
+            let fetchAccessQuery = this.supabase
+                .from('chapter_access')
+                .select('subject, chapter');
+
+            if (userTags.length > 0) {
+                // 將 userTags 陣列轉換為 JSON 格式字串以便傳遞給 PostgREST 'ov' (overlap) 運算子
+                fetchAccessQuery = fetchAccessQuery.or(`is_public.eq.true,allowed_tags.ov.${JSON.stringify(userTags)}`);
+            } else {
+                fetchAccessQuery = fetchAccessQuery.eq('is_public', true);
+            }
+
+            const { data: accessibleChapters, error: accessError } = await fetchAccessQuery;
+
+            if (accessError) throw accessError;
+
+            // 3. 如果沒有任何可用的章節，直接回傳空陣列
+            if (!accessibleChapters || accessibleChapters.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        questions: [],
+                        pagination: {
+                            currentPage: options.page || 1,
+                            totalPages: 0,
+                            totalItems: 0,
+                            itemsPerPage: options.limit || 20
+                        }
+                    }
+                };
+            }
+
+            // 4. 用這些章節與科目篩選題目
+            // 建立一個 or 字串來過濾特定的 subject + chapter 組合
+            // 格式：and(subject.eq.科目A,chapter.eq.章節A),and(subject.eq.科目B,chapter.eq.章節B)
+            const orConditions = accessibleChapters.map(
+                ch => `and(subject.eq."${ch.subject}",chapter.eq."${ch.chapter}")`
+            ).join(',');
+
+
+            const {
+                searchQuery = null,
+                page = 1,
+                limit = 20
+            } = options;
+
+            let query = this.supabase
+                .from('questions')
+                .select('*, user_question_progress!left(*)', { count: 'exact' })
+                .or(orConditions) // 加上權限過濾！
+                .order('subject_no', { ascending: true })
+                .order('chapter_no', { ascending: true })
+                .order('question_no', { ascending: true });
+
+
+            // 搜尋過濾
+            if (searchQuery) {
+                query = query.or(`question.ilike.%${searchQuery}%,explanation.ilike.%${searchQuery}%`);
+            }
+
+            const offset = (page - 1) * limit;
+            query = query.range(offset, offset + limit - 1);
+
+            const { data: questionsData, error: queryError, count } = await query;
+
+            if (queryError) throw queryError;
+
+            // 整理加上 progress，並確保留下這名使用者的進度 (其餘忽略)
+            const questions = questionsData.map(q => {
+                let progress = null;
+                if (q.user_question_progress && q.user_question_progress.length > 0) {
+                    progress = q.user_question_progress.find(p => p.user_id === userId) || null;
+                }
+                return {
+                    ...q,
+                    progress: progress
+                };
+            });
+
+            return {
+                success: true,
+                data: {
+                    questions: questions,
+                    pagination: {
+                        currentPage: page,
+                        totalPages: Math.ceil(count / limit),
+                        totalItems: count,
+                        itemsPerPage: limit
+                    }
+                }
+            };
+
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 取得題目列表（支援分頁與篩選）
      */
     async getQuestions(options = {}) {
@@ -1160,6 +1284,7 @@ class ApiService {
 
     /**
      * [僅管理員] 批量建立題目 (匯入 JSON)
+     * 匯入後會自動同步 chapter_access 表
      */
     async createQuestions(questionsData) {
         try {
@@ -1177,6 +1302,9 @@ class ApiService {
 
             if (error) throw error;
             await this._syncUserCardCount();
+
+            // 自動同步 chapter_access 表（將新章節加入權限控制）
+            await this.syncChapterAccess();
 
             return { success: true, data, count: data.length };
         } catch (error) {
@@ -1374,6 +1502,415 @@ class ApiService {
     }
 
 
+
+    // ==================== 權限管理相關 ====================
+
+    /**
+     * 取得所有標籤
+     */
+    async getAllTags() {
+        try {
+            const { data, error } = await this.supabase
+                .from('tags')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 建立新標籤
+     * @param {string} name - 標籤名稱
+     * @param {string} color - 標籤顏色 (hex)
+     */
+    async createTag(name, color = '#FFD600') {
+        try {
+            const { data, error } = await this.supabase
+                .from('tags')
+                .insert({ name, color })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 更新標籤
+     * @param {string} tagId - 標籤 ID
+     * @param {object} updates - 更新內容 { name?, color? }
+     */
+    async updateTag(tagId, updates) {
+        try {
+            const { data, error } = await this.supabase
+                .from('tags')
+                .update(updates)
+                .eq('id', tagId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 刪除標籤
+     * @param {string} tagId - 標籤 ID
+     */
+    async deleteTag(tagId) {
+        try {
+            const { error } = await this.supabase
+                .from('tags')
+                .delete()
+                .eq('id', tagId);
+
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得所有章節權限設定（含題目數量統計）
+     */
+    async getAllChapterAccess() {
+        try {
+            // 1. 取得所有 chapter_access 設定
+            const { data: accessData, error: accessError } = await this.supabase
+                .from('chapter_access')
+                .select('*')
+                .order('subject', { ascending: true })
+                .order('chapter', { ascending: true });
+
+            if (accessError) throw accessError;
+
+            // 2. 取得每個 subject + chapter 的題目數量
+            const { data: questionCounts, error: countError } = await this.supabase
+                .from('questions')
+                .select('subject, chapter');
+
+            if (countError) throw countError;
+
+            // 3. 計算每個組合的題目數
+            const countMap = {};
+            questionCounts.forEach(q => {
+                const key = `${q.subject}||${q.chapter}`;
+                countMap[key] = (countMap[key] || 0) + 1;
+            });
+
+            // 4. 合併資料
+            const result = accessData.map(access => ({
+                ...access,
+                question_count: countMap[`${access.subject}||${access.chapter}`] || 0
+            }));
+
+            return { success: true, data: result };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 更新章節權限設定
+     * @param {string} accessId - chapter_access ID
+     * @param {object} updates - 更新內容 { allowed_tags?, is_public? }
+     */
+    async updateChapterAccess(accessId, updates) {
+        try {
+            updates.updated_at = new Date().toISOString();
+
+            const { data, error } = await this.supabase
+                .from('chapter_access')
+                .update(updates)
+                .eq('id', accessId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 批量更新章節的 allowed_tags
+     * @param {string} subject - 大科目
+     * @param {string} chapter - 章節
+     * @param {string[]} allowedTags - 允許的標籤陣列
+     */
+    async setChapterAllowedTags(subject, chapter, allowedTags) {
+        try {
+            const { data, error } = await this.supabase
+                .from('chapter_access')
+                .update({
+                    allowed_tags: allowedTags,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('subject', subject)
+                .eq('chapter', chapter)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 設定章節為公開/非公開
+     * @param {string} subject - 大科目
+     * @param {string} chapter - 章節
+     * @param {boolean} isPublic - 是否公開
+     */
+    async setChapterPublic(subject, chapter, isPublic) {
+        try {
+            const { data, error } = await this.supabase
+                .from('chapter_access')
+                .update({
+                    is_public: isPublic,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('subject', subject)
+                .eq('chapter', chapter)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 同步 chapter_access 表（將 questions 中的新章節加入）
+     * 管理員匯入新題目後呼叫此函式
+     */
+    async syncChapterAccess() {
+        try {
+            // 1. 取得 questions 中所有不重複的 subject + chapter 組合
+            const { data: chapters, error: fetchError } = await this.supabase
+                .from('questions')
+                .select('subject, chapter');
+
+            if (fetchError) throw fetchError;
+
+            // 2. 取得目前 chapter_access 中已有的組合
+            const { data: existingAccess, error: existingError } = await this.supabase
+                .from('chapter_access')
+                .select('subject, chapter');
+
+            if (existingError) throw existingError;
+
+            // 3. 找出需要新增的組合
+            const existingSet = new Set(
+                existingAccess.map(a => `${a.subject}||${a.chapter}`)
+            );
+
+            const uniqueChapters = [...new Set(
+                chapters
+                    .filter(c => c.subject && c.chapter)
+                    .map(c => `${c.subject}||${c.chapter}`)
+            )];
+
+            const newChapters = uniqueChapters
+                .filter(key => !existingSet.has(key))
+                .map(key => {
+                    const [subject, chapter] = key.split('||');
+                    return { subject, chapter, is_public: false, allowed_tags: [] };
+                });
+
+            // 4. 批量插入新章節
+            if (newChapters.length > 0) {
+                const { error: insertError } = await this.supabase
+                    .from('chapter_access')
+                    .insert(newChapters);
+
+                if (insertError) throw insertError;
+            }
+
+            return {
+                success: true,
+                message: `同步完成，新增 ${newChapters.length} 個章節權限設定`,
+                newChapters: newChapters
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得所有學員列表（含標籤）
+     */
+    async getAllUsers() {
+        try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .select('id, username, email, avatar_url, tags, current_level, current_xp, created_at')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 更新學員的標籤
+     * @param {string} userId - 學員 ID
+     * @param {string[]} tags - 標籤陣列
+     */
+    async setUserTags(userId, tags) {
+        try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .update({
+                    tags: tags,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 批量更新多個學員的標籤（新增標籤到現有標籤）
+     * @param {string[]} userIds - 學員 ID 陣列
+     * @param {string[]} tagsToAdd - 要新增的標籤
+     */
+    async addTagsToUsers(userIds, tagsToAdd) {
+        try {
+            // 1. 取得這些用戶現有的 tags
+            const { data: users, error: fetchError } = await this.supabase
+                .from('users')
+                .select('id, tags')
+                .in('id', userIds);
+
+            if (fetchError) throw fetchError;
+
+            // 2. 為每個用戶合併標籤並更新
+            const updates = users.map(user => {
+                const currentTags = user.tags || [];
+                const mergedTags = [...new Set([...currentTags, ...tagsToAdd])];
+                return {
+                    id: user.id,
+                    tags: mergedTags,
+                    updated_at: new Date().toISOString()
+                };
+            });
+
+            // 3. 批量更新（使用 upsert）
+            const { error: updateError } = await this.supabase
+                .from('users')
+                .upsert(updates, { onConflict: 'id' });
+
+            if (updateError) throw updateError;
+
+            return { success: true, updatedCount: updates.length };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 批量移除多個學員的特定標籤
+     * @param {string[]} userIds - 學員 ID 陣列
+     * @param {string[]} tagsToRemove - 要移除的標籤
+     */
+    async removeTagsFromUsers(userIds, tagsToRemove) {
+        try {
+            // 1. 取得這些用戶現有的 tags
+            const { data: users, error: fetchError } = await this.supabase
+                .from('users')
+                .select('id, tags')
+                .in('id', userIds);
+
+            if (fetchError) throw fetchError;
+
+            // 2. 為每個用戶移除標籤並更新
+            const updates = users.map(user => {
+                const currentTags = user.tags || [];
+                const filteredTags = currentTags.filter(t => !tagsToRemove.includes(t));
+                return {
+                    id: user.id,
+                    tags: filteredTags,
+                    updated_at: new Date().toISOString()
+                };
+            });
+
+            // 3. 批量更新
+            const { error: updateError } = await this.supabase
+                .from('users')
+                .upsert(updates, { onConflict: 'id' });
+
+            if (updateError) throw updateError;
+
+            return { success: true, updatedCount: updates.length };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得學員可存取的章節清單（不含題目，僅用於顯示）
+     * @param {string} userId - 學員 ID
+     */
+    async getUserAccessibleChapters(userId) {
+        try {
+            // 1. 取得學員的 tags
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('tags')
+                .eq('id', userId)
+                .single();
+
+            if (userError) throw userError;
+
+            const userTags = user.tags || [];
+
+            // 2. 取得可存取的章節
+            let query = this.supabase
+                .from('chapter_access')
+                .select('subject, chapter, is_public, allowed_tags');
+
+            if (userTags.length > 0) {
+                query = query.or(`is_public.eq.true,allowed_tags.ov.${JSON.stringify(userTags)}`);
+            } else {
+                query = query.eq('is_public', true);
+            }
+
+            const { data, error } = await query
+                .order('subject', { ascending: true })
+                .order('chapter', { ascending: true });
+
+            if (error) throw error;
+
+            return { success: true, data, userTags };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
 
     // ==================== 管理員儀表板相關 ====================
 
