@@ -166,7 +166,7 @@
                             <h2 class="text-2xl font-black italic uppercase">管理員儀表板</h2>
                         </div>
                         <a href="admin.html"
-                           class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+                            class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
                             <span class="material-symbols-outlined text-xl">settings</span>
                             權限管理
                         </a>
@@ -336,7 +336,8 @@
                     0
                 </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
+            <div id="admin-backup-card"
+                class="hidden bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-black dark:text-white">cloud_upload</span>
                     <span class="text-xl font-black italic uppercase">資料備份</span>
@@ -672,6 +673,12 @@
                 const dashboardEl = document.getElementById('admin-dashboard');
                 if (dashboardEl) {
                     dashboardEl.classList.remove('hidden');
+                }
+
+                // 顯示資料備份 (僅限管理員)
+                const backupCard = document.getElementById('admin-backup-card');
+                if (backupCard) {
+                    backupCard.classList.remove('hidden');
                 }
 
                 // 載入並渲染圖表/區塊
