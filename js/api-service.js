@@ -648,14 +648,23 @@ class ApiService {
 
             if (error) throw error;
 
-            // 計算使用者的題目數量 (因為原本有卡片數，此處可以查詢 users.total_questions)
-            // PRD 中指出 users 表有新增 total_questions 欄位，這可以直接從 data 返回，不一定要再 query Count
-            // 不過為了與先前的邏輯一致（或是若資料不一致時防禦），可以直接讀取 user 表現有欄位
+            // 取得題目總數（共用題庫）
+            const { count: totalQuestions, error: totalError } = await this.supabase
+                .from('questions')
+                .select('*', { count: 'exact', head: true });
+
+            // 取得該用戶已作答的題目數（user_question_progress 中有記錄的）
+            const { count: answeredQuestions, error: answeredError } = await this.supabase
+                .from('user_question_progress')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+
             return {
                 success: true,
                 data: {
                     ...data,
-                    total_questions: data.total_questions || 0,
+                    total_questions: totalQuestions || 0,
+                    answered_questions: answeredQuestions || 0,
                     correct_answer_count: data.correct_answer_count || 0
                 }
             };

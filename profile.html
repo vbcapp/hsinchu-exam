@@ -322,10 +322,11 @@
             <div
                 class="bg-white dark:bg-gray-800 border-4 border-black p-4 flex justify-between items-center neo-brutalism-card">
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-black dark:text-white">style</span>
-                    <span class="text-xl font-black italic">我的卡片數量</span>
+                    <span class="material-symbols-outlined text-black dark:text-white">quiz</span>
+                    <span class="text-xl font-black italic">我的答題總數</span>
                 </div>
-                <div id="user-card-count" class="text-4xl font-black italic bg-primary px-3 border-l-4 border-black">0
+                <div id="user-card-count" class="text-3xl font-black italic bg-primary px-3 border-l-4 border-black">0 /
+                    0
                 </div>
             </div>
             <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
@@ -1247,10 +1248,12 @@
                 }
             }
 
-            // 更新卡片數量
+            // 更新題目數量（已作答 / 題目總數）
             const cardCount = document.getElementById('user-card-count');
             if (cardCount) {
-                cardCount.textContent = userData.total_questions || 0;
+                const answered = userData.answered_questions || 0;
+                const total = userData.total_questions || 0;
+                cardCount.textContent = `${answered} / ${total}`;
             }
 
             // [New] 更新頭像
