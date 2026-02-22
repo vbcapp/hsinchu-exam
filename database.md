@@ -324,3 +324,177 @@ async getAccessibleQuestions(userId) {
 - `setUserTags(userId, tags)` - 設定單一學員的標籤
 - `addTagsToUsers(userIds, tagsToAdd)` - 批量新增標籤
 - `removeTagsFromUsers(userIds, tagsToRemove)` - 批量移除標籤
+
+---
+
+# AI 分析歷史記錄系統
+
+> [!NOTE]
+> 此功能用於儲存學員的 AI 學習分析記錄，保留歷史軌跡以追蹤學習進步。
+>
+> **功能說明：**
+> - 學員在「精準弱點打擊」頁面可點擊生成 AI 分析
+> - 每天只能生成一次分析
+> - 生成時會同時儲存：當時的統計數據快照 + AI 產出的分析內容
+> - 可查看歷史分析記錄（追蹤學習進步軌跡）
+
+## 實作進度
+
+| 項目 | 狀態 | 說明 |
+|------|------|------|
+| 資料庫結構 | ⏳ 待執行 | SQL 腳本已準備，需在 Supabase 執行 |
+| API 函式 | ⏳ 待實作 | `api-service.js` 需新增相關函式 |
+| 前端整合 | ⏳ 待實作 | `weakness.html` 需整合儲存邏輯 |
+
+## 8. AI 分析歷史: `user_ai_analyses`
+
+儲存學員的 AI 學習分析記錄，包含生成時的數據快照。
+
+| 欄位名稱 (Column) | 資料型別 (Type) | 屬性與預設值 (Attributes & Default) | 說明 (Description) |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | 分析記錄唯一識別碼 |
+| `user_id` | `uuid` | FK (`auth.users.id`), NOT NULL | 對應使用者 |
+| `analysis_content` | `text` | NOT NULL | AI 生成的 Markdown 分析內容 |
+| `stats_snapshot` | `jsonb` | NOT NULL | 生成時的統計數據快照 |
+| `generated_at` | `timestamptz` | DEFAULT now() | 生成時間 |
+
+### `stats_snapshot` JSONB 欄位內容範例
+
+```json
+{
+  "totalAnswered": 150,
+  "correctQuestionCount": 120,
+  "wrongQuestionCount": 30,
+  "overallAccuracy": 80,
+  "masteryRate": 45,
+  "masteredCount": 68,
+  "remainingQuestions": 82,
+  "totalQuestionsInBank": 150,
+  "improvement": { "accuracyChange": 5 },
+  "weakSubjects": [
+    { "subject": "勞動基準法", "errorRate": 0.35 },
+    { "subject": "勞工保險條例", "errorRate": 0.28 }
+  ],
+  "topWeakQuestions": [
+    { "question": "勞基法第84-1條規定...", "timesIncorrect": 5 },
+    { "question": "加班費計算方式...", "timesIncorrect": 4 }
+  ]
+}
+```
+
+---
+
+## 📋 執行 SQL 腳本
+
+在 Supabase SQL Editor 中執行以下腳本：
+
+```sql
+-- =============================================
+-- AI 分析歷史記錄系統 - 資料庫變更
+-- 執行前請先備份資料庫
+-- =============================================
+
+-- 1. 建立 user_ai_analyses 表
+CREATE TABLE IF NOT EXISTS user_ai_analyses (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    analysis_content text NOT NULL,
+    stats_snapshot jsonb NOT NULL,
+    generated_at timestamptz DEFAULT now()
+);
+
+-- 2. 建立索引加速查詢（用戶 + 生成時間）
+CREATE INDEX IF NOT EXISTS idx_user_ai_analyses_user_date
+ON user_ai_analyses(user_id, generated_at DESC);
+
+-- 3. 啟用 RLS (Row Level Security)
+ALTER TABLE user_ai_analyses ENABLE ROW LEVEL SECURITY;
+
+-- 4. RLS 政策：用戶只能讀取自己的分析記錄
+CREATE POLICY "Users can view own analyses"
+ON user_ai_analyses FOR SELECT
+USING (auth.uid() = user_id);
+
+-- 5. RLS 政策：用戶只能新增自己的分析記錄
+CREATE POLICY "Users can insert own analyses"
+ON user_ai_analyses FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- 6. RLS 政策：用戶可以刪除自己的分析記錄（選用）
+CREATE POLICY "Users can delete own analyses"
+ON user_ai_analyses FOR DELETE
+USING (auth.uid() = user_id);
+```
+
+---
+
+## 🔄 API 函式（供實作參考）
+
+### 1. 檢查今天是否已生成分析
+
+```javascript
+async checkTodayAnalysisExists(userId) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+        .from('user_ai_analyses')
+        .select('id, analysis_content, stats_snapshot, generated_at')
+        .eq('user_id', userId)
+        .gte('generated_at', today.toISOString())
+        .order('generated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+    return { exists: !!data, data };
+}
+```
+
+### 2. 儲存 AI 分析結果
+
+```javascript
+async saveAIAnalysis(userId, analysisContent, statsSnapshot) {
+    const { data, error } = await supabase
+        .from('user_ai_analyses')
+        .insert({
+            user_id: userId,
+            analysis_content: analysisContent,
+            stats_snapshot: statsSnapshot
+        })
+        .select()
+        .single();
+
+    return { success: !error, data, error };
+}
+```
+
+### 3. 取得用戶歷史分析記錄
+
+```javascript
+async getUserAnalysisHistory(userId, limit = 10) {
+    const { data, error } = await supabase
+        .from('user_ai_analyses')
+        .select('*')
+        .eq('user_id', userId)
+        .order('generated_at', { ascending: false })
+        .limit(limit);
+
+    return { success: !error, data, error };
+}
+```
+
+---
+
+## 📊 前端整合邏輯
+
+### 頁面載入時
+1. 呼叫 `checkTodayAnalysisExists(userId)`
+2. **已有今日分析** → 直接顯示已儲存的內容，按鈕改為「查看今日分析」
+3. **尚無今日分析** → 顯示「生成 AI 分析」按鈕
+
+### 點擊生成按鈕時
+1. 再次檢查今天是否已生成（雙重檢查，防止重複）
+2. 撈取用戶統計數據 → `statsSnapshot`
+3. 呼叫 AI 生成分析 → `analysisContent`
+4. 同時儲存到資料庫：`saveAIAnalysis(userId, analysisContent, statsSnapshot)`
+5. 顯示分析結果

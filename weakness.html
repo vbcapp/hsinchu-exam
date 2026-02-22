@@ -74,10 +74,134 @@
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <!-- 專案配置與 API Service -->
     <script src="config.js"></script>
     <script src="js/level-system.js"></script>
     <script src="js/api-service.js"></script>
+    <script src="js/ai-service.js"></script>
+
+    <style>
+        /* AI 分析卡片內容樣式 */
+        .ai-analysis-content {
+            max-height: 180px;
+            overflow: hidden;
+            position: relative;
+        }
+        .ai-analysis-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(transparent, white);
+            pointer-events: none;
+        }
+        .ai-analysis-content.expanded {
+            max-height: none;
+            overflow: visible;
+        }
+        .ai-analysis-content.expanded::after {
+            display: none;
+        }
+
+        /* Markdown 渲染樣式 */
+        .markdown-body h2 {
+            font-size: 1rem;
+            font-weight: 900;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0.25rem;
+        }
+        .markdown-body h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        .markdown-body p {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            font-size: 0.875rem;
+        }
+        .markdown-body ul, .markdown-body ol {
+            margin-left: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body li {
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .markdown-body strong {
+            font-weight: 900;
+        }
+
+        /* Modal 樣式 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            border: 4px solid black;
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        .modal-header {
+            padding: 1rem;
+            border-bottom: 3px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #FFD600;
+        }
+        .modal-body {
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: 2px solid black;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 1.25rem;
+        }
+        .modal-close:hover {
+            background: #FF3B30;
+            color: white;
+        }
+    </style>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen pb-24">
@@ -86,6 +210,22 @@
         <div class="text-center">
             <span class="material-symbols-outlined text-5xl animate-spin text-black">progress_activity</span>
             <p class="mt-4 font-black">分析弱點中...</p>
+        </div>
+    </div>
+
+    <!-- AI 分析 Modal -->
+    <div id="ai-analysis-modal" class="modal-overlay" onclick="closeAIAnalysisModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xl">auto_awesome</span>
+                    <span class="font-black text-sm uppercase">AI 智慧分析</span>
+                </div>
+                <button class="modal-close" onclick="closeAIAnalysisModal()">&times;</button>
+            </div>
+            <div id="ai-analysis-modal-body" class="modal-body markdown-body">
+                <!-- Modal 內容會由 JS 填入 -->
+            </div>
         </div>
     </div>
 
@@ -100,40 +240,53 @@
         <main class="flex-grow p-4">
             <!-- 個人數據儀表板 -->
             <div id="stats-dashboard" class="mb-6 space-y-4">
-                <!-- 第一行：核心指標 -->
-                <div class="grid grid-cols-2 gap-3">
+                <!-- 第一行：核心指標 (3欄) -->
+                <div class="grid grid-cols-3 gap-2">
                     <!-- 錯題 / 已答題 -->
-                    <div class="neo-brutalism-card bg-white p-4">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="material-symbols-outlined text-[#FF3B30] text-lg">error</span>
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">錯題 / 已答</span>
+                    <div class="neo-brutalism-card bg-white p-3">
+                        <div class="flex items-center gap-1 mb-1">
+                            <span class="material-symbols-outlined text-[#FF3B30] text-sm">error</span>
+                            <span class="text-[9px] font-bold text-gray-500 uppercase">錯題/已答</span>
                         </div>
-                        <div class="flex items-baseline gap-1">
-                            <span id="stat-wrong-count" class="text-2xl font-black text-[#FF3B30]">--</span>
-                            <span class="text-gray-400 font-bold">/</span>
-                            <span id="stat-answered-count" class="text-lg font-bold text-gray-600">--</span>
+                        <div class="flex items-baseline gap-0.5">
+                            <span id="stat-wrong-count" class="text-xl font-black text-[#FF3B30]">--</span>
+                            <span class="text-gray-400 font-bold text-sm">/</span>
+                            <span id="stat-answered-count" class="text-sm font-bold text-gray-600">--</span>
+                        </div>
+                    </div>
+
+                    <!-- 正確題數 / 已答題 -->
+                    <div class="neo-brutalism-card bg-white p-3">
+                        <div class="flex items-center gap-1 mb-1">
+                            <span class="material-symbols-outlined text-green-500 text-sm">task_alt</span>
+                            <span class="text-[9px] font-bold text-gray-500 uppercase">正確/已答</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span id="stat-correct-count" class="text-xl font-black text-green-600">--</span>
+                            <span class="text-gray-400 font-bold text-sm">/</span>
+                            <span id="stat-answered-count-2" class="text-sm font-bold text-gray-600">--</span>
                         </div>
                     </div>
 
                     <!-- 整體正確率 -->
-                    <div class="neo-brutalism-card bg-white p-4">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">整體正確率</span>
+                    <div class="neo-brutalism-card bg-white p-3">
+                        <div class="flex items-center gap-1 mb-1">
+                            <span class="material-symbols-outlined text-blue-500 text-sm">percent</span>
+                            <span class="text-[9px] font-bold text-gray-500 uppercase">正確率</span>
                         </div>
-                        <div class="flex items-baseline gap-1">
-                            <span id="stat-accuracy" class="text-2xl font-black text-green-600">--%</span>
+                        <div class="flex items-baseline gap-0.5">
+                            <span id="stat-accuracy" class="text-xl font-black text-blue-600">--%</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- 第二行：熟練度 + 進步指標 -->
                 <div class="grid grid-cols-2 gap-3">
-                    <!-- 整體熟練度 -->
+                    <!-- 已答題之熟練度 -->
                     <div class="neo-brutalism-card bg-white p-4">
                         <div class="flex items-center gap-2 mb-1">
                             <span class="material-symbols-outlined text-primary text-lg">workspace_premium</span>
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">整體熟練度</span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">已答題之熟練度</span>
                         </div>
                         <div class="flex items-baseline gap-1">
                             <span id="stat-mastery" class="text-2xl font-black">--%</span>
@@ -146,7 +299,8 @@
                     <!-- 進步指標 -->
                     <div class="neo-brutalism-card bg-white p-4">
                         <div class="flex items-center gap-2 mb-1">
-                            <span id="improvement-icon" class="material-symbols-outlined text-lg text-gray-400">trending_flat</span>
+                            <span id="improvement-icon"
+                                class="material-symbols-outlined text-lg text-gray-400">trending_flat</span>
                             <span class="text-[10px] font-bold text-gray-500 uppercase">近 7 天進步</span>
                         </div>
                         <div class="flex items-baseline gap-1">
@@ -154,6 +308,77 @@
                         </div>
                         <div id="improvement-desc" class="text-[10px] text-gray-400 mt-1">
                             正確率變化
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三行：預估完成天數 -->
+                <div class="neo-brutalism-card bg-gradient-to-r from-purple-50 to-indigo-50 p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-purple-600 text-lg">calendar_month</span>
+                                <span class="text-[10px] font-bold text-gray-500 uppercase">預估全部熟練</span>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <span id="stat-estimated-days" class="text-3xl font-black text-purple-600">--</span>
+                                <span class="text-sm font-bold text-gray-500">天</span>
+                            </div>
+                            <div id="estimated-desc" class="text-[10px] text-gray-500 mt-1">
+                                剩餘 <span id="stat-remaining-questions" class="font-bold">--</span> 題待熟練
+                            </div>
+                        </div>
+                        <!-- 每日題數調整器 -->
+                        <div class="flex flex-col items-center gap-1 ml-4">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase">每日題數</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="adjustDailyGoal(-5)"
+                                    class="w-7 h-7 neo-border bg-white flex items-center justify-center font-black text-lg active:translate-y-0.5 active:shadow-none">-</button>
+                                <div class="w-12 h-8 neo-border bg-primary flex items-center justify-center">
+                                    <span id="daily-goal-display" class="font-black text-lg">20</span>
+                                </div>
+                                <button onclick="adjustDailyGoal(5)"
+                                    class="w-7 h-7 neo-border bg-white flex items-center justify-center font-black text-lg active:translate-y-0.5 active:shadow-none">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 進度條 -->
+                    <div class="mt-3">
+                        <div class="h-3 neo-border bg-white overflow-hidden">
+                            <div id="mastery-progress-bar" class="h-full bg-purple-500 transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-1 text-[9px] text-gray-400">
+                            <span>0%</span>
+                            <span id="mastery-progress-text" class="font-bold text-purple-600">--% 完成</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 分析卡片 -->
+                <div id="ai-analysis-card" class="neo-brutalism-card bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-purple-600 text-xl">auto_awesome</span>
+                            <span class="text-xs font-black uppercase">AI 智慧分析</span>
+                        </div>
+                        <div id="ai-analysis-status" class="flex items-center gap-1 text-[10px] font-bold text-gray-400">
+                            <!-- 狀態會由 JS 更新 -->
+                        </div>
+                    </div>
+                    <!-- AI 分析內容 -->
+                    <div id="ai-analysis-content" class="ai-analysis-content markdown-body">
+                        <!-- 預設顯示生成按鈕 -->
+                        <div class="flex flex-col items-center justify-center py-6">
+                            <span class="material-symbols-outlined text-4xl mb-3 text-purple-400">psychology</span>
+                            <p class="text-sm font-bold text-gray-600 mb-4">讓 AI 幫你分析學習狀況</p>
+                            <button id="generate-ai-btn" onclick="startAIAnalysis()" class="px-6 py-2 neo-border neo-shadow-sm bg-purple-500 text-white font-black text-sm hover:bg-purple-600 active:translate-y-0.5 active:shadow-none transition-all">
+                                <span class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                                    生成 AI 分析
+                                </span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -166,8 +391,10 @@
                             <span class="text-xs font-black uppercase">錯題趨勢</span>
                         </div>
                         <div class="flex gap-1">
-                            <button id="btn-7days" class="px-3 py-1 text-[10px] font-bold neo-border bg-primary" onclick="switchTrendPeriod(7)">7天</button>
-                            <button id="btn-30days" class="px-3 py-1 text-[10px] font-bold neo-border bg-white" onclick="switchTrendPeriod(30)">30天</button>
+                            <button id="btn-7days" class="px-3 py-1 text-[10px] font-bold neo-border bg-primary"
+                                onclick="switchTrendPeriod(7)">7天</button>
+                            <button id="btn-30days" class="px-3 py-1 text-[10px] font-bold neo-border bg-white"
+                                onclick="switchTrendPeriod(30)">30天</button>
                         </div>
                     </div>
                     <!-- 趨勢圖表 -->
@@ -246,6 +473,11 @@
         // 全域變數儲存趨勢數據
         let globalTrendData = [];
         let currentPeriod = 7;
+        let dailyGoal = 20; // 預設每日題數
+        let globalStats = null; // 儲存統計數據供重新計算使用
+        let globalWeaknessData = null; // 儲存弱點數據供 AI 分析使用
+        let globalAIAnalysis = null; // 儲存 AI 分析結果
+        let isAIAnalysisLoading = false; // AI 分析載入狀態
 
         document.addEventListener('DOMContentLoaded', async () => {
             const listContainer = document.getElementById('weakness-list');
@@ -273,6 +505,9 @@
                     renderDashboardStats(statsResult.data);
                     globalTrendData = statsResult.data.trendData;
                     renderTrendChart(7); // 預設顯示 7 天
+
+                    // 儲存弱點數據供 AI 分析使用
+                    globalWeaknessData = weaknessResult.data;
                 }
 
                 // 渲染弱點列表
@@ -300,9 +535,13 @@
          * 渲染儀表板統計數據
          */
         function renderDashboardStats(stats) {
+            globalStats = stats; // 儲存供後續使用
+
             // 基礎數據
             document.getElementById('stat-wrong-count').textContent = stats.wrongQuestionCount;
             document.getElementById('stat-answered-count').textContent = stats.totalAnswered;
+            document.getElementById('stat-correct-count').textContent = stats.correctQuestionCount;
+            document.getElementById('stat-answered-count-2').textContent = stats.totalAnswered;
             document.getElementById('stat-accuracy').textContent = stats.overallAccuracy + '%';
             document.getElementById('stat-mastery').textContent = stats.masteryRate + '%';
             document.getElementById('stat-mastered-count').textContent = stats.masteredCount;
@@ -335,6 +574,46 @@
                 improvementIcon.className = 'material-symbols-outlined text-lg text-gray-500';
                 improvementDesc.textContent = '維持穩定';
                 improvementDesc.className = 'text-[10px] text-gray-500 mt-1';
+            }
+
+            // 預估完成天數
+            updateEstimatedDays(stats);
+        }
+
+        /**
+         * 更新預估完成天數
+         */
+        function updateEstimatedDays(stats) {
+            const remaining = stats.remainingQuestions;
+            const accuracy = stats.overallAccuracy / 100 || 0.5; // 預設 50% 正確率
+            const totalQuestions = stats.totalQuestionsInBank;
+            const mastered = stats.masteredCount;
+
+            // 計算預估天數
+            // 公式：每題平均需要 (3 / 正確率) 次才能熟練，總需作答次數 / 每日題數 = 天數
+            const avgAttemptsPerQuestion = accuracy > 0 ? Math.ceil(3 / accuracy) : 6;
+            const totalAttemptsNeeded = remaining * avgAttemptsPerQuestion;
+            const estimatedDays = dailyGoal > 0 ? Math.ceil(totalAttemptsNeeded / dailyGoal) : 999;
+
+            // 更新 UI
+            document.getElementById('stat-estimated-days').textContent =
+                remaining === 0 ? '0' : (estimatedDays > 365 ? '365+' : estimatedDays);
+            document.getElementById('stat-remaining-questions').textContent = remaining;
+            document.getElementById('daily-goal-display').textContent = dailyGoal;
+
+            // 進度條
+            const progressPercent = totalQuestions > 0 ? Math.round((mastered / totalQuestions) * 100) : 0;
+            document.getElementById('mastery-progress-bar').style.width = progressPercent + '%';
+            document.getElementById('mastery-progress-text').textContent = progressPercent + '% 完成';
+        }
+
+        /**
+         * 調整每日題數目標
+         */
+        function adjustDailyGoal(delta) {
+            dailyGoal = Math.max(5, Math.min(100, dailyGoal + delta)); // 限制 5-100 題
+            if (globalStats) {
+                updateEstimatedDays(globalStats);
             }
         }
 
@@ -478,6 +757,174 @@
                 container.appendChild(listItem);
             });
         }
+
+        /**
+         * 點擊按鈕開始 AI 分析
+         */
+        async function startAIAnalysis() {
+            if (isAIAnalysisLoading) return;
+            if (!globalStats || !globalWeaknessData) {
+                console.error('數據尚未載入');
+                return;
+            }
+
+            isAIAnalysisLoading = true;
+            const contentEl = document.getElementById('ai-analysis-content');
+            const statusEl = document.getElementById('ai-analysis-status');
+
+            // 顯示載入狀態
+            contentEl.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <span class="material-symbols-outlined text-3xl mb-2 animate-spin">progress_activity</span>
+                    <p class="text-xs font-bold">AI 正在分析你的學習數據...</p>
+                    <p class="text-[10px] text-gray-400 mt-1">約需 3-5 秒</p>
+                </div>
+            `;
+            statusEl.innerHTML = `
+                <span class="material-symbols-outlined text-sm animate-spin text-purple-500">progress_activity</span>
+                <span class="text-purple-600">分析中...</span>
+            `;
+
+            await generateAIAnalysis(globalStats, globalWeaknessData);
+            isAIAnalysisLoading = false;
+        }
+
+        /**
+         * 生成 AI 分析
+         */
+        async function generateAIAnalysis(stats, weaknessData) {
+            const contentEl = document.getElementById('ai-analysis-content');
+            const statusEl = document.getElementById('ai-analysis-status');
+            const cardEl = document.getElementById('ai-analysis-card');
+
+            try {
+                // 準備弱點科目數據
+                const weakSubjects = [];
+                const subjectStats = {};
+
+                weaknessData.forEach(item => {
+                    const subject = item.question_data?.subject || '未分類';
+                    if (!subjectStats[subject]) {
+                        subjectStats[subject] = { total: 0, errors: 0 };
+                    }
+                    subjectStats[subject].total += item.times_correct + item.times_incorrect;
+                    subjectStats[subject].errors += item.times_incorrect;
+                });
+
+                for (const [subject, data] of Object.entries(subjectStats)) {
+                    if (data.total > 0) {
+                        weakSubjects.push({
+                            subject,
+                            errorRate: data.errors / data.total
+                        });
+                    }
+                }
+                weakSubjects.sort((a, b) => b.errorRate - a.errorRate);
+
+                // 準備錯題數據
+                const topWeakQuestions = weaknessData.slice(0, 5).map(item => ({
+                    question: item.question_data?.question || '無題目',
+                    timesIncorrect: item.times_incorrect
+                }));
+
+                // 組合完整數據
+                const analysisData = {
+                    ...stats,
+                    weakSubjects,
+                    topWeakQuestions
+                };
+
+                // 調用 AI 服務
+                const result = await aiService.generateWeaknessAnalysis(analysisData);
+
+                if (result.success) {
+                    globalAIAnalysis = result.data;
+
+                    // 使用 marked 渲染 Markdown
+                    const htmlContent = marked.parse(result.data);
+                    contentEl.innerHTML = htmlContent;
+
+                    // 讓卡片可點擊展開 Modal
+                    cardEl.classList.add('cursor-pointer', 'hover:shadow-lg');
+                    cardEl.onclick = openAIAnalysisModal;
+
+                    statusEl.innerHTML = `
+                        <span class="material-symbols-outlined text-sm text-green-500">check_circle</span>
+                        <span class="text-green-600">點擊展開完整分析</span>
+                    `;
+                } else {
+                    throw new Error(result.error?.message || '分析生成失敗');
+                }
+
+            } catch (error) {
+                console.error('AI 分析生成失敗:', error);
+                contentEl.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-6 text-gray-400">
+                        <span class="material-symbols-outlined text-2xl mb-2 text-red-400">error</span>
+                        <p class="text-xs font-bold text-red-500">分析生成失敗</p>
+                        <p class="text-[10px] text-gray-400 mt-1">${error.message}</p>
+                        <button onclick="startAIAnalysis()" class="mt-3 px-3 py-1 text-xs font-bold neo-border bg-primary">
+                            重試
+                        </button>
+                    </div>
+                `;
+                statusEl.innerHTML = `
+                    <span class="material-symbols-outlined text-sm text-red-400">error</span>
+                    <span class="text-red-500">生成失敗</span>
+                `;
+            }
+        }
+
+        /**
+         * 重試 AI 分析
+         */
+        async function retryAIAnalysis() {
+            if (globalStats && globalWeaknessData) {
+                await startAIAnalysis();
+            }
+        }
+
+        /**
+         * 打開 AI 分析 Modal
+         */
+        function openAIAnalysisModal() {
+            const modal = document.getElementById('ai-analysis-modal');
+            const modalBody = document.getElementById('ai-analysis-modal-body');
+
+            if (globalAIAnalysis) {
+                modalBody.innerHTML = marked.parse(globalAIAnalysis);
+            } else {
+                modalBody.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <span class="material-symbols-outlined text-4xl mb-3 animate-spin">progress_activity</span>
+                        <p class="text-sm font-bold">AI 正在分析中...</p>
+                        <p class="text-xs mt-2">請稍候片刻</p>
+                    </div>
+                `;
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        /**
+         * 關閉 AI 分析 Modal
+         */
+        function closeAIAnalysisModal(event) {
+            // 如果點擊的是 overlay 背景或關閉按鈕
+            if (!event || event.target.id === 'ai-analysis-modal') {
+                const modal = document.getElementById('ai-analysis-modal');
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // ESC 鍵關閉 Modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAIAnalysisModal();
+            }
+        });
     </script>
 </body>
 

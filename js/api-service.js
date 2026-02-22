@@ -2183,15 +2183,28 @@ class ApiService {
             // 總錯題數（有答錯過的題目數量）
             const wrongQuestionCount = progressData?.filter(p => p.times_incorrect > 0).length || 0;
 
+            // 正確題數（至少答對過一次的題目）
+            const correctQuestionCount = progressData?.filter(p => p.times_correct > 0).length || 0;
+
             // 整體正確率 (以作答次數計算)
             const overallAccuracy = totalReviewed > 0
                 ? Math.round((totalCorrect / totalReviewed) * 100)
                 : 0;
 
-            // 整體熟練度 (已熟練題數 / 已作答題數)
+            // 已答題之熟練度 (已熟練題數 / 已作答題數)
             const masteryRate = totalAnswered > 0
                 ? Math.round((masteredCount / totalAnswered) * 100)
                 : 0;
+
+            // 取得題庫總題數（用於預估計算）
+            const { count: totalQuestionsInBank, error: countError } = await this.supabase
+                .from('questions')
+                .select('*', { count: 'exact', head: true });
+
+            if (countError) throw countError;
+
+            // 待熟練題數
+            const remainingQuestions = (totalQuestionsInBank || 0) - masteredCount;
 
             // 3. 取得最近 30 天的答題紀錄（用於趨勢分析）
             const thirtyDaysAgo = new Date();
@@ -2268,9 +2281,14 @@ class ApiService {
                     // 基礎統計
                     totalAnswered,          // 已作答題數
                     wrongQuestionCount,     // 總錯題數
+                    correctQuestionCount,   // 正確題數（至少答對過一次）
                     overallAccuracy,        // 整體正確率 %
-                    masteryRate,            // 整體熟練度 %
+                    masteryRate,            // 已答題之熟練度 %
                     masteredCount,          // 已熟練題數
+
+                    // 預估計算用
+                    totalQuestionsInBank: totalQuestionsInBank || 0,  // 題庫總題數
+                    remainingQuestions,     // 待熟練題數
 
                     // 趨勢數據
                     trendData,              // 30 天每日數據
