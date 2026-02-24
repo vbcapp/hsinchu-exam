@@ -3000,6 +3000,803 @@ class ApiService {
         }
     }
 
+    /**
+     * T005 - 實作答題時段效率分析 API
+     * 分析學員在不同時段（0-23 時）的答題效率
+     * @param {string} userId - 用戶 ID
+     * @returns {Promise<{success: boolean, data: Object}>}
+     */
+    async getHourlyEfficiency(userId) {
+        try {
+            if (!userId) {
+                return { success: false, error: 'User ID is required' };
+            }
+
+            // 1. 查詢所有答題記錄（含時間戳記）
+            const { data: records, error: recordsError } = await this.supabase
+                .from('answer_records')
+                .select('is_correct, created_at')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (recordsError) throw recordsError;
+
+            // 2. 處理無答題記錄的情況
+            if (!records || records.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        hourlyStats: [],
+                        bestHour: null,
+                        worstHour: null,
+                        bestAccuracy: 0,
+                        worstAccuracy: 0,
+                        recommendation: '目前尚無答題記錄，開始答題後即可查看時段效率分析'
+                    }
+                };
+            }
+
+            // 3. 按小時分組統計（0-23 時）
+            const hourlyData = {};
+            for (let h = 0; h < 24; h++) {
+                hourlyData[h] = { hour: h, correct: 0, total: 0, accuracy: 0 };
+            }
+
+            records.forEach(record => {
+                // 從 ISO 時間字串提取小時（使用 UTC+8 台灣時區）
+                const date = new Date(record.created_at);
+                const hour = date.getHours(); // 本地時區
+
+                hourlyData[hour].total++;
+                if (record.is_correct) {
+                    hourlyData[hour].correct++;
+                }
+            });
+
+            // 4. 計算各時段正確率並過濾出有數據的時段
+            const hourlyStats = Object.values(hourlyData)
+                .filter(stat => stat.total > 0)
+                .map(stat => ({
+                    hour: stat.hour,
+                    correct: stat.correct,
+                    total: stat.total,
+                    accuracy: Math.round((stat.correct / stat.total) * 100)
+                }))
+                .sort((a, b) => a.hour - b.hour);
+
+            // 5. 找出最佳與最差時段
+            let bestHour = null;
+            let worstHour = null;
+            let bestAccuracy = 0;
+            let worstAccuracy = 100;
+
+            // 只考慮至少答過 5 題的時段（避免單一題目的偏差）
+            const significantHours = hourlyStats.filter(stat => stat.total >= 5);
+
+            if (significantHours.length > 0) {
+                // 找出最高正確率
+                const best = significantHours.reduce((max, stat) =>
+                    stat.accuracy > max.accuracy ? stat : max
+                );
+                bestHour = best.hour;
+                bestAccuracy = best.accuracy;
+
+                // 找出最低正確率
+                const worst = significantHours.reduce((min, stat) =>
+                    stat.accuracy < min.accuracy ? stat : min
+                );
+                worstHour = worst.hour;
+                worstAccuracy = worst.accuracy;
+            }
+
+            // 6. 生成建議文字
+            let recommendation = '';
+            if (bestHour !== null) {
+                const timeRange = `${bestHour}:00-${(bestHour + 1) % 24}:00`;
+                const avgAccuracy = Math.round(
+                    hourlyStats.reduce((sum, s) => sum + s.accuracy, 0) / hourlyStats.length
+                );
+
+                if (bestAccuracy > avgAccuracy + 10) {
+                    recommendation = `建議在 ${timeRange} 答題，該時段正確率達 ${bestAccuracy}%，表現最佳`;
+                } else {
+                    recommendation = `各時段表現穩定，平均正確率 ${avgAccuracy}%`;
+                }
+
+                if (worstHour !== null && worstAccuracy < avgAccuracy - 15) {
+                    const worstTimeRange = `${worstHour}:00-${(worstHour + 1) % 24}:00`;
+                    recommendation += `；建議避免在 ${worstTimeRange} 答題（正確率僅 ${worstAccuracy}%）`;
+                }
+            } else {
+                recommendation = '建議每個時段至少答 5 題以上，才能提供準確的時段效率分析';
+            }
+
+            return {
+                success: true,
+                data: {
+                    hourlyStats: hourlyStats,
+                    bestHour: bestHour,
+                    worstHour: worstHour,
+                    bestAccuracy: bestAccuracy,
+                    worstAccuracy: worstAccuracy,
+                    recommendation: recommendation
+                }
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * T006 - 取得錯題二刷正確率
+     * 計算「上週錯題在本週重做的正確率」，用於驗證學習成效
+     * @param {string} userId - 用戶 ID
+     * @returns {Promise<{success: boolean, data: Object}>}
+     */
+    async getRetryAccuracy(userId) {
+        try {
+            if (!userId) {
+                return { success: false, error: 'User ID is required' };
+            }
+
+            // 計算時間區間
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 今日 00:00
+            const lastWeekStart = new Date(todayStart);
+            lastWeekStart.setDate(lastWeekStart.getDate() - 7); // 7 天前 00:00
+
+            // 1. 查詢上週（7 天前 ~ 今日開始）答錯的題目
+            const { data: lastWeekWrong, error: lastWeekError } = await this.supabase
+                .from('answer_records')
+                .select('question_id')
+                .eq('user_id', userId)
+                .eq('is_correct', false)
+                .gte('created_at', lastWeekStart.toISOString())
+                .lt('created_at', todayStart.toISOString());
+
+            if (lastWeekError) throw lastWeekError;
+
+            // 2. 處理無上週錯題的情況
+            if (!lastWeekWrong || lastWeekWrong.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        lastWeekWrongQuestions: 0,
+                        retriedThisWeek: 0,
+                        retriedCorrect: 0,
+                        retryAccuracy: 0,
+                        stillWrong: 0,
+                        notRetried: 0,
+                        wrongQuestionIds: [],
+                        message: '上週無錯題記錄，太棒了！'
+                    }
+                };
+            }
+
+            // 3. 取得上週錯題的不重複 question_id 列表
+            const uniqueWrongQuestionIds = [...new Set(lastWeekWrong.map(r => r.question_id))];
+
+            // 4. 查詢這些題目在本週（今日開始 ~ 現在）的所有答題記錄
+            const { data: thisWeekRetry, error: thisWeekError } = await this.supabase
+                .from('answer_records')
+                .select('question_id, is_correct, created_at')
+                .eq('user_id', userId)
+                .in('question_id', uniqueWrongQuestionIds)
+                .gte('created_at', todayStart.toISOString())
+                .order('created_at', { ascending: false });
+
+            if (thisWeekError) throw thisWeekError;
+
+            // 5. 處理無本週重做記錄的情況
+            if (!thisWeekRetry || thisWeekRetry.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        lastWeekWrongQuestions: uniqueWrongQuestionIds.length,
+                        retriedThisWeek: 0,
+                        retriedCorrect: 0,
+                        retryAccuracy: 0,
+                        stillWrong: 0,
+                        notRetried: uniqueWrongQuestionIds.length,
+                        wrongQuestionIds: uniqueWrongQuestionIds,
+                        message: `上週有 ${uniqueWrongQuestionIds.length} 題錯題尚未重做，建議複習！`
+                    }
+                };
+            }
+
+            // 6. 分析每個題目的最新重做結果（取每題最近一次答題）
+            const questionRetryMap = {}; // { questionId: { isCorrect: boolean, retried: boolean } }
+
+            uniqueWrongQuestionIds.forEach(qid => {
+                questionRetryMap[qid] = { retried: false, isCorrect: false };
+            });
+
+            // 為每個題目找到本週最新的答題記錄
+            thisWeekRetry.forEach(record => {
+                const qid = record.question_id;
+                if (!questionRetryMap[qid].retried) {
+                    // 第一次遇到此題目的記錄（因為已按時間倒序，所以是最新的）
+                    questionRetryMap[qid] = {
+                        retried: true,
+                        isCorrect: record.is_correct
+                    };
+                }
+            });
+
+            // 7. 統計結果
+            let retriedThisWeek = 0;
+            let retriedCorrect = 0;
+            const stillWrongQuestionIds = [];
+
+            Object.entries(questionRetryMap).forEach(([qid, result]) => {
+                if (result.retried) {
+                    retriedThisWeek++;
+                    if (result.isCorrect) {
+                        retriedCorrect++;
+                    } else {
+                        stillWrongQuestionIds.push(qid);
+                    }
+                }
+            });
+
+            const notRetried = uniqueWrongQuestionIds.length - retriedThisWeek;
+            const retryAccuracy = retriedThisWeek > 0
+                ? Math.round((retriedCorrect / retriedThisWeek) * 100)
+                : 0;
+
+            // 8. 生成訊息
+            let message = '';
+            if (retriedThisWeek === 0) {
+                message = `上週有 ${uniqueWrongQuestionIds.length} 題錯題尚未重做，建議複習！`;
+            } else if (retryAccuracy >= 80) {
+                message = `太棒了！二刷正確率達 ${retryAccuracy}%，學習成效顯著！`;
+            } else if (retryAccuracy >= 60) {
+                message = `不錯！二刷正確率 ${retryAccuracy}%，繼續保持！`;
+            } else {
+                message = `二刷正確率 ${retryAccuracy}%，建議加強複習這些題目`;
+            }
+
+            return {
+                success: true,
+                data: {
+                    lastWeekWrongQuestions: uniqueWrongQuestionIds.length,
+                    retriedThisWeek: retriedThisWeek,
+                    retriedCorrect: retriedCorrect,
+                    retryAccuracy: retryAccuracy,
+                    stillWrong: stillWrongQuestionIds.length,
+                    notRetried: notRetried,
+                    wrongQuestionIds: stillWrongQuestionIds,
+                    message: message
+                }
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * T007 - 徽章系統：取得所有徽章定義
+     * 定義所有可解鎖的徽章條件（前端配置）
+     * @returns {Array<Object>} 徽章定義列表
+     */
+    _getBadgeDefinitions() {
+        return [
+            // 數量成就
+            {
+                badgeKey: 'first_correct',
+                badgeName: '首題達陣',
+                badgeDescription: '答對第 1 題',
+                badgeIcon: 'flag',
+                category: '數量成就',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .from('answer_records')
+                        .select('id')
+                        .eq('user_id', userId)
+                        .eq('is_correct', true)
+                        .limit(1);
+                    return data && data.length >= 1;
+                }
+            },
+            {
+                badgeKey: 'ten_correct',
+                badgeName: '十全十美',
+                badgeDescription: '累積答對 10 題',
+                badgeIcon: 'stars',
+                category: '數量成就',
+                condition: async (userId) => {
+                    const { count } = await this.supabase
+                        .from('answer_records')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', userId)
+                        .eq('is_correct', true);
+                    return count >= 10;
+                }
+            },
+            {
+                badgeKey: 'hundred_correct',
+                badgeName: '百題斬',
+                badgeDescription: '累積答對 100 題',
+                badgeIcon: 'emoji_events',
+                category: '數量成就',
+                condition: async (userId) => {
+                    const { count } = await this.supabase
+                        .from('answer_records')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', userId)
+                        .eq('is_correct', true);
+                    return count >= 100;
+                }
+            },
+            {
+                badgeKey: 'fivehundred_correct',
+                badgeName: '五百壯士',
+                badgeDescription: '累積答對 500 題',
+                badgeIcon: 'military_tech',
+                category: '數量成就',
+                condition: async (userId) => {
+                    const { count } = await this.supabase
+                        .from('answer_records')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', userId)
+                        .eq('is_correct', true);
+                    return count >= 500;
+                }
+            },
+            // 連勝成就
+            {
+                badgeKey: 'streak_3',
+                badgeName: '連勝起步',
+                badgeDescription: '連續答對 3 題',
+                badgeIcon: 'local_fire_department',
+                category: '連勝成就',
+                condition: async (userId) => {
+                    // 取得最近的答題記錄
+                    const { data } = await this.supabase
+                        .from('answer_records')
+                        .select('is_correct')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+
+                    if (!data) return false;
+
+                    // 計算最長連勝
+                    let maxStreak = 0;
+                    let currentStreak = 0;
+                    for (const record of data) {
+                        if (record.is_correct) {
+                            currentStreak++;
+                            maxStreak = Math.max(maxStreak, currentStreak);
+                        } else {
+                            currentStreak = 0;
+                        }
+                    }
+                    return maxStreak >= 3;
+                }
+            },
+            {
+                badgeKey: 'streak_10',
+                badgeName: '連勝達人',
+                badgeDescription: '連續答對 10 題',
+                badgeIcon: 'whatshot',
+                category: '連勝成就',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .from('answer_records')
+                        .select('is_correct')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+
+                    if (!data) return false;
+
+                    let maxStreak = 0;
+                    let currentStreak = 0;
+                    for (const record of data) {
+                        if (record.is_correct) {
+                            currentStreak++;
+                            maxStreak = Math.max(maxStreak, currentStreak);
+                        } else {
+                            currentStreak = 0;
+                        }
+                    }
+                    return maxStreak >= 10;
+                }
+            },
+            {
+                badgeKey: 'streak_20',
+                badgeName: '無敵連勝',
+                badgeDescription: '連續答對 20 題',
+                badgeIcon: 'bolt',
+                category: '連勝成就',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .from('answer_records')
+                        .select('is_correct')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+
+                    if (!data) return false;
+
+                    let maxStreak = 0;
+                    let currentStreak = 0;
+                    for (const record of data) {
+                        if (record.is_correct) {
+                            currentStreak++;
+                            maxStreak = Math.max(maxStreak, currentStreak);
+                        } else {
+                            currentStreak = 0;
+                        }
+                    }
+                    return maxStreak >= 20;
+                }
+            },
+            // 連續天數成就
+            {
+                badgeKey: 'daily_streak_3',
+                badgeName: '三日修行',
+                badgeDescription: '連續 3 天答題',
+                badgeIcon: 'calendar_today',
+                category: '連續天數',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .rpc('get_user_daily_streak', { p_user_id: userId });
+                    return data && data >= 3;
+                }
+            },
+            {
+                badgeKey: 'daily_streak_7',
+                badgeName: '一週達人',
+                badgeDescription: '連續 7 天答題',
+                badgeIcon: 'event_available',
+                category: '連續天數',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .rpc('get_user_daily_streak', { p_user_id: userId });
+                    return data && data >= 7;
+                }
+            },
+            {
+                badgeKey: 'daily_streak_30',
+                badgeName: '不屈之志',
+                badgeDescription: '連續 30 天答題',
+                badgeIcon: 'verified',
+                category: '連續天數',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .rpc('get_user_daily_streak', { p_user_id: userId });
+                    return data && data >= 30;
+                }
+            },
+            // 熟練度成就
+            {
+                badgeKey: 'mastery_10',
+                badgeName: '熟能生巧',
+                badgeDescription: '累積 10 題達到熟練',
+                badgeIcon: 'school',
+                category: '熟練度成就',
+                condition: async (userId) => {
+                    const { count } = await this.supabase
+                        .from('user_question_progress')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', userId)
+                        .gte('times_correct', 3);
+                    return count >= 10;
+                }
+            },
+            {
+                badgeKey: 'mastery_50',
+                badgeName: '爐火純青',
+                badgeDescription: '累積 50 題達到熟練',
+                badgeIcon: 'workspace_premium',
+                category: '熟練度成就',
+                condition: async (userId) => {
+                    const { count } = await this.supabase
+                        .from('user_question_progress')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', userId)
+                        .gte('times_correct', 3);
+                    return count >= 50;
+                }
+            },
+            {
+                badgeKey: 'mastery_100',
+                badgeName: '登峰造極',
+                badgeDescription: '累積 100 題達到熟練',
+                badgeIcon: 'emoji_events',
+                category: '熟練度成就',
+                condition: async (userId) => {
+                    const { count } = await this.supabase
+                        .from('user_question_progress')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('user_id', userId)
+                        .gte('times_correct', 3);
+                    return count >= 100;
+                }
+            },
+            // 特殊成就
+            {
+                badgeKey: 'perfect_day',
+                badgeName: '完美一天',
+                badgeDescription: '單日答題正確率達 100%（至少 10 題）',
+                badgeIcon: 'star',
+                category: '特殊成就',
+                condition: async (userId) => {
+                    // 檢查是否有任何一天達到 100% 正確率（至少 10 題）
+                    const { data } = await this.supabase
+                        .from('answer_records')
+                        .select('is_correct, created_at')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(1000); // 查詢最近的記錄
+
+                    if (!data || data.length === 0) return false;
+
+                    // 按日期分組統計
+                    const dailyStats = {};
+                    data.forEach(record => {
+                        const date = new Date(record.created_at).toISOString().split('T')[0];
+                        if (!dailyStats[date]) {
+                            dailyStats[date] = { correct: 0, total: 0 };
+                        }
+                        dailyStats[date].total++;
+                        if (record.is_correct) dailyStats[date].correct++;
+                    });
+
+                    // 檢查是否有完美的一天
+                    return Object.values(dailyStats).some(stat =>
+                        stat.total >= 10 && stat.correct === stat.total
+                    );
+                }
+            },
+            {
+                badgeKey: 'fast_learner',
+                badgeName: '快速學習者',
+                badgeDescription: '平均答題速度 < 15 秒（至少 50 題）',
+                badgeIcon: 'speed',
+                category: '特殊成就',
+                condition: async (userId) => {
+                    const { data } = await this.supabase
+                        .from('answer_records')
+                        .select('response_time_ms')
+                        .eq('user_id', userId)
+                        .not('response_time_ms', 'is', null);
+
+                    if (!data || data.length < 50) return false;
+
+                    const avgTime = data.reduce((sum, r) => sum + (r.response_time_ms || 0), 0) / data.length;
+                    return avgTime < 15000; // 15 秒
+                }
+            }
+        ];
+    }
+
+    /**
+     * T007 - 徽章系統：檢查並解鎖徽章
+     * 檢查用戶是否達成新徽章條件，並自動解鎖
+     * @param {string} userId - 使用者 ID
+     * @returns {Promise<{success: boolean, data: {newlyUnlocked: Array}}>}
+     */
+    async checkAndUnlockBadges(userId) {
+        try {
+            // 1. 取得所有徽章定義
+            const allBadges = this._getBadgeDefinitions();
+
+            // 2. 取得用戶已解鎖的徽章
+            const { data: unlockedBadges, error: fetchError } = await this.supabase
+                .from('user_badges')
+                .select('badge_key')
+                .eq('user_id', userId);
+
+            if (fetchError) throw fetchError;
+
+            const unlockedKeys = new Set((unlockedBadges || []).map(b => b.badge_key));
+
+            // 3. 檢查每個未解鎖的徽章
+            const newlyUnlocked = [];
+
+            for (const badge of allBadges) {
+                // 跳過已解鎖的徽章
+                if (unlockedKeys.has(badge.badgeKey)) continue;
+
+                try {
+                    // 檢查解鎖條件
+                    const isUnlocked = await badge.condition(userId);
+
+                    if (isUnlocked) {
+                        // 解鎖徽章：寫入資料庫
+                        const { data: newBadge, error: insertError } = await this.supabase
+                            .from('user_badges')
+                            .insert({
+                                user_id: userId,
+                                badge_key: badge.badgeKey,
+                                badge_name: badge.badgeName,
+                                badge_description: badge.badgeDescription,
+                                badge_icon: badge.badgeIcon
+                            })
+                            .select()
+                            .single();
+
+                        if (insertError) {
+                            // 如果是重複鍵錯誤（已存在），忽略
+                            if (insertError.code === '23505') continue;
+                            throw insertError;
+                        }
+
+                        newlyUnlocked.push({
+                            badgeKey: badge.badgeKey,
+                            badgeName: badge.badgeName,
+                            badgeDescription: badge.badgeDescription,
+                            badgeIcon: badge.badgeIcon,
+                            unlockedAt: newBadge.unlocked_at
+                        });
+                    }
+                } catch (conditionError) {
+                    console.error(`檢查徽章 ${badge.badgeKey} 條件時出錯:`, conditionError);
+                    // 繼續檢查其他徽章
+                }
+            }
+
+            return {
+                success: true,
+                data: {
+                    newlyUnlocked: newlyUnlocked,
+                    totalChecked: allBadges.length,
+                    totalUnlocked: unlockedKeys.size + newlyUnlocked.length
+                }
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * T007 - 徽章系統：取得用戶已解鎖的徽章
+     * @param {string} userId - 使用者 ID
+     * @returns {Promise<{success: boolean, data: Array}>}
+     */
+    async getUserBadges(userId) {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_badges')
+                .select('*')
+                .eq('user_id', userId)
+                .order('unlocked_at', { ascending: false });
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                data: data || [],
+                total: data ? data.length : 0
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * T007 - 徽章系統：取得即將解鎖的徽章（進度追蹤）
+     * @param {string} userId - 使用者 ID
+     * @param {number} minProgress - 最小進度百分比（預設 50）
+     * @returns {Promise<{success: boolean, data: Array}>}
+     */
+    async getAvailableBadges(userId, minProgress = 50) {
+        try {
+            // 1. 取得所有徽章定義
+            const allBadges = this._getBadgeDefinitions();
+
+            // 2. 取得用戶已解鎖的徽章
+            const { data: unlockedBadges } = await this.supabase
+                .from('user_badges')
+                .select('badge_key')
+                .eq('user_id', userId);
+
+            const unlockedKeys = new Set((unlockedBadges || []).map(b => b.badge_key));
+
+            // 3. 計算未解鎖徽章的進度
+            const availableBadges = [];
+
+            // 取得用戶統計數據（一次查詢，避免重複）
+            const { count: totalCorrect } = await this.supabase
+                .from('answer_records')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('is_correct', true);
+
+            const { count: masteredCount } = await this.supabase
+                .from('user_question_progress')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .gte('times_correct', 3);
+
+            // 計算連勝
+            const { data: recentAnswers } = await this.supabase
+                .from('answer_records')
+                .select('is_correct')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            let maxStreak = 0;
+            let currentStreak = 0;
+            if (recentAnswers) {
+                for (const record of recentAnswers) {
+                    if (record.is_correct) {
+                        currentStreak++;
+                        maxStreak = Math.max(maxStreak, currentStreak);
+                    } else {
+                        currentStreak = 0;
+                    }
+                }
+            }
+
+            // 簡化版進度計算（針對主要徽章類型）
+            for (const badge of allBadges) {
+                if (unlockedKeys.has(badge.badgeKey)) continue;
+
+                let current = 0;
+                let target = 0;
+                let progress = 0;
+
+                // 根據徽章類型計算進度
+                if (badge.badgeKey.includes('_correct')) {
+                    // 累積答對題數徽章
+                    current = totalCorrect || 0;
+                    if (badge.badgeKey === 'first_correct') target = 1;
+                    else if (badge.badgeKey === 'ten_correct') target = 10;
+                    else if (badge.badgeKey === 'hundred_correct') target = 100;
+                    else if (badge.badgeKey === 'fivehundred_correct') target = 500;
+
+                    progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+                } else if (badge.badgeKey.includes('streak_')) {
+                    // 連勝徽章
+                    current = maxStreak || 0;
+                    if (badge.badgeKey === 'streak_3') target = 3;
+                    else if (badge.badgeKey === 'streak_10') target = 10;
+                    else if (badge.badgeKey === 'streak_20') target = 20;
+
+                    progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+                } else if (badge.badgeKey.includes('mastery_')) {
+                    // 熟練度徽章
+                    current = masteredCount || 0;
+                    if (badge.badgeKey === 'mastery_10') target = 10;
+                    else if (badge.badgeKey === 'mastery_50') target = 50;
+                    else if (badge.badgeKey === 'mastery_100') target = 100;
+
+                    progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+                }
+
+                // 只包含進度 >= minProgress 的徽章
+                if (progress >= minProgress && target > 0) {
+                    availableBadges.push({
+                        badgeKey: badge.badgeKey,
+                        badgeName: badge.badgeName,
+                        badgeDescription: badge.badgeDescription,
+                        badgeIcon: badge.badgeIcon,
+                        category: badge.category,
+                        progress: progress,
+                        current: current,
+                        target: target,
+                        remaining: target - current
+                    });
+                }
+            }
+
+            // 按進度降序排序（即將解鎖的排在前面）
+            availableBadges.sort((a, b) => b.progress - a.progress);
+
+            return {
+                success: true,
+                data: availableBadges
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
     // ==================== 考卷建立相關 ====================
 
     /**
