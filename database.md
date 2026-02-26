@@ -32,6 +32,9 @@
 | `created_at` | `timestamptz` | DEFAULT now() | 帳號建立時間 |
 | `updated_at` | `timestamptz` | DEFAULT now() | 最後更新時間 |
 | `tags` | `jsonb` | DEFAULT '[]' | 學員標籤，如 `["第1梯", "VIP"]` |
+| `exam_name` | `varchar` | NULLABLE | 考試項目名稱（用戶手動設定，如「甲級技術士」） |
+| `exam_date` | `date` | NULLABLE | 考試日期（用戶手動設定） |
+| `daily_goal` | `integer` | DEFAULT 20 | 每日目標題數（用戶手動設定） |
 
 ## 2. 題庫: `questions`
 儲存所有的測驗題目。
@@ -608,10 +611,13 @@ async getUserAnalysisHistory(userId, limit = 10) {
 
 ## 11. 考試倒數設定: `users` 表擴充
 
-為了支援「進度條與倒數計時」功能，需擴充 users 表。
+為了支援「進度條與倒數計時」功能，需擴充 users 表，讓用戶可在個人頁手動設定考試資訊。
 
 ```sql
--- 在 users 表新增考試日期欄位
+-- 在 users 表新增考試相關欄位
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS exam_name varchar(100);
+
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS exam_date date;
 
@@ -624,13 +630,15 @@ ADD COLUMN IF NOT EXISTS daily_goal integer DEFAULT 20;
 
 | 欄位名稱 (Column) | 資料型別 (Type) | 屬性與預設值 (Attributes & Default) | 說明 (Description) |
 | --- | --- | --- | --- |
-| `exam_date` | `date` | NULLABLE | 學員設定的考試日期 |
+| `exam_name` | `varchar(100)` | NULLABLE | 考試項目名稱（如「甲級技術士」） |
+| `exam_date` | `date` | NULLABLE | 考試日期 |
 | `daily_goal` | `integer` | DEFAULT 20 | 每日答題目標（可調整） |
 
-**使用說明：**
-- `exam_date`：學員設定的考試日期，用於計算倒數天數
-- `daily_goal`：學員設定的每日答題目標（可調整）
-- 這兩個欄位會影響「預估完成天數」的計算
+**功能設計：**
+- **設定位置**：用戶在 `profile.html` 的「考試設定」區塊手動填寫
+- **顯示位置**：`weakness.html` 弱點分析頁顯示倒數天數與進度
+- **前端計算**：倒數天數、預估完成天數等數據由前端 JavaScript 計算
+- **無 API 函式**：直接使用 Supabase Client 讀寫 `users` 表
 
 ---
 
@@ -709,7 +717,10 @@ CREATE POLICY "Users can insert own records"
 ON user_records FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
--- 3. 擴充 users 表（考試日期 + 每日目標）
+-- 3. 擴充 users 表（考試資訊：名稱 + 日期 + 每日目標）
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS exam_name varchar(100);
+
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS exam_date date;
 
@@ -744,12 +755,18 @@ ON CONFLICT (user_id) DO NOTHING;
     └─ UPDATE user_records SET ...
 ```
 
-### 進度條與倒數計時
+### 進度條與倒數計時（用戶手動設定）
 ```
-查詢 users.exam_date → 計算剩餘天數
-查詢 users.daily_goal → 計算每日應答題數
-查詢熟練題數 / 總題數 → 計算進度百分比
-    └─ 顯示：「以目前速度，X 天後完成（距考試還有 Y 天）」
+用戶在個人頁設定：
+    ├─ exam_name (例如：甲級技術士)
+    ├─ exam_date (考試日期)
+    └─ daily_goal (每日目標題數)
+
+弱點分析頁讀取並計算：
+    ├─ 查詢 users.exam_date → 前端計算剩餘天數
+    ├─ 查詢 users.daily_goal → 計算每日應答題數
+    ├─ 查詢熟練題數 / 總題數 → 計算進度百分比
+    └─ 顯示：「距離 [考試名稱] 還有 X 天，預計 Y 天完成」
 ```
 
 ---
@@ -761,7 +778,8 @@ ON CONFLICT (user_id) DO NOTHING;
 │       users         │
 ├─────────────────────┤
 │ id                  │
-│ exam_date          │───┐ 考試倒數
+│ exam_name          │───┐ 考試倒數
+│ exam_date          │   │ (用戶手動設定)
 │ daily_goal         │   │
 └─────────────────────┘   │
          │                │
@@ -810,7 +828,7 @@ ON CONFLICT (user_id) DO NOTHING;
 |------|---------|------|
 | 徽章與里程碑系統 | `user_badges` | 需記錄解鎖狀態與時間 |
 | 超越自己的數據 | `user_records` | 需儲存個人最佳紀錄 |
-| 進度條與倒數計時 | `users` 擴充 | 需 `exam_date`, `daily_goal` |
+| 進度條與倒數計時 | `users` 擴充 | 需 `exam_name`, `exam_date`, `daily_goal`（用戶手動設定） |
 
 ---
 

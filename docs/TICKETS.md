@@ -375,7 +375,7 @@ async getAvailableBadges(userId)  // 取得「即將解鎖」的徽章
 
 ### T008 - 實作個人紀錄追蹤 API
 **優先級：** 🟡 高
-**狀態：** ⏳ 待開始
+**狀態：** ✅ 已完成
 **負責人：** 後端開發
 **相依性：** T001（需 `user_records` 表）
 
@@ -413,70 +413,114 @@ async getUserRecords(userId)      // 取得所有紀錄
 5. 回傳打破的紀錄列表
 
 **測試案例：**
-- [ ] 打破單日最高正確率
-- [ ] 打破最長連續答對
-- [ ] 連續天數+1
-- [ ] 連續天數中斷
+- [x] 打破單日最高正確率
+- [x] 打破最長連續答對
+- [x] 連續天數+1
+- [x] 連續天數中斷
 
-**預計時間：** 3 小時
+**完成時間：** 2026-02-24
+**測試報告：** `docs/T008-TEST-REPORT.md`
 **參考文件：** `database.md` - `user_records` 表
 
 ---
 
-### T009 - 實作考試倒數與進度條 API
+### T009 - 實作考試倒數設定與顯示功能
 **優先級：** 🔴 極高
 **狀態：** ⏳ 待開始
-**負責人：** 後端開發
+**負責人：** 前端開發
 **相依性：** T001（需 `users.exam_date`, `daily_goal`）
 
 **任務描述：**
-新增 API 函式計算考試倒數天數與完成進度。
+在個人頁面新增「考試項目」與「考試日期」設定功能，並在弱點分析頁顯示倒數天數與進度。
 
-**實作位置：** `js/api-service.js`
+**實作位置：**
+- `profile.html` - 考試設定介面
+- `weakness.html` - 倒數顯示區塊
+- `js/api-service.js` - 資料存取函式
 
-**函式簽名：**
-```javascript
-async getExamCountdown(userId)
-async setExamDate(userId, examDate)
-async setDailyGoal(userId, dailyGoal)
+**功能 1：個人頁設定區塊**
+
+**UI 設計：**
+```
+📅 考試設定
+┌─────────────────────────────┐
+│ 考試項目：[________________]│ (例如：甲級技術士)
+│ 考試日期：[____/____/______]│ (日期選擇器)
+│ 每日目標：[____] 題         │ (數字輸入)
+│         [儲存設定]          │
+└─────────────────────────────┘
 ```
 
-**回傳格式：**
+**API 函式：**
 ```javascript
-{
-  success: true,
-  data: {
-    examDate: '2026-04-10',
-    daysRemaining: 45,
-    dailyGoal: 20,
-    totalQuestions: 500,
-    masteredCount: 340,
-    remainingQuestions: 160,
-    progressPercent: 68,
-    estimatedDays: 20,           // 預估完成天數
-    bufferDays: 25,              // 距考試緩衝天數
-    onTrack: true,               // 是否跟上進度
-    recommendedDailyGoal: 12     // 建議每日題數
-  }
-}
+// 更新考試設定
+async updateExamSettings(userId, examName, examDate, dailyGoal)
+
+// 取得考試設定
+async getExamSettings(userId)
 ```
 
-**實作邏輯：**
-1. 查詢 `users.exam_date`, `daily_goal`
-2. 計算剩餘天數
-3. 查詢熟練題數 / 題庫總數 → 進度百分比
-4. 計算預估完成天數（剩餘題數 / 每日目標）
-5. 比較預估天數 vs 考試天數 → 判斷是否跟上
-6. 計算建議每日目標
+**欄位驗證：**
+- `examName`: 必填，最多 100 字元
+- `examDate`: 必填，須為未來日期
+- `dailyGoal`: 選填，預設 20，範圍 1-100
+
+**功能 2：弱點分析頁倒數顯示**
+
+**數據內容：**
+```
+🎯 考試倒數：45 天（甲級技術士）
+
+📊 你的完成進度
+━━━━━━━━━━━━━━━━━━━━ 68%
+已熟練：340 / 500 題
+
+💡 以目前速度（每日 8 題熟練）
+   預計 20 天後達成 100%
+   ⚠️ 距離考試還有 25 天緩衝
+
+🔥 如果每日增加到 12 題，可提前 7 天完成！
+```
+
+**前端計算邏輯：**
+```javascript
+// 1. 從 users 表取得 exam_date, daily_goal, exam_name
+const { examDate, dailyGoal, examName } = await getExamSettings(userId);
+
+// 2. 計算剩餘天數
+const daysRemaining = Math.ceil((new Date(examDate) - new Date()) / 86400000);
+
+// 3. 查詢熟練題數（times_correct >= 3）
+const masteredCount = await getMasteredCount(userId);
+const totalQuestions = await getTotalQuestions();
+const progressPercent = (masteredCount / totalQuestions * 100).toFixed(0);
+
+// 4. 計算近 7 天平均熟練速度
+const avgDailySpeed = await getAvgDailyMasterySpeed(userId, 7);
+
+// 5. 預估完成天數
+const remainingQuestions = totalQuestions - masteredCount;
+const estimatedDays = Math.ceil(remainingQuestions / avgDailySpeed);
+
+// 6. 計算緩衝天數
+const bufferDays = daysRemaining - estimatedDays;
+```
+
+**UI 狀態：**
+- 未設定考試日期：顯示「點擊設定考試日期」按鈕
+- 進度超前（bufferDays > 0）：綠色進度條
+- 進度正常（bufferDays == 0）：黃色進度條
+- 進度落後（bufferDays < 0）：紅色進度條 + 建議加快速度
 
 **測試案例：**
-- [ ] 已設定考試日期
-- [ ] 未設定考試日期
-- [ ] 進度超前（已完成 > 預期）
-- [ ] 進度落後
+- [ ] 首次設定考試資訊
+- [ ] 修改考試日期
+- [ ] 未設定考試日期（顯示提示）
+- [ ] 考試日期已過期（顯示警告）
+- [ ] 進度超前/落後的不同顯示狀態
 
-**預計時間：** 2 小時
-**參考文件：** `database.md` - `users` 表
+**預計時間：** 3 小時
+**參考文件：** `database.md` - `users` 表、`docs/PRD.md` - 弱點分析頁面設計
 
 ---
 
@@ -486,7 +530,7 @@ async setDailyGoal(userId, dailyGoal)
 **優先級：** 🔴 極高
 **狀態：** ⏳ 待開始
 **負責人：** 前端開發
-**相依性：** T002, T003, T004, T009
+**相依性：** T002, T003, T004（API 數據），T009（考試倒數顯示）
 
 **任務描述：**
 根據新的驅動力設計重構弱點分析頁面。
@@ -629,7 +673,7 @@ async submitAnswer(userId, questionId, userAnswer, isCorrect, responseTimeMs) {
 | Phase | 完成度 | 預計完成日期 |
 |-------|--------|-------------|
 | Phase 1: 資料庫建置 | ✅ 100% | 2026-02-24 |
-| Phase 2: API 開發 | 75% (6/8) | 進行中 |
+| Phase 2: API 開發 | 88% (7/8) | 進行中 |
 | Phase 3: 前端整合 | 0% | 待定 |
 | Phase 4: 文件更新 | 0% | 待定 |
 
@@ -638,10 +682,10 @@ async submitAnswer(userId, questionId, userAnswer, isCorrect, responseTimeMs) {
 ## 🎯 Sprint 建議
 
 ### Sprint 1（優先）
-- T001: 執行 SQL 腳本
-- T002: 今日新增熟練題數 API
-- T003: 本次 vs 歷史正確率 API
-- T009: 考試倒數 API
+- T001: 執行 SQL 腳本 ✅
+- T002: 今日新增熟練題數 API ✅
+- T003: 本次 vs 歷史正確率 API ✅
+- T009: 考試倒數設定與顯示功能
 - T010: 重新設計弱點分析頁面
 
 ### Sprint 2

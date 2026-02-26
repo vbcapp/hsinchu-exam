@@ -3797,6 +3797,256 @@ class ApiService {
         }
     }
 
+    // ==================== T008 - 個人紀錄追蹤 ====================
+
+    /**
+     * T008 - 更新個人紀錄（每次答題後呼叫）
+     * @param {string} userId - 使用者 ID
+     * @returns {Promise<{success: boolean, data: {brokenRecords: Array<string>, currentRecords: Object}}>}
+     */
+    async updateUserRecords(userId) {
+        try {
+            // 1. 確保用戶有 user_records 記錄（沒有就建立）
+            let { data: userRecord, error: fetchError } = await this.supabase
+                .from('user_records')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (fetchError && fetchError.code === 'PGRST116') {
+                // 記錄不存在，建立新記錄
+                const { data: newRecord, error: insertError } = await this.supabase
+                    .from('user_records')
+                    .insert({
+                        user_id: userId,
+                        last_answer_date: new Date().toISOString().split('T')[0]
+                    })
+                    .select()
+                    .single();
+
+                if (insertError) throw insertError;
+                userRecord = newRecord;
+            } else if (fetchError) {
+                throw fetchError;
+            }
+
+            // 2. 計算今日統計
+            const today = new Date().toISOString().split('T')[0];
+            const todayStart = new Date(today + 'T00:00:00Z');
+            const todayEnd = new Date(today + 'T23:59:59Z');
+
+            // 今日答題記錄
+            const { data: todayAnswers, error: todayError } = await this.supabase
+                .from('answer_records')
+                .select('is_correct, response_time_ms')
+                .eq('user_id', userId)
+                .gte('created_at', todayStart.toISOString())
+                .lte('created_at', todayEnd.toISOString());
+
+            if (todayError) throw todayError;
+
+            // 3. 計算今日正確率與答對數
+            const todayTotal = todayAnswers?.length || 0;
+            const todayCorrect = todayAnswers?.filter(a => a.is_correct).length || 0;
+            const todayAccuracy = todayTotal > 0 ? (todayCorrect / todayTotal) * 100 : 0;
+            const todayAvgResponseMs = todayAnswers?.length > 0
+                ? Math.round(todayAnswers.reduce((sum, a) => sum + (a.response_time_ms || 0), 0) / todayAnswers.length)
+                : null;
+
+            // 4. 計算當前連續答對數（最近答題）
+            const { data: recentAnswers, error: recentError } = await this.supabase
+                .from('answer_records')
+                .select('is_correct')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (recentError) throw recentError;
+
+            let currentStreak = 0;
+            let longestStreak = 0;
+            let tempStreak = 0;
+
+            if (recentAnswers && recentAnswers.length > 0) {
+                // 計算當前連勝（從最新開始往回數）
+                for (const answer of recentAnswers) {
+                    if (answer.is_correct) {
+                        currentStreak++;
+                    } else {
+                        break;
+                    }
+                }
+
+                // 計算最長連勝
+                for (const answer of recentAnswers) {
+                    if (answer.is_correct) {
+                        tempStreak++;
+                        longestStreak = Math.max(longestStreak, tempStreak);
+                    } else {
+                        tempStreak = 0;
+                    }
+                }
+            }
+
+            // 5. 計算連續答題天數
+            const lastAnswerDate = userRecord.last_answer_date;
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            let newDailyStreak = userRecord.current_daily_streak || 0;
+
+            if (lastAnswerDate === yesterdayStr) {
+                // 昨天也有答題，連續天數+1
+                newDailyStreak++;
+            } else if (lastAnswerDate !== today) {
+                // 中斷了（超過一天沒答題），重新計數
+                newDailyStreak = 1;
+            }
+            // 如果 lastAnswerDate === today，保持現有天數不變（今天已經計數過了）
+
+            // 6. 準備更新資料與打破紀錄列表
+            const brokenRecords = [];
+            const updateData = {
+                last_answer_date: today,
+                current_daily_streak: newDailyStreak,
+                updated_at: new Date().toISOString()
+            };
+
+            // 檢查各項紀錄是否打破
+            if (todayTotal > 0 && todayAccuracy > (userRecord.best_daily_accuracy || 0)) {
+                updateData.best_daily_accuracy = todayAccuracy;
+                updateData.best_daily_accuracy_date = today;
+                brokenRecords.push('bestDailyAccuracy');
+            }
+
+            if (todayCorrect > (userRecord.best_daily_correct_count || 0)) {
+                updateData.best_daily_correct_count = todayCorrect;
+                updateData.best_daily_correct_date = today;
+                brokenRecords.push('bestDailyCorrectCount');
+            }
+
+            if (longestStreak > (userRecord.longest_correct_streak || 0)) {
+                updateData.longest_correct_streak = longestStreak;
+                updateData.longest_correct_streak_date = today;
+                brokenRecords.push('longestCorrectStreak');
+            }
+
+            if (newDailyStreak > (userRecord.longest_daily_streak || 0)) {
+                updateData.longest_daily_streak = newDailyStreak;
+                updateData.longest_daily_streak_end_date = today;
+                brokenRecords.push('longestDailyStreak');
+            }
+
+            if (todayAvgResponseMs && (
+                !userRecord.fastest_avg_response_ms ||
+                todayAvgResponseMs < userRecord.fastest_avg_response_ms
+            )) {
+                updateData.fastest_avg_response_ms = todayAvgResponseMs;
+                updateData.fastest_avg_response_date = today;
+                brokenRecords.push('fastestAvgResponse');
+            }
+
+            // 7. 更新資料庫
+            const { data: updatedRecord, error: updateError } = await this.supabase
+                .from('user_records')
+                .update(updateData)
+                .eq('user_id', userId)
+                .select()
+                .single();
+
+            if (updateError) throw updateError;
+
+            // 8. 回傳結果
+            return {
+                success: true,
+                data: {
+                    brokenRecords: brokenRecords,
+                    currentRecords: {
+                        bestDailyAccuracy: updatedRecord.best_daily_accuracy,
+                        bestDailyAccuracyDate: updatedRecord.best_daily_accuracy_date,
+                        bestDailyCorrectCount: updatedRecord.best_daily_correct_count,
+                        bestDailyCorrectDate: updatedRecord.best_daily_correct_date,
+                        longestCorrectStreak: updatedRecord.longest_correct_streak,
+                        longestCorrectStreakDate: updatedRecord.longest_correct_streak_date,
+                        longestDailyStreak: updatedRecord.longest_daily_streak,
+                        longestDailyStreakEndDate: updatedRecord.longest_daily_streak_end_date,
+                        currentDailyStreak: updatedRecord.current_daily_streak,
+                        fastestAvgResponseMs: updatedRecord.fastest_avg_response_ms,
+                        fastestAvgResponseDate: updatedRecord.fastest_avg_response_date,
+                        todayStats: {
+                            accuracy: todayAccuracy,
+                            correctCount: todayCorrect,
+                            totalCount: todayTotal,
+                            avgResponseMs: todayAvgResponseMs,
+                            currentStreak: currentStreak
+                        }
+                    }
+                }
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * T008 - 取得用戶的所有個人紀錄
+     * @param {string} userId - 使用者 ID
+     * @returns {Promise<{success: boolean, data: Object}>}
+     */
+    async getUserRecords(userId) {
+        try {
+            const { data, error } = await this.supabase
+                .from('user_records')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (error && error.code === 'PGRST116') {
+                // 記錄不存在，回傳空白紀錄
+                return {
+                    success: true,
+                    data: {
+                        bestDailyAccuracy: 0,
+                        bestDailyAccuracyDate: null,
+                        bestDailyCorrectCount: 0,
+                        bestDailyCorrectDate: null,
+                        longestCorrectStreak: 0,
+                        longestCorrectStreakDate: null,
+                        longestDailyStreak: 0,
+                        longestDailyStreakEndDate: null,
+                        currentDailyStreak: 0,
+                        fastestAvgResponseMs: null,
+                        fastestAvgResponseDate: null,
+                        lastAnswerDate: null
+                    }
+                };
+            }
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                data: {
+                    bestDailyAccuracy: data.best_daily_accuracy,
+                    bestDailyAccuracyDate: data.best_daily_accuracy_date,
+                    bestDailyCorrectCount: data.best_daily_correct_count,
+                    bestDailyCorrectDate: data.best_daily_correct_date,
+                    longestCorrectStreak: data.longest_correct_streak,
+                    longestCorrectStreakDate: data.longest_correct_streak_date,
+                    longestDailyStreak: data.longest_daily_streak,
+                    longestDailyStreakEndDate: data.longest_daily_streak_end_date,
+                    currentDailyStreak: data.current_daily_streak,
+                    fastestAvgResponseMs: data.fastest_avg_response_ms,
+                    fastestAvgResponseDate: data.fastest_avg_response_date,
+                    lastAnswerDate: data.last_answer_date
+                }
+            };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
     // ==================== 考卷建立相關 ====================
 
     /**
