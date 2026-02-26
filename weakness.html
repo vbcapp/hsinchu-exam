@@ -49,6 +49,13 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
         }
+        .toast-enter {
+            animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
     <style>
         body {
@@ -230,6 +237,16 @@
         </div>
     </div>
 
+    <!-- Notification Toast -->
+    <div id="notification-toast" class="fixed top-4 left-4 right-4 z-[10000] hidden toast-enter max-w-[430px] mx-auto">
+        <div class="bg-primary neo-border-thick p-4 flex items-center gap-3 neo-shadow">
+            <div id="toast-icon" class="bg-black rounded-full p-2 shrink-0 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary font-black text-xl">check</span>
+            </div>
+            <span id="toast-message" class="font-black text-sm flex-1">操作成功</span>
+        </div>
+    </div>
+
     <!-- AI 分析 Modal -->
     <div id="ai-analysis-modal" class="modal-overlay" onclick="closeAIAnalysisModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
@@ -366,6 +383,46 @@
                 <div class="flex items-center gap-2 mb-2">
                     <span class="material-symbols-outlined text-primary">emoji_events</span>
                     <h2 class="text-sm font-black uppercase">即時成就感</h2>
+                </div>
+
+                <!-- 0. 今日目標達成狀況 -->
+                <div id="daily-goal-card" class="neo-brutalism-card bg-gradient-to-br from-yellow-50 to-amber-50 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-600 text-xl">flag</span>
+                            <span class="text-xs font-black uppercase">今日目標達成</span>
+                        </div>
+                        <button onclick="openExamSettingsModal()"
+                                class="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                            調整
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex-1">
+                            <div class="flex items-baseline gap-2 mb-1">
+                                <span id="today-answered" class="text-4xl font-black text-amber-600">--</span>
+                                <span class="text-lg font-bold text-gray-400">/</span>
+                                <span id="daily-goal-target" class="text-2xl font-bold text-gray-600">--</span>
+                                <span class="text-sm font-bold text-gray-500">題</span>
+                            </div>
+                            <div id="goal-status-text" class="text-[10px] text-gray-600">
+                                <!-- 狀態文字會由 JS 填入 -->
+                            </div>
+                        </div>
+                        <div id="goal-status-icon" class="shrink-0 ml-4">
+                            <!-- 圖示會由 JS 填入 -->
+                        </div>
+                    </div>
+                    <!-- 進度條 -->
+                    <div class="h-4 neo-border bg-white overflow-hidden relative">
+                        <div id="daily-goal-progress-bar" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between mt-1 text-[9px] text-gray-400">
+                        <span>0%</span>
+                        <span id="daily-goal-percent" class="font-bold text-amber-600">--% 完成</span>
+                        <span>100%</span>
+                    </div>
                 </div>
 
                 <!-- 1. 今日新增熟練題數 -->
@@ -648,6 +705,45 @@
         let isAIAnalysisLoading = false; // AI 分析載入狀態
         let globalWrongPatternsData = null; // 儲存錯誤選項數據
 
+        /**
+         * 顯示通知 Toast
+         * @param {string} message - 通知訊息
+         * @param {string} type - 通知類型：'success', 'error', 'info'
+         */
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notification-toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = toast.querySelector('.material-symbols-outlined');
+            const iconBg = document.getElementById('toast-icon');
+            const toastBody = toast.querySelector('div > div');
+
+            // 設定訊息
+            toastMessage.textContent = message;
+
+            // 根據類型設定圖示和顏色
+            if (type === 'success') {
+                toastIcon.textContent = 'check';
+                toastIcon.className = 'material-symbols-outlined text-primary font-black text-xl';
+                toastBody.className = 'bg-primary neo-border-thick p-4 flex items-center gap-3 neo-shadow';
+            } else if (type === 'error') {
+                toastIcon.textContent = 'error';
+                toastIcon.className = 'material-symbols-outlined text-red-500 font-black text-xl';
+                toastBody.className = 'bg-red-500 neo-border-thick p-4 flex items-center gap-3 neo-shadow';
+            } else if (type === 'info') {
+                toastIcon.textContent = 'info';
+                toastIcon.className = 'material-symbols-outlined text-blue-500 font-black text-xl';
+                toastBody.className = 'bg-blue-500 neo-border-thick p-4 flex items-center gap-3 neo-shadow';
+            }
+
+            // 顯示 Toast
+            toast.classList.remove('hidden');
+
+            // 3 秒後自動隱藏
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             const listContainer = document.getElementById('weakness-list');
             const emptyState = document.getElementById('empty-state');
@@ -664,11 +760,12 @@
                 const userId = apiService.currentUser.id;
 
                 // 並行載入所有數據
-                const [statsResult, weaknessResult, analysisState, todayMasteredResult, recentAccuracyResult, wrongPatternsResult, examSettings] = await Promise.all([
+                const [statsResult, weaknessResult, analysisState, todayMasteredResult, todayAnsweredResult, recentAccuracyResult, wrongPatternsResult, examSettings] = await Promise.all([
                     apiService.getWeaknessStats(userId),
                     apiService.getWeaknessList(userId, 30),
                     apiService.checkTodayAnalysisExists(userId),
                     apiService.getTodayMasteredCount(userId),
+                    apiService.getTodayAnsweredCount(userId),
                     apiService.getRecentVsHistoricalAccuracy(userId, 10),
                     apiService.getWrongAnswerPatterns(userId, 5),
                     loadExamSettings(userId)
@@ -677,6 +774,11 @@
                 // 渲染考試倒數
                 if (examSettings) {
                     renderExamCountdown(examSettings, statsResult.data);
+                }
+
+                // 渲染今日目標達成狀況
+                if (todayAnsweredResult.success && examSettings) {
+                    renderDailyGoalProgress(todayAnsweredResult.data.todayAnswered, examSettings.daily_goal || 20);
                 }
 
                 // 渲染即時成就感模組
@@ -864,6 +966,61 @@
                 estimationText.innerHTML = `預計 <span class="text-red-600 font-black">${estimatedDays}</span> 天後達成 100%`;
                 suggestionText.innerHTML = `🔥 進度落後 <span class="text-red-600 font-bold">${Math.abs(bufferDays)}</span> 天！建議每日增加到 <span class="font-black">${neededSpeed}</span> 題（+${speedIncrease} 題）`;
                 progressBar.className = 'h-full bg-red-500 transition-all duration-500';
+            }
+        }
+
+        /**
+         * 渲染今日目標達成狀況
+         */
+        function renderDailyGoalProgress(todayAnswered, dailyGoalTarget) {
+            const progressPercent = dailyGoalTarget > 0 ? Math.min(100, Math.round((todayAnswered / dailyGoalTarget) * 100)) : 0;
+
+            // 更新數字
+            document.getElementById('today-answered').textContent = todayAnswered;
+            document.getElementById('daily-goal-target').textContent = dailyGoalTarget;
+            document.getElementById('daily-goal-percent').textContent = progressPercent + '%';
+
+            // 更新進度條
+            const progressBar = document.getElementById('daily-goal-progress-bar');
+            progressBar.style.width = progressPercent + '%';
+
+            // 根據完成度更新狀態
+            const statusTextEl = document.getElementById('goal-status-text');
+            const statusIconEl = document.getElementById('goal-status-icon');
+
+            if (todayAnswered === 0) {
+                // 尚未開始
+                statusTextEl.innerHTML = '今天還沒開始答題，加油！💪';
+                statusTextEl.className = 'text-[10px] text-gray-500';
+                statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-gray-300">schedule</span>';
+                progressBar.className = 'h-full bg-gray-300 transition-all duration-500';
+            } else if (progressPercent < 50) {
+                // 進度不到一半
+                const remaining = dailyGoalTarget - todayAnswered;
+                statusTextEl.innerHTML = `還差 <span class="font-bold text-amber-600">${remaining}</span> 題達標，繼續加油！`;
+                statusTextEl.className = 'text-[10px] text-gray-600';
+                statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-amber-400">hourglass_empty</span>';
+                progressBar.className = 'h-full bg-amber-400 transition-all duration-500';
+            } else if (progressPercent < 100) {
+                // 進度過半但未完成
+                const remaining = dailyGoalTarget - todayAnswered;
+                statusTextEl.innerHTML = `只差 <span class="font-bold text-orange-600">${remaining}</span> 題就達標了！衝刺 🔥`;
+                statusTextEl.className = 'text-[10px] text-orange-600';
+                statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-orange-500">local_fire_department</span>';
+                progressBar.className = 'h-full bg-orange-500 transition-all duration-500';
+            } else if (progressPercent === 100) {
+                // 剛好達標
+                statusTextEl.innerHTML = '🎉 <span class="font-bold text-green-600">今日目標達成！</span>';
+                statusTextEl.className = 'text-[10px] text-green-600';
+                statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-green-500">check_circle</span>';
+                progressBar.className = 'h-full bg-green-500 transition-all duration-500';
+            } else {
+                // 超標
+                const exceeded = todayAnswered - dailyGoalTarget;
+                statusTextEl.innerHTML = `⭐ <span class="font-bold text-purple-600">超標 ${exceeded} 題！今天太認真了！</span>`;
+                statusTextEl.className = 'text-[10px] text-purple-600';
+                statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-purple-500">emoji_events</span>';
+                progressBar.className = 'h-full bg-purple-500 transition-all duration-500';
             }
         }
 
@@ -1446,7 +1603,7 @@
          */
         async function saveExamSettings() {
             if (!apiService.currentUser) {
-                alert('請先登入');
+                showNotification('請先登入', 'error');
                 return;
             }
 
@@ -1456,22 +1613,22 @@
 
             // 驗證
             if (!examName) {
-                alert('請輸入考試項目');
+                showNotification('請輸入考試項目', 'error');
                 return;
             }
             if (!examDate) {
-                alert('請選擇考試日期');
+                showNotification('請選擇考試日期', 'error');
                 return;
             }
             const selectedDate = new Date(examDate);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             if (selectedDate < today) {
-                alert('考試日期須為未來日期');
+                showNotification('考試日期須為未來日期', 'error');
                 return;
             }
             if (dailyGoal < 1 || dailyGoal > 100) {
-                alert('每日目標須在 1-100 題之間');
+                showNotification('每日目標須在 1-100 題之間', 'error');
                 return;
             }
 
@@ -1501,14 +1658,16 @@
                 cached.daily_goal = dailyGoal;
                 sessionStorage.setItem('userData', JSON.stringify(cached));
 
-                alert('✅ 考試設定已儲存！');
                 closeExamSettingsModal();
+                showNotification('✅ 考試設定已儲存！', 'success');
 
-                // 重新載入考試倒數資訊
-                await loadExamSettings();
+                // 重新載入頁面以更新所有相關顯示
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
             } catch (error) {
                 console.error('儲存失敗:', error);
-                alert('❌ 儲存失敗：' + (error.message || '未知錯誤'));
+                showNotification('❌ 儲存失敗：' + (error.message || '未知錯誤'), 'error');
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;

@@ -2657,6 +2657,46 @@ class ApiService {
      * @param {string} userId - 用戶 ID
      * @returns {Promise<{success: boolean, data: {todayMastered, weekMastered, consecutiveDays, yesterdayMastered}}>}
      */
+    /**
+     * 取得今日答題數（作答次數）
+     * @param {string} userId - 用戶 ID
+     * @returns {Promise<{success: boolean, data?: {todayAnswered: number}, error?: object}>}
+     */
+    async getTodayAnsweredCount(userId) {
+        try {
+            if (!userId) {
+                return { success: false, error: 'User ID is required' };
+            }
+
+            // 定義今日時間範圍
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // 查詢今日答題記錄數
+            const { count, error } = await this.supabase
+                .from('answer_records')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .gte('created_at', todayStart.toISOString());
+
+            if (error) throw error;
+
+            return {
+                success: true,
+                data: {
+                    todayAnswered: count || 0
+                }
+            };
+
+        } catch (error) {
+            console.error('Error getting today answered count:', error);
+            return {
+                success: false,
+                error: error
+            };
+        }
+    }
+
     async getTodayMasteredCount(userId) {
         try {
             if (!userId) {
