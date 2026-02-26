@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>熟練卡預覽方案示範</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .neo-border {
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px 0px #000000;
+        }
+
+        /* 方案一：榮譽金邊 */
+        .mastery-gold {
+            background: linear-gradient(135deg, #fffcf0 0%, #fff9d6 100%);
+            border-color: #ffd400;
+            box-shadow: 4px 4px 0px 0px #b8860b;
+        }
+
+        .medal-glow {
+            box-shadow: 0 0 15px rgba(255, 212, 0, 0.8);
+            animation: pulse-gold 2s infinite;
+        }
+
+        @keyframes pulse-gold {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 5px rgba(255, 212, 0, 0.5);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 20px rgba(255, 212, 0, 0.9);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 5px rgba(255, 212, 0, 0.5);
+            }
+        }
+
+        /* 方案二：極簡低調 */
+        .mastery-minimal {
+            background-color: #f8f9fa;
+            border-color: #ced4da;
+            opacity: 0.85;
+            box-shadow: 2px 2px 0px 0px #adb5bd;
+        }
+
+        .mastery-minimal:hover {
+            opacity: 1;
+        }
+
+        /* 方案三：動態能量 */
+        .mastery-pulse {
+            border: 3px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(45deg, #00f2fe, #4facfe);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            animation: border-pulse 3s infinite;
+            box-shadow: 4px 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        @keyframes border-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+        }
+    </style>
+</head>
+
+<body class="p-8">
+    <div class="max-w-[800px] mx-auto">
+        <h1 class="text-3xl font-black mb-8 italic">熟練卡預覽方案示範</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- 原版本作對比 -->
+            <div class="space-y-2">
+                <p class="text-sm font-bold text-gray-500">當前版本 (普通卡)</p>
+                <div class="bg-white neo-border p-4 h-[180px] flex flex-col relative">
+                    <div class="flex justify-between mb-2">
+                        <span class="bg-yellow-400 border-2 border-black px-2 py-0.5 text-[10px] font-bold">Q12</span>
+                        <span class="bg-yellow-400 border-2 border-black px-2 py-0.5 text-[10px] font-bold">Chapter
+                            1</span>
+                    </div>
+                    <h3 class="text-xl font-black italic mt-2 uppercase">Labor Law</h3>
+                    <p class="text-xs text-gray-600 mt-2">這是一張普通的題目卡片示範內容...</p>
+                    <div class="mt-auto flex justify-between items-end">
+                        <span class="material-symbols-outlined">favorite</span>
+                        <div
+                            class="w-8 h-8 rounded-full bg-blue-500 border-2 border-black flex items-center justify-center">
+                            <span class="text-white text-xs">✓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 方案一：榮譽金邊 -->
+            <div class="space-y-2">
+                <p class="text-sm font-bold text-yellow-600">方案一：榮譽金邊 (Elite Gold)</p>
+                <div class="mastery-gold border-[4px] p-4 h-[180px] flex flex-col relative">
+                    <div class="flex justify-between mb-2">
+                        <span
+                            class="bg-yellow-500 border-2 border-black text-white px-2 py-0.5 text-[10px] font-bold">MASTERED</span>
+                        <span
+                            class="bg-yellow-500 border-2 border-black text-white px-2 py-0.5 text-[10px] font-bold">CH1</span>
+                    </div>
+                    <h3 class="text-xl font-black italic mt-2 uppercase text-yellow-900">Labor Law</h3>
+                    <p class="text-xs text-yellow-800 mt-2">您已完全掌握此項勞資事務知識，成為專家！</p>
+                    <div class="mt-auto flex justify-between items-end">
+                        <span class="material-symbols-outlined text-red-500"
+                            style="font-variation-settings: 'FILL' 1">favorite</span>
+                        <div
+                            class="w-10 h-10 rounded-full bg-yellow-400 border-[3px] border-yellow-600 flex items-center justify-center medal-glow">
+                            <span class="text-yellow-900 font-bold text-lg">🏆</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 方案二：極簡低調 -->
+            <div class="space-y-2">
+                <p class="text-sm font-bold text-gray-500">方案二：極簡低調 (Minimal Mastery)</p>
+                <div class="mastery-minimal border-2 p-4 h-[180px] flex flex-col relative">
+                    <div class="flex justify-between mb-2">
+                        <span
+                            class="bg-gray-200 border border-gray-400 px-2 py-0.5 text-[10px] font-bold text-gray-500 uppercase">DONE</span>
+                    </div>
+                    <h3 class="text-xl font-black italic mt-2 uppercase text-gray-400">Labor Law</h3>
+                    <p class="text-xs text-gray-400 mt-2">此卡片內容已熟練紀錄...</p>
+                    <div class="mt-auto flex justify-between items-end">
+                        <span class="material-symbols-outlined text-gray-300">favorite</span>
+                        <div
+                            class="w-8 h-8 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                            <span class="text-gray-500 text-xs">✓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 方案三：動態能量 -->
+            <div class="space-y-2">
+                <p class="text-sm font-bold text-blue-500">方案三：動態能量 (Pulse Energy)</p>
+                <div class="mastery-pulse p-4 h-[180px] flex flex-col relative bg-white">
+                    <div class="flex justify-between mb-2">
+                        <span class="bg-blue-500 text-white px-2 py-0.5 text-[10px] font-bold">MASTERED</span>
+                    </div>
+                    <h3
+                        class="text-xl font-black italic mt-2 uppercase bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                        Labor Law</h3>
+                    <p class="text-xs text-blue-400 mt-2">充滿能量的熟練卡片，隨時準備應用！</p>
+                    <div class="mt-auto flex justify-between items-end">
+                        <span class="material-symbols-outlined text-blue-300">favorite</span>
+                        <div
+                            class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 border-2 border-white shadow-md flex items-center justify-center">
+                            <span class="text-white text-xs">⚡</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

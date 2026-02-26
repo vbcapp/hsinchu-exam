@@ -136,7 +136,7 @@ const OnboardingSystem = {
                     </div>
                     <div class="text-center px-2">
                         <p class="text-black dark:text-white text-xl font-black leading-snug">
-                            輸入術語即可生成專屬題目卡，透過比喻輕鬆記憶。
+                            豐富題庫隨時練習，透過 AI 分析弱點突破盲區。
                         </p>
                     </div>
                 </div>
