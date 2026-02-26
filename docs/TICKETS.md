@@ -186,7 +186,7 @@ async getWrongAnswerPatterns(userId, limit = 5)
 
 **實作邏輯：**
 1. 查詢 `answer_records` 中 `is_correct = false` 的記錄
-2. 依 `question_id` 分組統計錯誤次數
+2. 依 `question_id` 分組統計答錯次數
 3. 統計每題的 `user_answer` 分布
 4. 找出最常被選的錯誤選項
 5. Join `questions` 表取得題目詳情

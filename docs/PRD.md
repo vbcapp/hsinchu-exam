@@ -731,7 +731,7 @@ const bufferDays = daysRemaining - estimatedDays;
 #### 5.3 數據儀表板(Dashboard)
 僅管理員可見，位於 `profile.html`:
 - **每日學習趨勢圖**: Line Chart，最近 30 天學員作答數
-- **答錯最多題目**: 錯誤次數最多的 Top 10 題目(Bar Chart)
+- **答錯最多題目**: 答錯次數最多的 Top 10 題目(Bar Chart)
 - **章節答對率分析**: Doughnut Chart，顯示各章節整體答對率
 - **魔王陷阱題**: 錯誤率最高的 Top 10 題目列表
 

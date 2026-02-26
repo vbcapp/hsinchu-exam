@@ -2230,7 +2230,7 @@ class ApiService {
     }
 
     /**
-     * 取得錯誤次數最多的前 N 張卡片 (改版：取得全站錯誤率最高的 Top N 魔王題)
+     * 取得答錯次數最多的前 N 張卡片 (改版：取得全站錯誤率最高的 Top N 魔王題)
      */
     async getAdminTopIncorrectCards(limit = 10) {
         try {
@@ -2944,7 +2944,7 @@ class ApiService {
                 };
             }
 
-            // 3. 按 question_id 分組統計錯誤次數與錯誤答案分布
+            // 3. 按 question_id 分組統計答錯次數與錯誤答案分布
             const questionStats = {};
             wrongRecords.forEach(record => {
                 const qid = record.question_id;
@@ -2972,7 +2972,7 @@ class ApiService {
                 questionStats[qid].wrongAnswerCounts[answerKey].count++;
             });
 
-            // 4. 排序：錯誤次數最多的題目
+            // 4. 排序：答錯次數最多的題目
             const sortedQuestions = Object.values(questionStats)
                 .sort((a, b) => b.timesWrong - a.timesWrong)
                 .slice(0, limit);

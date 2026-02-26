@@ -377,7 +377,8 @@
                         <div>
                             <div class="font-black text-base mb-1">定義說明</div>
                             <p class="text-sm leading-relaxed">
-                                「本次答題表現」統計你<strong class="text-blue-600 font-black">最近 10 題</strong>的正確率，並與你的<strong class="font-black">歷史平均正確率</strong>做比較。
+                                「本次答題表現」統計你<strong class="text-blue-600 font-black">最近 10 題</strong>的正確率，並與你的<strong
+                                    class="font-black">歷史平均正確率</strong>做比較。
                             </p>
                         </div>
                     </div>
@@ -858,7 +859,7 @@
         let globalWeaknessData = null; // 儲存弱點數據供 AI 分析使用
         let globalAIAnalysis = null; // 儲存 AI 分析結果
         let isAIAnalysisLoading = false; // AI 分析載入狀態
-        let globalWrongPatternsData = null; // 儲存錯誤選項數據
+        window.globalWrongPatternsData = null; // 儲存錯誤選項數據（使用 window 確保在 onclick 中可存取）
 
         /**
          * 顯示通知 Toast
@@ -954,7 +955,7 @@
                     renderRecentAccuracy(recentAccuracyResult.data);
                 }
                 if (wrongPatternsResult.success) {
-                    globalWrongPatternsData = wrongPatternsResult.data;
+                    window.globalWrongPatternsData = wrongPatternsResult.data;
                     renderWrongPatterns(wrongPatternsResult.data);
                 }
 
@@ -1244,7 +1245,7 @@
         /**
          * 渲染錯誤選項分析
          */
-        let wrongPatternsExpanded = false;
+        window.wrongPatternsExpanded = false;
         function renderWrongPatterns(data) {
             const listEl = document.getElementById('wrong-patterns-list');
 
@@ -1255,7 +1256,7 @@
             }
 
             // 預設只顯示前 3 題
-            const displayData = wrongPatternsExpanded ? data : data.slice(0, 3);
+            const displayData = window.wrongPatternsExpanded ? data : data.slice(0, 3);
 
             listEl.innerHTML = displayData.map((item, index) => {
                 const question = item.question.length > 30 ? item.question.substring(0, 30) + '...' : item.question;
@@ -1277,7 +1278,7 @@
                             </div>
                             <div class="shrink-0 text-right">
                                 <div class="text-lg font-black text-red-600">${item.timesWrong}</div>
-                                <div class="text-[9px] text-gray-500">錯誤次數</div>
+                                <div class="text-[9px] text-gray-500">答錯次數</div>
                             </div>
                         </div>
                     </div>
@@ -1296,11 +1297,11 @@
          * 切換錯誤選項展開/收合
          */
         function toggleWrongPatterns() {
-            wrongPatternsExpanded = !wrongPatternsExpanded;
+            window.wrongPatternsExpanded = !window.wrongPatternsExpanded;
             const textEl = document.getElementById('expand-wrong-patterns-text');
             const iconEl = document.getElementById('expand-wrong-patterns-icon');
 
-            if (wrongPatternsExpanded) {
+            if (window.wrongPatternsExpanded) {
                 textEl.textContent = '收起';
                 iconEl.textContent = 'expand_less';
             } else {
