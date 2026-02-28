@@ -2963,6 +2963,65 @@ class ApiService {
     }
 
     /**
+     * 取得每輪刷題正確率（第1次~第6次）
+     * 將每題的答題紀錄按時間排序，計算第N次作答的平均正確率
+     * @param {string} userId - 用戶 ID
+     * @returns {Array} [{ round: 1, accuracy: 45.2, total: 120 }, ...]
+     */
+    async getAttemptAccuracyByRound(userId) {
+        try {
+            if (!userId) {
+                return { success: false, error: 'User ID is required' };
+            }
+
+            const { data: records, error } = await this.supabase
+                .from('answer_records')
+                .select('question_id, is_correct, created_at')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            if (!records || records.length === 0) {
+                return { success: true, data: [] };
+            }
+
+            // 按 question_id 分組
+            const byQuestion = {};
+            records.forEach(r => {
+                if (!byQuestion[r.question_id]) {
+                    byQuestion[r.question_id] = [];
+                }
+                byQuestion[r.question_id].push(r.is_correct);
+            });
+
+            // 統計第1~6次的正確數與總數
+            const maxRound = 6;
+            const roundStats = Array.from({ length: maxRound }, () => ({ correct: 0, total: 0 }));
+
+            Object.values(byQuestion).forEach(attempts => {
+                const limit = Math.min(attempts.length, maxRound);
+                for (let i = 0; i < limit; i++) {
+                    roundStats[i].total++;
+                    if (attempts[i]) roundStats[i].correct++;
+                }
+            });
+
+            const result = roundStats
+                .map((s, i) => ({
+                    round: i + 1,
+                    accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 1000) / 10 : null,
+                    total: s.total
+                }))
+                .filter(s => s.total > 0);
+
+            return { success: true, data: result };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * T004 - 取得錯誤選項分析
      * 分析學員最常選的錯誤選項，找出思維盲點
      * @param {string} userId - 用戶 ID

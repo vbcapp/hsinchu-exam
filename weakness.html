@@ -589,56 +589,56 @@
 
                 <!-- 1 & 2: 今日精熟題數 + 本次答題表現（左右並排） -->
                 <div class="grid grid-cols-2 gap-3">
-                <div class="neo-brutalism-card bg-gradient-to-br from-green-50 to-emerald-50 p-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="material-symbols-outlined text-green-600 text-xl">workspace_premium</span>
-                        <span class="text-xs font-black uppercase">今日精熟題數</span>
-                        <button onclick="showMasteryInfoModal()"
-                            class="w-5 h-5 bg-blue-500 text-white border-2 border-black rounded-full flex items-center justify-center text-xs font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer">
-                            ?
-                        </button>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="flex items-baseline gap-1">
-                                <span class="text-green-600 text-xl">🎯</span>
-                                <span id="today-mastered" class="text-3xl font-black text-green-600">--</span>
-                                <span class="text-sm font-bold text-gray-600">題</span>
-                            </div>
-                            <div class="mt-1 text-[10px] text-gray-600">
-                                💪 本週累積：<span id="week-mastered" class="font-bold text-black">--</span> 題
-                            </div>
-                            <div id="consecutive-days" class="mt-1 text-[10px] text-gray-600">
-                                <!-- 連續天數會由 JS 填入 -->
+                    <div class="neo-brutalism-card bg-gradient-to-br from-green-50 to-emerald-50 p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-green-600 text-xl">workspace_premium</span>
+                            <span class="text-xs font-black uppercase">今日精熟題數</span>
+                            <button onclick="showMasteryInfoModal()"
+                                class="w-5 h-5 bg-blue-500 text-white border-2 border-black rounded-full flex items-center justify-center text-xs font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer">
+                                ?
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-green-600 text-xl">🎯</span>
+                                    <span id="today-mastered" class="text-3xl font-black text-green-600">--</span>
+                                    <span class="text-sm font-bold text-gray-600">題</span>
+                                </div>
+                                <div class="mt-1 text-[10px] text-gray-600">
+                                    💪 本週累積：<span id="week-mastered" class="font-bold text-black">--</span> 題
+                                </div>
+                                <div id="consecutive-days" class="mt-1 text-[10px] text-gray-600">
+                                    <!-- 連續天數會由 JS 填入 -->
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="neo-brutalism-card bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="material-symbols-outlined text-blue-600 text-xl">show_chart</span>
-                        <span class="text-xs font-black uppercase">本次答題表現</span>
-                        <button onclick="showPerformanceInfoModal()"
-                            class="w-5 h-5 bg-blue-500 text-white border-2 border-black rounded-full flex items-center justify-center text-xs font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer">
-                            ?
-                        </button>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-baseline gap-1 mb-1">
-                                <span class="text-blue-600 text-xl">✅</span>
-                                <span id="recent-accuracy" class="text-3xl font-black text-blue-600">--%</span>
-                            </div>
-                            <div id="accuracy-comparison" class="text-[10px] text-gray-600 mt-1">
-                                <!-- 比較結果會由 JS 填入 -->
-                            </div>
-                            <div id="best-performance" class="mt-1 text-[10px]">
-                                <!-- 最佳表現標記會由 JS 填入 -->
+                    <div class="neo-brutalism-card bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-blue-600 text-xl">show_chart</span>
+                            <span class="text-xs font-black uppercase">本次答題表現</span>
+                            <button onclick="showPerformanceInfoModal()"
+                                class="w-5 h-5 bg-blue-500 text-white border-2 border-black rounded-full flex items-center justify-center text-xs font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer">
+                                ?
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-baseline gap-1 mb-1">
+                                    <span class="text-blue-600 text-xl">✅</span>
+                                    <span id="recent-accuracy" class="text-3xl font-black text-blue-600">--%</span>
+                                </div>
+                                <div id="accuracy-comparison" class="text-[10px] text-gray-600 mt-1">
+                                    <!-- 比較結果會由 JS 填入 -->
+                                </div>
+                                <div id="best-performance" class="mt-1 text-[10px]">
+                                    <!-- 最佳表現標記會由 JS 填入 -->
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 </div>
 
                 <!-- 3. 錯誤選項分析（Top 3） -->
@@ -702,7 +702,8 @@
                         <div class="flex items-center gap-1 mb-1">
                             <span id="improvement-icon"
                                 class="material-symbols-outlined text-sm text-gray-400">trending_flat</span>
-                            <span id="improvement-period-label" class="text-[8px] font-bold text-gray-500 uppercase">近1天</span>
+                            <span id="improvement-period-label"
+                                class="text-[8px] font-bold text-gray-500 uppercase">近1天</span>
                             <button onclick="showCardHelpModal('improvement')"
                                 class="w-4 h-4 bg-blue-500 text-white border-[1.5px] border-black rounded-full flex items-center justify-center text-[8px] font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer ml-auto shrink-0">?</button>
                         </div>
@@ -805,7 +806,7 @@
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-lg">show_chart</span>
-                            <span class="text-xs font-black uppercase">錯題趨勢</span>
+                            <span class="text-xs font-black uppercase">對：錯 比例趨勢</span>
                         </div>
                         <div class="flex gap-1">
                             <button id="btn-7days" class="px-3 py-1 text-[10px] font-bold neo-border bg-primary"
@@ -825,14 +826,26 @@
                     <!-- 圖例 -->
                     <div class="flex justify-center gap-4 mt-3 text-[10px]">
                         <div class="flex items-center gap-1">
+                            <div class="w-3 h-3 bg-green-500 neo-border"></div>
+                            <span class="font-bold">正確數</span>
+                        </div>
+                        <div class="flex items-center gap-1">
                             <div class="w-3 h-3 bg-[#FF3B30] neo-border"></div>
                             <span class="font-bold">錯題數</span>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <div class="w-3 h-3 bg-green-500 neo-border"></div>
-                            <span class="font-bold">正確率</span>
-                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 刷題正確率趨勢圖 -->
+            <div class="neo-brutalism-card bg-white p-4 mt-4">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-lg">bar_chart</span>
+                    <span class="text-xs font-black uppercase">刷題正確率趨勢</span>
+                </div>
+                <p class="text-[10px] text-gray-500 font-bold mb-3">每題第 1～6 次作答的平均正確率</p>
+                <div id="attempt-accuracy-chart" class="h-44 flex items-end justify-around gap-3 px-2">
+                    <!-- 柱狀圖由 JS 填入 -->
                 </div>
             </div>
 
@@ -933,7 +946,7 @@
                 const userId = apiService.currentUser.id;
 
                 // 並行載入所有數據
-                const [statsResult, weaknessResult, analysisState, todayMasteredResult, todayAnsweredResult, recentAccuracyResult, wrongPatternsResult, examSettings] = await Promise.all([
+                const [statsResult, weaknessResult, analysisState, todayMasteredResult, todayAnsweredResult, recentAccuracyResult, wrongPatternsResult, examSettings, attemptAccuracyResult] = await Promise.all([
                     apiService.getWeaknessStats(userId),
                     apiService.getWeaknessList(userId, 30),
                     apiService.checkTodayAnalysisExists(userId),
@@ -941,7 +954,8 @@
                     apiService.getTodayAnsweredCount(userId),
                     apiService.getRecentVsHistoricalAccuracy(userId, 10),
                     apiService.getWrongAnswerPatterns(userId, 5),
-                    loadExamSettings(userId)
+                    loadExamSettings(userId),
+                    apiService.getAttemptAccuracyByRound(userId)
                 ]);
 
                 // 渲染考試倒數
@@ -999,6 +1013,11 @@
 
                     // 儲存弱點數據供 AI 分析使用
                     globalWeaknessData = weaknessResult.data;
+                }
+
+                // 渲染刷題正確率趨勢圖
+                if (attemptAccuracyResult.success) {
+                    renderAttemptAccuracyChart(attemptAccuracyResult.data);
                 }
 
                 // 渲染弱點列表
@@ -1696,6 +1715,52 @@
             // 更新日期範圍
             document.getElementById('trend-start-date').textContent = data[0]?.date.slice(5) || '--';
             document.getElementById('trend-end-date').textContent = '今天';
+        }
+
+        /**
+         * 渲染刷題正確率趨勢圖（第1~6次）
+         */
+        function renderAttemptAccuracyChart(data) {
+            const container = document.getElementById('attempt-accuracy-chart');
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="w-full text-center text-gray-400 text-xs py-8">暫無數據，開始答題後即可查看趨勢</div>';
+                return;
+            }
+
+            const chartHeight = 140; // 柱狀圖最大高度 px
+            const roundLabels = ['第1次', '第2次', '第3次', '第4次', '第5次', '第6次'];
+
+            // 顏色：從紅到綠漸變
+            function getBarColor(accuracy) {
+                if (accuracy >= 90) return '#22C55E'; // green-500
+                if (accuracy >= 75) return '#84CC16'; // lime-500
+                if (accuracy >= 60) return '#EAB308'; // yellow-500
+                if (accuracy >= 45) return '#F97316'; // orange-500
+                return '#EF4444'; // red-500
+            }
+
+            let barsHtml = '';
+            data.forEach((item) => {
+                const barHeight = (item.accuracy / 100) * (chartHeight - 30);
+                const color = getBarColor(item.accuracy);
+
+                barsHtml += `
+                    <div class="flex flex-col items-center justify-end flex-1 max-w-[56px]">
+                        <!-- 百分比 -->
+                        <span class="text-xs font-black mb-1" style="color: ${color}">${item.accuracy}%</span>
+                        <!-- 柱子 -->
+                        <div class="w-full neo-border transition-all duration-300"
+                             style="height: ${Math.max(barHeight, 8)}px; background-color: ${color};">
+                        </div>
+                        <!-- 標籤 -->
+                        <span class="text-[10px] font-bold mt-1.5">${roundLabels[item.round - 1]}</span>
+                        <span class="text-[9px] text-gray-400 font-bold">共${item.total}題</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = barsHtml;
         }
 
         function renderWeaknessList(data, container) {
