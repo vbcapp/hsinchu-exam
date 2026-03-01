@@ -224,3 +224,72 @@ $$;
 
 GRANT EXECUTE ON FUNCTION get_admin_first_vs_review_accuracy() TO authenticated;
 COMMENT ON FUNCTION get_admin_first_vs_review_accuracy IS '取得首次作答 vs 複習作答的正確率比較（管理員儀表板用）';
+
+-- =============================================
+-- 7. 全站魔王題 Top N (錯誤率最高的題目)
+-- 回傳: { question_id, question_text, subject, chapter, question_no, total_reviewed, total_incorrect, error_rate }[]
+-- =============================================
+CREATE OR REPLACE FUNCTION get_admin_top_incorrect_cards(top_n integer DEFAULT 10)
+RETURNS TABLE(
+    question_id uuid,
+    question_text text,
+    subject text,
+    chapter text,
+    question_no integer,
+    total_reviewed bigint,
+    total_incorrect bigint,
+    error_rate numeric
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        q.id AS question_id,
+        q.question AS question_text,
+        q.subject,
+        q.chapter,
+        q.question_no,
+        SUM(uqp.times_reviewed)::bigint AS total_reviewed,
+        SUM(uqp.times_incorrect)::bigint AS total_incorrect,
+        ROUND(
+            SUM(uqp.times_incorrect)::numeric / NULLIF(SUM(uqp.times_reviewed), 0),
+            4
+        ) AS error_rate
+    FROM user_question_progress uqp
+    INNER JOIN questions q ON q.id = uqp.question_id
+    GROUP BY q.id, q.question, q.subject, q.chapter, q.question_no
+    HAVING SUM(uqp.times_reviewed) > 1
+    ORDER BY error_rate DESC, SUM(uqp.times_incorrect) DESC
+    LIMIT top_n;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_admin_top_incorrect_cards(integer) TO authenticated;
+COMMENT ON FUNCTION get_admin_top_incorrect_cards IS '取得全站錯誤率最高的 Top N 魔王題（管理員儀表板用）';
+
+-- =============================================
+-- 8. 答題次數排行榜 (排行榜頁面用)
+-- 回傳: { user_id, answer_count }[]
+-- 依 answer_count 降序排列
+-- =============================================
+CREATE OR REPLACE FUNCTION get_leaderboard_answer_counts(start_date timestamptz)
+RETURNS TABLE(user_id uuid, answer_count bigint)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        ar.user_id,
+        COUNT(ar.id) AS answer_count
+    FROM answer_records ar
+    WHERE ar.created_at >= start_date
+    GROUP BY ar.user_id
+    ORDER BY answer_count DESC;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_leaderboard_answer_counts(timestamptz) TO authenticated;
+COMMENT ON FUNCTION get_leaderboard_answer_counts IS '取得指定時間之後各用戶的答題次數排行（排行榜頁面用）';

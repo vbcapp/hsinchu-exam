@@ -654,38 +654,44 @@
         let overallAccuracyChart, firstVsReviewChart;
 
         async function initAdminDashboard() {
-            try {
-                // 顯示 Dashboard
-                const dashboardEl = document.getElementById('admin-dashboard');
-                if (dashboardEl) {
-                    dashboardEl.classList.remove('hidden');
-                }
-
-                // 顯示資料備份 (僅限管理員)
-                const backupCard = document.getElementById('admin-backup-card');
-                if (backupCard) {
-                    backupCard.classList.remove('hidden');
-                }
-
-                // 匯入 JSON 按鈕僅最高管理者可見
-                const importBtn = document.getElementById('import-cards-btn');
-                if (importBtn && (typeof SUPER_ADMIN_UUIDS === 'undefined' || !SUPER_ADMIN_UUIDS.includes(apiService.currentUser.id))) {
-                    importBtn.style.display = 'none';
-                }
-
-                // 載入並渲染圖表/區塊
-                await renderRegistrationsChart();
-                await renderTopIncorrectCardsDashboard();
-                await renderMasteryChart();
-                await renderDailyAnswersChart();
-                await renderDailyActiveUsersChart();
-                await renderLearningTrendsChart('week');
-                await renderAnswerTimeDistributionChart();
-                await renderOverallAccuracyTrendChart('week');
-                await renderFirstVsReviewAccuracyChart();
-            } catch (error) {
-                console.error('初始化管理員儀表板失敗:', error);
+            // 顯示 Dashboard
+            const dashboardEl = document.getElementById('admin-dashboard');
+            if (dashboardEl) {
+                dashboardEl.classList.remove('hidden');
             }
+
+            // 顯示資料備份 (僅限管理員)
+            const backupCard = document.getElementById('admin-backup-card');
+            if (backupCard) {
+                backupCard.classList.remove('hidden');
+            }
+
+            // 匯入 JSON 按鈕僅最高管理者可見
+            const importBtn = document.getElementById('import-cards-btn');
+            if (importBtn && (typeof SUPER_ADMIN_UUIDS === 'undefined' || !SUPER_ADMIN_UUIDS.includes(apiService.currentUser.id))) {
+                importBtn.style.display = 'none';
+            }
+
+            // 載入並渲染圖表/區塊（各自獨立 try-catch，避免一個失敗導致全部中斷）
+            const dashboardTasks = [
+                { name: '每日註冊趨勢', fn: () => renderRegistrationsChart() },
+                { name: '全站魔王題', fn: () => renderTopIncorrectCardsDashboard() },
+                { name: '熟練度分佈', fn: () => renderMasteryChart() },
+                { name: '每日答題數', fn: () => renderDailyAnswersChart() },
+                { name: '每日活躍用戶', fn: () => renderDailyActiveUsersChart() },
+                { name: '學習趨勢', fn: () => renderLearningTrendsChart('week') },
+                { name: '答題時段分佈', fn: () => renderAnswerTimeDistributionChart() },
+                { name: '整體正確率趨勢', fn: () => renderOverallAccuracyTrendChart('week') },
+                { name: '首次vs複習正確率', fn: () => renderFirstVsReviewAccuracyChart() },
+            ];
+
+            await Promise.allSettled(dashboardTasks.map(async (task) => {
+                try {
+                    await task.fn();
+                } catch (error) {
+                    console.error(`管理員儀表板 - ${task.name} 載入失敗:`, error);
+                }
+            }));
         }
 
         async function renderRegistrationsChart() {

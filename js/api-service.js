@@ -712,21 +712,24 @@ class ApiService {
      */
     async updateUserProgress(userId, { xpToAdd = 0, perfectCardsToAdd = 0 }) {
         try {
-            // 1. 取得當前數據
-            const userResult = await this.getUserProfile(userId);
-            if (!userResult.success) return userResult;
+            // 1. 使用資料庫端原子遞增，避免競態條件 (Race Condition)
+            const { data: rpcResult, error: rpcError } = await this.supabase
+                .rpc('update_user_xp', {
+                    p_user_id: userId,
+                    p_xp_to_add: xpToAdd,
+                    p_perfect_cards_to_add: perfectCardsToAdd
+                });
 
-            const user = userResult.data;
+            if (rpcError) throw rpcError;
 
-            // 2. 計算新數值
-            const currentTotalXP = user.current_xp || 0; // 資料庫存的是累積總 XP
-            const currentPerfectCards = user.correct_answer_count || 0;
+            if (!rpcResult || rpcResult.length === 0) {
+                return { success: false, error: 'User not found' };
+            }
 
-            const newTotalXP = currentTotalXP + xpToAdd;
-            const newPerfectCards = currentPerfectCards + perfectCardsToAdd;
+            const newTotalXP = rpcResult[0].new_current_xp;
+            const newPerfectCards = rpcResult[0].new_correct_answer_count;
 
-            // 3. 使用 LevelSystem 計算等級狀態
-            // 注意：LevelSystem.js 必須在 index.html 中被載入
+            // 2. 使用 LevelSystem 計算等級狀態
             if (typeof LevelSystem === 'undefined') {
                 console.error('LevelSystem is not defined');
                 return { success: false, error: 'LevelSystem missing' };
@@ -734,27 +737,22 @@ class ApiService {
 
             const levelState = LevelSystem.calculateState(newTotalXP, newPerfectCards);
 
-            // 4. 更新資料庫
-            const updates = {
-                current_xp: newTotalXP,
+            // 3. 更新等級相關欄位（這些不需要原子操作，因為只依賴剛算出的值）
+            const oldLevel = (await this.supabase
+                .from('users').select('current_level').eq('id', userId).single()
+            ).data?.current_level || 1;
+
+            await this.updateUser(userId, {
                 current_level: levelState.actualLevel,
                 next_level_xp: levelState.xpForNextLevel
-            };
-
-            if (perfectCardsToAdd !== 0) {
-                updates.correct_answer_count = newPerfectCards;
-            }
-
-            const updateResult = await this.updateUser(userId, updates);
-
-            if (!updateResult.success) return updateResult;
+            });
 
             return {
                 success: true,
                 data: {
-                    user: updateResult.data,
+                    user: { current_xp: newTotalXP, correct_answer_count: newPerfectCards, current_level: levelState.actualLevel },
                     levelState: levelState,
-                    leveledUp: levelState.actualLevel > user.current_level
+                    leveledUp: levelState.actualLevel > oldLevel
                 }
             };
 
@@ -2257,54 +2255,10 @@ class ApiService {
      */
     async getAdminTopIncorrectCards(limit = 10) {
         try {
-            // 從 user_question_progress 撈取所有作答紀錄，並 join 題目題幹
-            // 因為我們要聚合全站數據，所以不限制 user_id
-            const { data, error } = await this.supabase
-                .from('user_question_progress')
-                .select('question_id, times_reviewed, times_incorrect, questions!inner(question, subject, chapter, question_no)')
-                .order('question_id'); // 沒加條件就是全撈
-
+            // 使用 SECURITY DEFINER RPC 函式，繞過 RLS 取得全站數據
+            const { data, error } = await this.supabase.rpc('get_admin_top_incorrect_cards', { top_n: limit });
             if (error) throw error;
-
-            // 手動聚合每個題目的總作答數與總錯誤數
-            const questionStats = {};
-            data.forEach(progress => {
-                const qId = progress.question_id;
-                if (!questionStats[qId]) {
-                    // 初始化結構
-                    questionStats[qId] = {
-                        question_id: qId,
-                        question_text: progress.questions?.question || 'Unknown',
-                        subject: progress.questions?.subject || '未分類',
-                        chapter: progress.questions?.chapter || '',
-                        question_no: progress.questions?.question_no || '',
-                        total_reviewed: 0,
-                        total_incorrect: 0
-                    };
-                }
-                questionStats[qId].total_reviewed += (progress.times_reviewed || 0);
-                questionStats[qId].total_incorrect += (progress.times_incorrect || 0);
-            });
-
-            // 計算錯誤率、過濾與排序
-            const minReviewsRequired = 1; // 門檻: 全站總作答次數 > 1 才列入統計
-            const sortedQuestions = Object.values(questionStats)
-                .filter(q => q.total_reviewed > minReviewsRequired)
-                .map(q => {
-                    q.error_rate = q.total_reviewed > 0 ? (q.total_incorrect / q.total_reviewed) : 0;
-                    return q;
-                })
-                .sort((a, b) => {
-                    // 優先依錯誤率降冪排序
-                    if (b.error_rate !== a.error_rate) {
-                        return b.error_rate - a.error_rate;
-                    }
-                    // 錯誤率相同時，依總錯次降冪排序
-                    return b.total_incorrect - a.total_incorrect;
-                })
-                .slice(0, limit);
-
-            return { success: true, data: sortedQuestions };
+            return { success: true, data: data || [] };
         } catch (error) {
             return this._handleError(error);
         }
