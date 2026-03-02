@@ -311,25 +311,25 @@
         </div>
     </div>
 
-    <!-- 精熟說明 Modal -->
+    <!-- 精通說明 Modal -->
     <div id="mastery-info-modal" class="modal-overlay" onclick="closeMasteryInfoModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-xl">workspace_premium</span>
-                    <span class="font-black text-sm uppercase">什麼是「精熟」？</span>
+                    <span class="font-black text-sm uppercase">什麼是「精通」？</span>
                 </div>
                 <button class="modal-close" onclick="closeMasteryInfoModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="space-y-4 text-sm">
-                    <!-- 精熟定義 -->
+                    <!-- 精通定義 -->
                     <div class="flex items-start gap-3 bg-green-50 border-2 border-green-400 p-3">
                         <span class="text-2xl shrink-0">🎯</span>
                         <div>
-                            <div class="font-black text-base mb-1">精熟定義</div>
+                            <div class="font-black text-base mb-1">精通定義</div>
                             <p class="text-sm leading-relaxed">
-                                當你將某一題<strong class="text-green-600 font-black">連續答對 3 次</strong>，就算精熟這題！
+                                當你將某一題<strong class="text-green-600 font-black">連續答對 3 次</strong>，就算精通這題！
                             </p>
                         </div>
                     </div>
@@ -345,13 +345,13 @@
                         </div>
                     </div>
 
-                    <!-- 精熟後的好處 -->
+                    <!-- 精通後的好處 -->
                     <div class="flex items-start gap-3">
                         <span class="text-2xl shrink-0">📉</span>
                         <div>
-                            <div class="font-black text-base mb-1">精熟後的好處</div>
+                            <div class="font-black text-base mb-1">精通後的好處</div>
                             <p class="text-sm leading-relaxed">
-                                精熟的題目會<strong class="font-black">減少出現頻率</strong>，讓你專注在還不熟的題目，學習效率更高！
+                                精通的題目會<strong class="font-black">減少出現頻率</strong>，讓你專注在還不熟的題目，學習效率更高！
                             </p>
                         </div>
                     </div>
@@ -532,12 +532,12 @@
                     </div>
                 </div>
 
-                <!-- 2. 今日精熟題數 + 本次答題表現（左右並排） -->
+                <!-- 2. 今日精通題數 + 本次答題表現（左右並排） -->
                 <div class="grid grid-cols-2 gap-3">
                     <div class="neo-brutalism-card bg-gradient-to-br from-green-50 to-emerald-50 p-4">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="material-symbols-outlined text-green-600 text-xl">workspace_premium</span>
-                            <span class="text-sm font-black uppercase">今日精熟題數</span>
+                            <span class="text-sm font-black uppercase">今日精通題數</span>
                             <button onclick="showMasteryInfoModal()"
                                 class="w-5 h-5 bg-blue-500 text-white border-2 border-black rounded-full flex items-center justify-center text-sm font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer">
                                 ?
@@ -2030,7 +2030,7 @@
         }
 
         /**
-         * 顯示精熟說明彈窗
+         * 顯示精通說明彈窗
          */
         function showMasteryInfoModal() {
             const modal = document.getElementById('mastery-info-modal');
@@ -2039,7 +2039,7 @@
         }
 
         /**
-         * 關閉精熟說明彈窗
+         * 關閉精通說明彈窗
          */
         function closeMasteryInfoModal(event) {
             if (!event || event.target.id === 'mastery-info-modal') {
