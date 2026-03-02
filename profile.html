@@ -2,1368 +2,1369 @@
 <html lang="zh-Hant">
 
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>工商安全衛生協會-新竹職訓中心 - 個人中心</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&amp;display=swap" rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-        rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#FFD600",
-                        "background-light": "#EEEEEE",
-                        "background-dark": "#111827",
-                    },
-                    fontFamily: {
-                        display: ["Inter", "sans-serif"],
-                    },
-                    borderRadius: {
-                        DEFAULT: "0px",
-                    },
-                },
-            },
-        };
-    </script>
-    <style type="text/tailwindcss">
-        .neo-shadow { box-shadow: 4px 4px 0px 0px #000000; }
-        .neo-shadow-sm { box-shadow: 2px 2px 0px 0px #000000; }
-        .neo-border { border: 2px solid #000000; }
-        .neo-border-thick { border: 3px solid #000000; }
-        .neo-brutalism-card {
-            box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
-            border: 4px solid black;
-        }
-        .neo-brutalism-button:active {
-            box-shadow: 0px 0px 0px 0px rgba(0,0,0,1);
-            transform: translate(2px, 2px);
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
-        }
-    </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
-    </style>
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
+ <meta charset="utf-8" />
+ <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+ <title>工商安全衛生協會-新竹職訓中心 - 個人中心</title>
+ <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+ <link href="https://fonts.googleapis.com" rel="preconnect" />
+ <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&amp;display=swap" rel="stylesheet" />
+ <link
+ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+ rel="stylesheet" />
+ <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+ <script>
+ tailwind.config = {
+ darkMode:"class",
+ theme: {
+ extend: {
+ colors: {
+ primary:"#FFD600",
+"background-light":"#EEEEEE",
+"background-dark":"#111827",
+ },
+ fontFamily: {
+ display: ["Inter","sans-serif"],
+ },
+ borderRadius: {
+ DEFAULT:"0px",
+ },
+ },
+ },
+ };
+ </script>
+ <style type="text/tailwindcss">
+ .neo-shadow { box-shadow: 4px 4px 0px 0px #000000; }
+ .neo-shadow-sm { box-shadow: 2px 2px 0px 0px #000000; }
+ .neo-border { border: 2px solid #000000; }
+ .neo-border-thick { border: 3px solid #000000; }
+ .neo-brutalism-card {
+ box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+ border: 4px solid black;
+ }
+ .neo-brutalism-button:active {
+ box-shadow: 0px 0px 0px 0px rgba(0,0,0,1);
+ transform: translate(2px, 2px);
+ }
+ .material-symbols-outlined {
+ font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
+ }
+ </style>
+ <style>
+ body {
+ min-height: max(884px, 100dvh);
+ }
+ </style>
+ <style>
+ body {
+ min-height: max(884px, 100dvh);
+ }
 
-        .capped-gold-shimmer {
-            position: relative;
-            overflow: hidden;
-            background-color: #ffd400 !important;
-            /* Force gold connection */
-        }
+ .capped-gold-shimmer {
+ position: relative;
+ overflow: hidden;
+ background-color: #ffd400 !important;
+ /* Force gold connection */
+ }
 
-        .capped-gold-shimmer::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg,
-                    transparent,
-                    rgba(255, 255, 255, 0.6),
-                    transparent);
-            animation: shimmer 1.5s infinite;
-        }
+ .capped-gold-shimmer::after {
+ content:"";
+ position: absolute;
+ top: 0;
+ left: -100%;
+ width: 50%;
+ height: 100%;
+ background: linear-gradient(90deg,
+ transparent,
+ rgba(255, 255, 255, 0.6),
+ transparent);
+ animation: shimmer 1.5s infinite;
+ }
 
-        @keyframes shimmer {
-            100% {
-                left: 200%;
-            }
-        }
-    </style>
-    <!-- Add LevelSystem Script -->
-    <script src="js/level-system.js"></script>
-    <!-- Add Chart.js for Admin Dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+ @keyframes shimmer {
+ 100% {
+ left: 200%;
+ }
+ }
+ </style>
+ <!-- Add LevelSystem Script -->
+ <script src="js/level-system.js"></script>
+ <!-- Add Chart.js for Admin Dashboard -->
+ <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen">
-    <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
-        <section class="bg-primary pt-12 pb-10 px-6 border-b-8 border-black relative overflow-hidden">
-            <div class="absolute top-4 left-6 right-6 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <a href="rule.html"
-                        class="bg-white border-4 border-black p-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:scale-105 transition-transform">
-                        <span class="material-symbols-outlined text-black block text-xl">terminal</span>
-                    </a>
-                    <h1 class="text-xl font-black italic tracking-tighter">工商安全衛生協會-新竹職訓中心</h1>
-                </div>
-                <button
-                    class="bg-white border-4 border-black p-2 neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:scale-105 transition-transform"
-                    onclick="window.location.href='profilei.html'">
-                    <span class="material-symbols-outlined text-black block">settings</span>
-                </button>
-            </div>
-            <div class="flex flex-col items-center mt-12 mb-12">
-                <div class="relative group">
-                    <!-- Avatar Container: Click to Upload -->
-                    <div class="w-32 h-32 bg-white border-4 border-black flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:scale-105 transition-transform overflow-hidden relative"
-                        onclick="document.getElementById('avatar-input').click()">
-
-                        <!-- Default Icon (Hidden if image exists) -->
-                        <span id="avatar-icon" class="material-symbols-outlined text-black text-7xl">person</span>
-
-                        <!-- User Avatar Image (Hidden by default) -->
-                        <img id="avatar-image" src="" alt="Avatar" class="w-full h-full object-cover hidden">
-
-                        <!-- Camera Overlay (Visible on Hover/Always small) -->
-                        <div
-                            class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="material-symbols-outlined text-white font-bold text-3xl">photo_camera</span>
-                        </div>
-                    </div>
-
-                    <!-- Camera Badge (Always visible) -->
-                    <div
-                        class="absolute -bottom-2 -right-2 bg-white border-2 border-black p-1 rounded-full shadow-sm pointer-events-none z-10">
-                        <span class="material-symbols-outlined text-black text-sm font-bold block">photo_camera</span>
-                    </div>
-
-                    <!-- Hidden Input -->
-                    <input type="file" id="avatar-input" accept="image/*" class="hidden">
-                    <!-- 提示文字 -->
-                    <div id="user-level"
-                        class="absolute -top-3 -right-6 bg-black text-white border-4 border-black px-4 py-1 font-black italic shadow-[4px_4px_0px_0px_rgba(255,214,0,1)]">
-                        Lv. -
-                    </div>
-                </div>
-                <h2 id="user-nickname" class="text-6xl font-black italic mt-6 tracking-tight">Loading...</h2>
-            </div>
-            <div class="max-w-md mx-auto">
-                <div class="flex justify-between items-end mb-1">
-                    <span class="text-xs font-black italic uppercase tracking-wider">XP POINTS</span>
-                    <span id="user-xp-text" class="text-xs font-black italic">0 / 0</span>
-                </div>
-                <div class="h-6 w-full border-4 border-black bg-white">
-                    <div id="user-xp-bar" class="h-full bg-black border-r-4 border-black" style="width: 0%"></div>
-                </div>
-            </div>
-        </section>
-        <main class="flex-grow p-6 space-y-6 pb-32">
-            <!-- Admin Dashboard (Hidden by default, shown only for admin) -->
-            <div id="admin-dashboard" class="hidden space-y-6">
-                <div class="bg-primary border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-black text-3xl">admin_panel_settings</span>
-                            <h2 class="text-2xl font-black italic uppercase">管理員儀表板</h2>
-                        </div>
-                        <a href="admin.html"
-                            class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
-                            <span class="material-symbols-outlined text-xl">settings</span>
-                            權限管理
-                        </a>
-                    </div>
-                    <p class="text-sm font-bold">系統數據概覽與分析</p>
-                </div>
-
-                <!-- Chart 1: Daily Registrations -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">trending_up</span>
-                        <h3 class="text-xl font-black italic uppercase">每日註冊趨勢</h3>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="registrations-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 2: Top Error Questions (全站魔王題 Top 10) -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
-                        <h3 class="text-xl font-black italic uppercase">全站魔王題 Top 10</h3>
-                    </div>
-                    <div class="space-y-3">
-                        <!-- Loading state -->
-                        <div id="top-incorrect-cards-loading" class="text-center py-8">
-                            <span class="text-sm font-bold">載入中...</span>
-                        </div>
-                        <!-- Content container -->
-                        <div id="top-incorrect-cards-list" class="hidden space-y-3"></div>
-                        <!-- Empty state -->
-                        <div id="top-incorrect-cards-empty" class="hidden text-center py-8">
-                            <span
-                                class="material-symbols-outlined text-6xl text-zinc-300 dark:text-zinc-600">check_circle</span>
-                            <p class="mt-2 text-sm font-bold text-zinc-500 dark:text-zinc-400">目前沒有足夠的全局答題數據</p>
-                            <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">累積作答次數 > 1 次才會被列入統計</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chart 3: Mastery Level Distribution -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">pie_chart</span>
-                        <h3 class="text-xl font-black italic uppercase">熟練度分佈</h3>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black flex justify-center">
-                        <canvas id="mastery-chart" style="max-width: 400px; max-height: 400px;"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 4: Daily Answers Trend -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">insights</span>
-                        <h3 class="text-xl font-black italic uppercase">每日答題總次數趨勢</h3>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="daily-answers-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 5: Daily Active Users -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">group</span>
-                        <h3 class="text-xl font-black italic uppercase">每日活躍用戶數</h3>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="daily-active-users-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 6: Learning Trends -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-black dark:text-white">calendar_month</span>
-                            <h3 class="text-xl font-black italic uppercase">學習趨勢</h3>
-                        </div>
-                        <select id="learning-trends-period"
-                            class="border-2 border-black font-bold p-1 bg-white text-black text-sm"
-                            onchange="renderLearningTrendsChart(this.value)">
-                            <option value="week">每週</option>
-                            <option value="month">每月</option>
-                        </select>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="learning-trends-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 7: Answer Time Distribution -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">schedule</span>
-                        <h3 class="text-xl font-black italic uppercase">答題時段分佈</h3>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="answer-time-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 8: Overall Accuracy Trend -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-black dark:text-white">analytics</span>
-                            <h3 class="text-xl font-black italic uppercase">整體正確率趨勢</h3>
-                        </div>
-                        <select id="overall-accuracy-period"
-                            class="border-2 border-black font-bold p-1 bg-white text-black text-sm"
-                            onchange="renderOverallAccuracyTrendChart(this.value)">
-                            <option value="week">每週</option>
-                            <option value="month">每月</option>
-                        </select>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="overall-accuracy-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 9: First vs Review Accuracy -->
-                <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined text-black dark:text-white">compare_arrows</span>
-                        <h3 class="text-xl font-black italic uppercase">首次作答 vs 複習正確率</h3>
-                    </div>
-                    <div class="bg-white p-4 border-2 border-black">
-                        <canvas id="first-vs-review-chart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div
-                class="bg-white dark:bg-gray-800 border-4 border-black p-4 flex justify-between items-center neo-brutalism-card">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-black dark:text-white">quiz</span>
-                    <span class="text-xl font-black italic">我的答題總數</span>
-                </div>
-                <div id="user-card-count" class="text-3xl font-black italic bg-primary px-3 border-l-4 border-black">0 /
-                    0
-                </div>
-            </div>
-
-            <!-- 考試設定區塊 -->
-            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-black dark:text-white">calendar_month</span>
-                    <span class="text-xl font-black italic uppercase">考試設定</span>
-                </div>
-                <div class="space-y-3">
-                    <!-- 考試項目 -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">考試項目</label>
-                        <input id="exam-name-input" type="text" placeholder="例如：甲級技術士" maxlength="100"
-                            class="w-full border-2 border-black p-2 font-bold text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    <!-- 考試日期 -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">考試日期</label>
-                        <input id="exam-date-input" type="date"
-                            class="w-full border-2 border-black p-2 font-bold text-sm focus:outline-none focus:border-primary" />
-                    </div>
-                    <!-- 每日目標 -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">每日目標（題數）</label>
-                        <input id="daily-goal-input" type="number" min="1" max="100" value="20"
-                            class="w-full border-2 border-black p-2 font-bold text-sm focus:outline-none focus:border-primary" />
-                        <div class="text-[10px] text-gray-400 mt-1">建議設定 10-30 題，依個人時間調整</div>
-                    </div>
-                    <!-- 儲存按鈕 -->
-                    <button id="save-exam-settings-btn" onclick="saveExamSettings()"
-                        class="w-full bg-primary border-4 border-black py-3 px-4 font-black italic text-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        儲存設定
-                    </button>
-                </div>
-            </div>
-            <div id="admin-backup-card"
-                class="hidden bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-black dark:text-white">cloud_upload</span>
-                    <span class="text-xl font-black italic uppercase">資料備份</span>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- 匯出按鈕已隱藏 -->
-                    <button id="export-cards-btn" style="display:none;"
-                        class="w-full bg-primary border-4 border-black py-3 px-2 font-black italic flex items-center justify-center text-center leading-tight neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        匯出卡片資料 (JSON)
-                    </button>
-                    <button id="import-cards-btn" onclick="window.location.href='import.html'"
-                        class="w-full bg-white border-4 border-black py-3 px-2 font-black italic flex items-center justify-center text-center leading-tight neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        匯入所有卡片
-                    </button>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-black dark:text-white">share</span>
-                    <span class="text-xl font-black italic uppercase">社群追蹤</span>
-                </div>
-                <div class="grid grid-cols-4 gap-3">
-                    <a href="https://www.threads.net/@cecelove1209?igshid=NTc4MTIwNjQ2YQ==" target="_blank"
-                        class="aspect-square bg-black border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <span class="text-white font-black text-xl">@</span>
-                    </a>
-                    <a href="https://www.facebook.com/HRKeepGoing/?locale=zh_TW" target="_blank"
-                        class="aspect-square bg-[#1877F2] border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <span class="text-white font-black text-xl italic">f</span>
-                    </a>
-                    <a href="https://www.linkedin.com/company/%E6%89%8D%E5%BA%AB%E4%BA%BA%E5%8A%9B%E8%B3%87%E6%BA%90%E9%A1%A7%E5%95%8F%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/?originalSubdomain=tw"
-                        target="_blank"
-                        class="aspect-square bg-[#0077B5] border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <span class="text-white font-black text-xl italic">in</span>
-                    </a>
-                    <a href="https://line.me/ti/g2/KpyzdjDZpxYbg9Zpdl5Qpl7tt5C106eRyKFIBw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default"
-                        target="_blank"
-                        class="aspect-square bg-[#06C755] border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <span class="material-symbols-outlined text-white">chat_bubble</span>
-                    </a>
-                </div>
-            </div>
-        </main>
-        <!-- Bottom Navigation Component -->
-        <div id="bottom-nav" data-active-page="profile"></div>
-    </div>
-
-    <!-- Crop Modal -->
-    <div id="crop-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white border-4 border-black w-full max-w-md p-4 space-y-4 shadow-[8px_8px_0px_0px_#FFD600]">
-            <h3 class="text-xl font-black italic">調整頭像</h3>
-            <div class="relative w-full h-64 bg-gray-100 border-2 border-black">
-                <img id="crop-image" src="" alt="To Crop" class="max-w-full block">
-            </div>
-            <div class="flex gap-2">
-                <button id="cancel-crop-btn"
-                    class="flex-1 bg-white border-2 border-black py-2 font-bold hover:bg-gray-100">取消</button>
-                <button id="confirm-crop-btn"
-                    class="flex-1 bg-primary border-2 border-black py-2 font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">確認更換</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== Supabase 整合 ==================== -->
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- 專案配置與 API Service -->
-    <script src="config.js"></script>
-    <script src="js/api-service.js"></script>
-    <script src="js/init.js"></script>
-    <script src="js/modal-system.js"></script>
-    <script src="js/components/bottom-nav.js"></script>
-
-    <script>
-        // 從 sessionStorage 載入使用者資料（立即顯示）
-        function loadFromCache() {
-            const cached = sessionStorage.getItem('userData');
-            if (cached) {
-                const userData = JSON.parse(cached);
-                updateProfilePageUI(userData);
-                if (userData.username) {
-                    document.getElementById('user-nickname').textContent = userData.username;
-                }
-                return true;
-            }
-            return false;
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 1. 先從快取載入（最快）
-            loadFromCache();
-
-            const nickname = localStorage.getItem('userNickname');
-            if (nickname) {
-                document.getElementById('user-nickname').textContent = nickname;
-            }
-
-            // 2. 如果有 Supabase 連接，嘗試獲取最新資料
-            await apiService.initialize();
-
-            if (apiService.currentUser) {
-                const profileResult = await apiService.getUserProfile(apiService.currentUser.id);
-                if (profileResult.success) {
-                    // 更新顯示名稱
-                    document.getElementById('user-nickname').textContent = profileResult.data.username;
-
-                    // 同步更新 LocalStorage，確保下次載入也是最新的
-                    localStorage.setItem('userNickname', profileResult.data.username);
-
-                    // 快取到 sessionStorage
-                    sessionStorage.setItem('userData', JSON.stringify(profileResult.data));
-
-                    // 更新其他 UI (Level, XP 等)
-                    updateProfilePageUI(profileResult.data); // 這會處理頭像
-
-                    // 載入考試設定
-                    loadExamSettings(profileResult.data);
-
-                    // ==================== Admin Dashboard ====================
-                    // 檢查是否為管理員
-                    if (typeof ADMIN_UUIDS !== 'undefined' && ADMIN_UUIDS.includes(apiService.currentUser.id)) {
-                        console.log('管理員已登入，載入儀表板...');
-                        await initAdminDashboard();
-                    }
-                }
-            }
-
-            // ==================== Avatar Upload Logic ====================
-            const avatarInput = document.getElementById('avatar-input');
-            const cropModal = document.getElementById('crop-modal');
-            const cropImage = document.getElementById('crop-image');
-            const cancelCropBtn = document.getElementById('cancel-crop-btn');
-            const confirmCropBtn = document.getElementById('confirm-crop-btn');
-            let cropper = null;
-
-            if (avatarInput) {
-                avatarInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        cropImage.src = event.target.result;
-                        cropModal.classList.remove('hidden');
-
-                        // Destroy previous cropper if exists
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-
-                        // Initialize Cropper
-                        cropper = new Cropper(cropImage, {
-                            aspectRatio: 1, // 1:1 Square
-                            viewMode: 1,
-                            minCropBoxWidth: 50,
-                            minCropBoxHeight: 50,
-                            autoCropArea: 0.8
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                    // Reset input value so same file can be selected again
-                    avatarInput.value = '';
-                });
-            }
-
-            cancelCropBtn.addEventListener('click', () => {
-                cropModal.classList.add('hidden');
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
-            });
-
-            confirmCropBtn.addEventListener('click', () => {
-                if (!cropper) return;
-
-                // Get cropped canvas
-                const canvas = cropper.getCroppedCanvas({
-                    width: 300,
-                    height: 300
-                });
-
-                if (!canvas) return;
-
-                // Show loading state on button
-                const originalText = confirmCropBtn.innerText;
-                confirmCropBtn.innerText = '上傳中...';
-                confirmCropBtn.disabled = true;
-
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        ModalSystem.alert('錯誤', '裁切失敗');
-                        confirmCropBtn.innerText = originalText;
-                        confirmCropBtn.disabled = false;
-                        return;
-                    }
-
-                    if (!apiService.currentUser) {
-                        alert('請先登入');
-                        return;
-                    }
-
-                    // Call API to upload
-                    const result = await apiService.uploadAvatar(apiService.currentUser.id, blob);
-
-                    if (result.success) {
-                        // Update UI immediately (using generated Blob URL or result URL)
-                        // const objectUrl = URL.createObjectURL(blob);
-                        // updateAvatarDisplay(objectUrl);
-
-                        // Result URL is better
-                        const newUrl = result.avatarUrl;
-                        // Avoid caching
-                        const displayUrl = newUrl + '?t=' + new Date().getTime();
-                        updateAvatarDisplay(displayUrl);
-
-                        // Close modal
-                        cropModal.classList.add('hidden');
-                        if (cropper) {
-                            cropper.destroy();
-                            cropper = null;
-                        }
-
-                        // Update cache
-                        const cached = JSON.parse(sessionStorage.getItem('userData') || '{}');
-                        cached.avatar_url = newUrl;
-                        sessionStorage.setItem('userData', JSON.stringify(cached));
-
-                    } else {
-                        ModalSystem.alert('上傳失敗', result.error?.message || '未知錯誤');
-                    }
-
-                    // Reset button
-                    confirmCropBtn.innerText = originalText;
-                    confirmCropBtn.disabled = false;
-
-                }, 'image/png');
-            });
-
-            function updateAvatarDisplay(url) {
-                const imgEl = document.getElementById('avatar-image');
-                const iconEl = document.getElementById('avatar-icon');
-                if (url) {
-                    imgEl.src = url;
-                    imgEl.classList.remove('hidden');
-                    iconEl.classList.add('hidden');
-                } else {
-                    imgEl.classList.add('hidden');
-                    iconEl.classList.remove('hidden');
-                }
-            }
-
-
-            // 綁定匯出按鈕事件
-            const exportBtn = document.getElementById('export-cards-btn');
-            if (exportBtn) {
-                exportBtn.addEventListener('click', async () => {
-                    if (!apiService.currentUser) {
-                        ModalSystem.alert('請先登入', '需要登入才能匯出資料');
-                        return;
-                    }
-
-                    // 顯示 Loading
-                    const originalText = exportBtn.innerText;
-                    exportBtn.innerText = '匯出中...';
-                    exportBtn.disabled = true;
-
-                    try {
-                        const result = await apiService.getAllUserCards(apiService.currentUser.id);
-
-                        if (result.success) {
-                            const dataStr = JSON.stringify(result.data, null, 2);
-                            const blob = new Blob([dataStr], { type: 'application/json' });
-                            const url = URL.createObjectURL(blob);
-
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `vibecoding_cards_backup_${new Date().toISOString().split('T')[0]}.json`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                        } else {
-                            ModalSystem.alert('匯出失敗', result.error?.message || '未知錯誤');
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        ModalSystem.alert('錯誤', '匯出發生錯誤');
-                    } finally {
-                        exportBtn.innerText = originalText;
-                        exportBtn.disabled = false;
-                    }
-                });
-            }
-
-
-
-        });
-
-        // ==================== Admin Dashboard Functions ====================
-        let registrationsChart, masteryChart;
-        let dailyAnswersChart, dailyActiveUsersChart, learningTrendsChart, answerTimeChart;
-        let overallAccuracyChart, firstVsReviewChart;
-
-        async function initAdminDashboard() {
-            // 顯示 Dashboard
-            const dashboardEl = document.getElementById('admin-dashboard');
-            if (dashboardEl) {
-                dashboardEl.classList.remove('hidden');
-            }
-
-            // 顯示資料備份 (僅限管理員)
-            const backupCard = document.getElementById('admin-backup-card');
-            if (backupCard) {
-                backupCard.classList.remove('hidden');
-            }
-
-            // 匯入 JSON 按鈕僅最高管理者可見
-            const importBtn = document.getElementById('import-cards-btn');
-            if (importBtn && (typeof SUPER_ADMIN_UUIDS === 'undefined' || !SUPER_ADMIN_UUIDS.includes(apiService.currentUser.id))) {
-                importBtn.style.display = 'none';
-            }
-
-            // 載入並渲染圖表/區塊（各自獨立 try-catch，避免一個失敗導致全部中斷）
-            const dashboardTasks = [
-                { name: '每日註冊趨勢', fn: () => renderRegistrationsChart() },
-                { name: '全站魔王題', fn: () => renderTopIncorrectCardsDashboard() },
-                { name: '熟練度分佈', fn: () => renderMasteryChart() },
-                { name: '每日答題數', fn: () => renderDailyAnswersChart() },
-                { name: '每日活躍用戶', fn: () => renderDailyActiveUsersChart() },
-                { name: '學習趨勢', fn: () => renderLearningTrendsChart('week') },
-                { name: '答題時段分佈', fn: () => renderAnswerTimeDistributionChart() },
-                { name: '整體正確率趨勢', fn: () => renderOverallAccuracyTrendChart('week') },
-                { name: '首次vs複習正確率', fn: () => renderFirstVsReviewAccuracyChart() },
-            ];
-
-            await Promise.allSettled(dashboardTasks.map(async (task) => {
-                try {
-                    await task.fn();
-                } catch (error) {
-                    console.error(`管理員儀表板 - ${task.name} 載入失敗:`, error);
-                }
-            }));
-        }
-
-        async function renderRegistrationsChart() {
-            const result = await apiService.getAdminDailyRegistrations(30);
-            if (!result.success) {
-                console.error('取得註冊數據失敗:', result.error);
-                return;
-            }
-
-            const ctx = document.getElementById('registrations-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => {
-                const date = new Date(item.date);
-                return `${date.getMonth() + 1}/${date.getDate()}`;
-            });
-            const data = result.data.map(item => item.count);
-
-            // 銷毀舊圖表（如果存在）
-            if (registrationsChart) {
-                registrationsChart.destroy();
-            }
-
-            registrationsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '每日註冊人數',
-                        data: data,
-                        borderColor: '#FFD600',
-                        backgroundColor: 'rgba(255, 214, 0, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: '#FFD600',
-                        pointBorderColor: '#000000',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: { family: 'Inter', weight: 'bold', size: 12 },
-                                color: '#000000'
-                            }
-                        },
-                        title: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                font: { family: 'Inter', weight: 'bold' }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: { family: 'Inter', weight: 'bold' }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        async function renderTopIncorrectCardsDashboard() {
-            const result = await apiService.getAdminTopIncorrectCards(10); // 取前 10 名
-
-            const loadingEl = document.getElementById('top-incorrect-cards-loading');
-            const listEl = document.getElementById('top-incorrect-cards-list');
-            const emptyEl = document.getElementById('top-incorrect-cards-empty');
-
-            // 隱藏載入狀態
-            if (loadingEl) loadingEl.classList.add('hidden');
-
-            if (!result.success) {
-                console.error('取得錯誤題目數據失敗:', result.error);
-                if (emptyEl) emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            if (!result.data || result.data.length === 0) {
-                // 沒有數據，顯示空狀態
-                if (emptyEl) emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            // 有數據，渲染列表
-            if (listEl) {
-                listEl.classList.remove('hidden');
-                listEl.innerHTML = result.data.map((q, index) => {
-                    const errorRate = (q.error_rate * 100).toFixed(1);
-                    const subject = q.subject || '未分類';
-                    const chapter = q.chapter || '';
-                    const questionNo = q.question_no || '';
-                    const questionText = q.question_text || '題目內容未知';
-
-                    // 根據錯誤率決定顏色
-                    let bgColor = '#FFF3E0'; // 預設橘色
-                    let borderColor = '#FF9800';
-                    if (errorRate >= 80) {
-                        bgColor = '#FFEBEE'; // 紅色
-                        borderColor = '#F44336';
-                    } else if (errorRate >= 60) {
-                        bgColor = '#FFF3E0'; // 橘色
-                        borderColor = '#FF9800';
-                    } else if (errorRate >= 40) {
-                        bgColor = '#FFF9C4'; // 黃色
-                        borderColor = '#FBC02D';
-                    } else {
-                        bgColor = '#F5F5F5'; // 灰色 (錯誤率低)
-                        borderColor = '#9E9E9E';
-                    }
-
-                    // 確保章節與題號顯示格式美觀
-                    let questionIdDisplay = subject;
-                    if (chapter) questionIdDisplay += ` - ${chapter}`;
-                    if (questionNo) questionIdDisplay += ` - Q${questionNo}`;
-
-                    return `
-                        <div class="bg-white border-4 border-black p-4 neo-shadow-sm flex flex-col gap-2" style="background-color: ${bgColor};">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-lg">
-                                    ${index + 1}
-                                </div>
-                                <div class="flex-grow min-w-0">
-                                    <div class="flex flex-col mb-1">
-                                        <span class="font-black text-sm text-black truncate w-full" title="${questionIdDisplay}">${questionIdDisplay}</span>
-                                    </div>
-                                    <p class="text-sm font-bold text-gray-800 line-clamp-2 md:line-clamp-none w-full">${questionText}</p>
-                                </div>
-                            </div>
-                            <!-- 數據區塊 -->
-                            <div class="mt-2 border-t-2 border-black pt-2 flex flex-wrap gap-2 text-xs font-black w-full">
-                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap" style="color: ${borderColor};">
-                                    錯誤率: ${errorRate}%
-                                </span>
-                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap text-zinc-700">
-                                    全局作答: ${q.total_reviewed}
-                                </span>
-                                <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap text-red-600">
-                                    全局答錯: ${q.total_incorrect}
-                                </span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        }
-
-        async function renderMasteryChart() {
-            const result = await apiService.getAdminMasteryDistribution();
-            if (!result.success) {
-                console.error('取得熟練度分佈數據失敗:', result.error);
-                return;
-            }
-
-            const ctx = document.getElementById('mastery-chart');
-            if (!ctx) return;
-
-            const labels = ['未熟悉', '初學', '進階', '熟練', '精通', '大師'];
-            const data = [
-                result.data[0] || 0,
-                result.data[1] || 0,
-                result.data[2] || 0,
-                result.data[3] || 0,
-                result.data[4] || 0,
-                result.data[5] || 0
-            ];
-
-            // 銷毀舊圖表（如果存在）
-            if (masteryChart) {
-                masteryChart.destroy();
-            }
-
-            masteryChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '學習進度數量',
-                        data: data,
-                        backgroundColor: [
-                            '#CCCCCC',
-                            '#A8D5BA',
-                            '#FFD93D',
-                            '#FF9F40',
-                            '#FF6384',
-                            '#9966FF'
-                        ],
-                        borderColor: '#000000',
-                        borderWidth: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Inter', weight: 'bold', size: 12 },
-                                color: '#000000',
-                                padding: 15
-                            }
-                        },
-                        title: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        async function renderDailyAnswersChart() {
-            const result = await apiService.getAdminDailyAnswers(30);
-            if (!result.success) return;
-
-            const ctx = document.getElementById('daily-answers-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => {
-                const date = new Date(item.date);
-                return `${date.getMonth() + 1}/${date.getDate()}`;
-            });
-            const data = result.data.map(item => item.count);
-
-            if (dailyAnswersChart) dailyAnswersChart.destroy();
-
-            dailyAnswersChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '每日答題數',
-                        data: data,
-                        borderColor: '#2196F3',
-                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: '#2196F3',
-                        pointBorderColor: '#000000',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter', weight: 'bold' } } },
-                        x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        async function renderDailyActiveUsersChart() {
-            const result = await apiService.getAdminDailyActiveUsers(30);
-            if (!result.success) return;
-
-            const ctx = document.getElementById('daily-active-users-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => {
-                const date = new Date(item.date);
-                return `${date.getMonth() + 1}/${date.getDate()}`;
-            });
-            const data = result.data.map(item => item.count);
-
-            if (dailyActiveUsersChart) dailyActiveUsersChart.destroy();
-
-            dailyActiveUsersChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '每日活躍用戶',
-                        data: data,
-                        backgroundColor: '#4CAF50',
-                        borderColor: '#000000',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter', weight: 'bold' } } },
-                        x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        async function renderLearningTrendsChart(period = 'week') {
-            const result = await apiService.getAdminLearningTrends(period);
-            if (!result.success) return;
-
-            const ctx = document.getElementById('learning-trends-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => {
-                const date = new Date(item.period_start);
-                if (period === 'month') {
-                    return `${date.getFullYear()}/${date.getMonth() + 1}`;
-                } else {
-                    return `${date.getMonth() + 1}/${date.getDate()} 當週`;
-                }
-            });
-            const data = result.data.map(item => item.count);
-
-            if (learningTrendsChart) learningTrendsChart.destroy();
-
-            learningTrendsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: period === 'month' ? '每月答題數' : '每週答題數',
-                        data: data,
-                        backgroundColor: '#FF9800',
-                        borderColor: '#000000',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { font: { family: 'Inter', weight: 'bold' } } },
-                        x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        async function renderAnswerTimeDistributionChart() {
-            const result = await apiService.getAdminAnswerTimeDistribution(30);
-            if (!result.success) return;
-
-            const ctx = document.getElementById('answer-time-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => `${item.hour}時`);
-            const data = result.data.map(item => item.count);
-
-            if (answerTimeChart) answerTimeChart.destroy();
-
-            const maxVal = Math.max(...data, 1);
-            const backgroundColors = data.map(val => {
-                const intensity = val / maxVal;
-                // Red color with varying opacity based on heat
-                return `rgba(244, 67, 54, ${Math.max(0.1, intensity)})`;
-            });
-
-            answerTimeChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '時段答題熱度 (近30天)',
-                        data: data,
-                        backgroundColor: backgroundColors,
-                        borderColor: '#000000',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { font: { family: 'Inter', weight: 'bold' } } },
-                        x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-        async function renderOverallAccuracyTrendChart(period = 'week') {
-            const result = await apiService.getAdminOverallAccuracyTrend(period);
-            if (!result.success) {
-                console.error('取得整體正確率折線數據失敗:', result.error);
-                return;
-            }
-
-            const ctx = document.getElementById('overall-accuracy-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => item.date);
-            const accuracyData = result.data.map(item => item.accuracy);
-
-            if (overallAccuracyChart) {
-                overallAccuracyChart.destroy();
-            }
-
-            overallAccuracyChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '整體正確率 (%)',
-                        data: accuracyData,
-                        borderColor: '#10B981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: '#10B981',
-                        pointBorderColor: '#000000',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: true, labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { stepSize: 20, font: { family: 'Inter', weight: 'bold' }, callback: function (value) { return value + '%' } },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' }
-                        },
-                        x: {
-                            ticks: { font: { family: 'Inter', weight: 'bold' } },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        async function renderFirstVsReviewAccuracyChart() {
-            const result = await apiService.getAdminFirstVsReviewAccuracy();
-            if (!result.success) {
-                console.error('取得首次 vs 複習正確率數據失敗:', result.error);
-                return;
-            }
-
-            const ctx = document.getElementById('first-vs-review-chart');
-            if (!ctx) return;
-
-            const labels = result.data.map(item => item.category);
-            const data = result.data.map(item => item.accuracy);
-
-            if (firstVsReviewChart) {
-                firstVsReviewChart.destroy();
-            }
-
-            firstVsReviewChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '正確率 (%)',
-                        data: data,
-                        backgroundColor: ['#60A5FA', '#F59E0B'],
-                        borderColor: '#000000',
-                        borderWidth: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) { return context.parsed.y + '%'; }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { font: { family: 'Inter', weight: 'bold' }, callback: function (value) { return value + '%' } }
-                        },
-                        x: { ticks: { font: { family: 'Inter', weight: 'bold' } } }
-                    }
-                }
-            });
-        }
-
-
-
-
-        function updateProfilePageUI(userData) {
-            // 使用 LevelSystem 計算顯示狀態
-            let levelState;
-            if (typeof LevelSystem !== 'undefined') {
-                const currentXP = userData.current_xp || 0;
-                const perfectCards = userData.correct_answer_count || 0;
-                levelState = LevelSystem.calculateState(currentXP, perfectCards);
-            } else {
-                console.warn('LevelSystem not loaded, falling back to simple display');
-                levelState = {
-                    actualLevel: userData.current_level || 1,
-                    progressInLevel: 0,
-                    xpForNextLevel: 100,
-                    isCapped: false,
-                    displayProgress: 0
-                };
-            }
-
-            // 更新等級
-            const levelBadge = document.getElementById('user-level');
-            if (levelBadge) {
-                levelBadge.textContent = 'Lv. ' + levelState.actualLevel;
-            }
-
-            // 更新 XP 文字
-            const xpText = document.getElementById('user-xp-text');
-            if (xpText) {
-                if (levelState.isCapped) {
-                    xpText.textContent = `MAX (Need Perfect Card)`;
-                } else {
-                    xpText.textContent = `${levelState.progressInLevel.toLocaleString()} / ${levelState.xpForNextLevel.toLocaleString()}`;
-                }
-            }
-
-            // 更新 XP 進度條
-            const xpBar = document.getElementById('user-xp-bar');
-            if (xpBar) {
-                xpBar.style.width = `${Math.min(levelState.displayProgress, 100)}%`;
-
-                // 處理金色閃爍 (Capped State)
-                if (levelState.isCapped) {
-                    xpBar.classList.add('capped-gold-shimmer');
-                    xpBar.classList.remove('bg-black'); // Profile page default is black
-                } else {
-                    xpBar.classList.remove('capped-gold-shimmer');
-                    xpBar.classList.add('bg-black'); // Restore default
-                }
-            }
-
-            // 更新題目數量（已作答 / 可存取題目總數）
-            const cardCount = document.getElementById('user-card-count');
-            if (cardCount) {
-                const answered = userData.answered_questions || 0;
-                const total = userData.accessible_questions !== undefined ? userData.accessible_questions : (userData.total_questions || 0);
-                cardCount.textContent = `${answered} / ${total}`;
-            }
-
-            // [New] 更新頭像
-            const imgEl = document.getElementById('avatar-image');
-            const iconEl = document.getElementById('avatar-icon');
-            if (imgEl && iconEl) {
-                if (userData.avatar_url) {
-                    // Start with basic URL
-                    let finalUrl = userData.avatar_url;
-                    // Simply append time if it doesn't have query params, just to be safe, though usually handled by upload logic
-                    // But re-rendering profile page might use cached URL.
-                    // Let's rely on standard src.
-                    imgEl.src = finalUrl;
-                    imgEl.classList.remove('hidden');
-                    iconEl.classList.add('hidden');
-                } else {
-                    imgEl.classList.add('hidden');
-                    iconEl.classList.remove('hidden');
-                }
-            }
-        }
-
-        /**
-         * 載入考試設定
-         */
-        function loadExamSettings(userData) {
-            const examNameInput = document.getElementById('exam-name-input');
-            const examDateInput = document.getElementById('exam-date-input');
-            const dailyGoalInput = document.getElementById('daily-goal-input');
-
-            if (examNameInput && userData.exam_name) {
-                examNameInput.value = userData.exam_name;
-            }
-            if (examDateInput && userData.exam_date) {
-                examDateInput.value = userData.exam_date;
-            }
-            if (dailyGoalInput && userData.daily_goal !== undefined) {
-                dailyGoalInput.value = userData.daily_goal;
-            }
-        }
-
-        /**
-         * 儲存考試設定
-         */
-        async function saveExamSettings() {
-            if (!apiService.currentUser) {
-                alert('請先登入');
-                return;
-            }
-
-            const examName = document.getElementById('exam-name-input').value.trim();
-            const examDate = document.getElementById('exam-date-input').value;
-            const dailyGoal = parseInt(document.getElementById('daily-goal-input').value) || 20;
-
-            // 驗證
-            if (!examName) {
-                alert('請輸入考試項目');
-                return;
-            }
-            if (!examDate) {
-                alert('請選擇考試日期');
-                return;
-            }
-            const selectedDate = new Date(examDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (selectedDate < today) {
-                alert('考試日期須為未來日期');
-                return;
-            }
-            if (dailyGoal < 1 || dailyGoal > 100) {
-                alert('每日目標須在 1-100 題之間');
-                return;
-            }
-
-            // 顯示載入狀態
-            const btn = document.getElementById('save-exam-settings-btn');
-            const originalText = btn.textContent;
-            btn.textContent = '儲存中...';
-            btn.disabled = true;
-
-            try {
-                // 直接使用 Supabase Client 更新 users 表
-                const { data, error } = await apiService.supabase
-                    .from('users')
-                    .update({
-                        exam_name: examName,
-                        exam_date: examDate,
-                        daily_goal: dailyGoal
-                    })
-                    .eq('id', apiService.currentUser.id);
-
-                if (error) throw error;
-
-                // 更新快取
-                const cached = JSON.parse(sessionStorage.getItem('userData') || '{}');
-                cached.exam_name = examName;
-                cached.exam_date = examDate;
-                cached.daily_goal = dailyGoal;
-                sessionStorage.setItem('userData', JSON.stringify(cached));
-
-                alert('✅ 考試設定已儲存！');
-            } catch (error) {
-                console.error('儲存失敗:', error);
-                alert('❌ 儲存失敗：' + (error.message || '未知錯誤'));
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }
-        }
-    </script>
+<body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen leading-relaxed font-normal">
+ <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
+ <section class="bg-primary pt-12 pb-10 px-6 border-b-8 border-black relative overflow-hidden">
+ <div class="absolute top-4 left-6 right-6 flex justify-between items-center">
+ <div class="flex items-center gap-2">
+ <a href="rule.html"
+ class="bg-white border-4 border-black p-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:scale-105 transition-transform">
+ <span class="material-symbols-outlined text-black block text-xl">terminal</span>
+ </a>
+ <h1 class="text-xl font-black tracking-tighter">工商安全衛生協會-新竹職訓中心</h1>
+ </div>
+ <button
+ class="bg-white border-4 border-black p-2 neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:scale-105 transition-transform"
+ onclick="window.location.href='profilei.html'">
+ <span class="material-symbols-outlined text-black block">settings</span>
+ </button>
+ </div>
+ <div class="flex flex-col items-center mt-12 mb-12">
+ <div class="relative group">
+ <!-- Avatar Container: Click to Upload -->
+ <div class="w-32 h-32 bg-white border-4 border-black flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:scale-105 transition-transform overflow-hidden relative"
+ onclick="document.getElementById('avatar-input').click()">
+
+ <!-- Default Icon (Hidden if image exists) -->
+ <span id="avatar-icon" class="material-symbols-outlined text-black text-7xl">person</span>
+
+ <!-- User Avatar Image (Hidden by default) -->
+ <img id="avatar-image" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+
+ <!-- Camera Overlay (Visible on Hover/Always small) -->
+ <div
+ class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+ <span class="material-symbols-outlined text-white font-bold text-3xl">photo_camera</span>
+ </div>
+ </div>
+
+ <!-- Camera Badge (Always visible) -->
+ <div
+ class="absolute -bottom-2 -right-2 bg-white border-2 border-black p-1 rounded-full shadow-sm pointer-events-none z-10">
+ <span class="material-symbols-outlined text-black text-sm font-bold block">photo_camera</span>
+ </div>
+
+ <!-- Hidden Input -->
+ <input type="file" id="avatar-input" accept="image/*" class="hidden">
+ <!-- 提示文字 -->
+ <div id="user-level"
+ class="absolute -top-3 -right-6 bg-black text-white border-4 border-black px-4 py-1 font-black shadow-[4px_4px_0px_0px_rgba(255,214,0,1)]">
+ Lv. -
+ </div>
+ </div>
+ <h2 id="user-nickname" class="text-6xl font-black mt-6 tracking-tight">Loading...</h2>
+ </div>
+ <div class="max-w-md mx-auto">
+ <div class="flex justify-between items-end mb-1">
+ <span class="text-xs font-black uppercase tracking-wider">XP POINTS</span>
+ <span id="user-xp-text" class="text-xs font-black">0 / 0</span>
+ </div>
+ <div class="h-6 w-full border-4 border-black bg-white">
+ <div id="user-xp-bar" class="h-full bg-black border-r-4 border-black" style="width: 0%"></div>
+ </div>
+ </div>
+ </section>
+ <main class="flex-grow p-6 space-y-6 pb-32">
+ <!-- Admin Dashboard (Hidden by default, shown only for admin) -->
+ <div id="admin-dashboard" class="hidden space-y-6">
+ <div class="bg-primary border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center justify-between mb-4">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black text-3xl">admin_panel_settings</span>
+ <h2 class="text-2xl font-black uppercase">管理員儀表板</h2>
+ </div>
+ <a href="admin.html"
+ class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+ <span class="material-symbols-outlined text-xl">settings</span>
+ 權限管理
+ </a>
+ </div>
+ <p class="text-sm font-bold">系統數據概覽與分析</p>
+ </div>
+
+ <!-- Chart 1: Daily Registrations -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white">trending_up</span>
+ <h3 class="text-xl font-black uppercase">每日註冊趨勢</h3>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="registrations-chart"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 2: Top Error Questions (全站魔王題 Top 10) -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
+ <h3 class="text-xl font-black uppercase">全站魔王題 Top 10</h3>
+ </div>
+ <div class="space-y-3">
+ <!-- Loading state -->
+ <div id="top-incorrect-cards-loading" class="text-center py-8">
+ <span class="text-sm font-bold">載入中...</span>
+ </div>
+ <!-- Content container -->
+ <div id="top-incorrect-cards-list" class="hidden space-y-3"></div>
+ <!-- Empty state -->
+ <div id="top-incorrect-cards-empty" class="hidden text-center py-8">
+ <span
+ class="material-symbols-outlined text-6xl text-zinc-300 dark:text-zinc-600">check_circle</span>
+ <p class="mt-2 text-sm font-bold text-zinc-500 dark:text-zinc-400">目前沒有足夠的全局答題數據</p>
+ <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">累積作答次數 > 1 次才會被列入統計</p>
+ </div>
+ </div>
+ </div>
+
+ <!-- Chart 3: Mastery Level Distribution -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white">pie_chart</span>
+ <h3 class="text-xl font-black uppercase">熟練度分佈</h3>
+ </div>
+ <div class="bg-white p-4 border-2 border-black flex justify-center">
+ <canvas id="mastery-chart" style="max-width: 400px; max-height: 400px;"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 4: Daily Answers Trend -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white">insights</span>
+ <h3 class="text-xl font-black uppercase">每日答題總次數趨勢</h3>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="daily-answers-chart"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 5: Daily Active Users -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white">group</span>
+ <h3 class="text-xl font-black uppercase">每日活躍用戶數</h3>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="daily-active-users-chart"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 6: Learning Trends -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center justify-between mb-4">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black dark:text-white">calendar_month</span>
+ <h3 class="text-xl font-black uppercase">學習趨勢</h3>
+ </div>
+ <select id="learning-trends-period"
+ class="border-2 border-black font-bold p-1 bg-white text-black text-sm"
+ onchange="renderLearningTrendsChart(this.value)">
+ <option value="week">每週</option>
+ <option value="month">每月</option>
+ </select>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="learning-trends-chart"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 7: Answer Time Distribution -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white">schedule</span>
+ <h3 class="text-xl font-black uppercase">答題時段分佈</h3>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="answer-time-chart"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 8: Overall Accuracy Trend -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center justify-between mb-4">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black dark:text-white">analytics</span>
+ <h3 class="text-xl font-black uppercase">整體正確率趨勢</h3>
+ </div>
+ <select id="overall-accuracy-period"
+ class="border-2 border-black font-bold p-1 bg-white text-black text-sm"
+ onchange="renderOverallAccuracyTrendChart(this.value)">
+ <option value="week">每週</option>
+ <option value="month">每月</option>
+ </select>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="overall-accuracy-chart"></canvas>
+ </div>
+ </div>
+
+ <!-- Chart 9: First vs Review Accuracy -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 neo-brutalism-card">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="material-symbols-outlined text-black dark:text-white">compare_arrows</span>
+ <h3 class="text-xl font-black uppercase">首次作答 vs 複習正確率</h3>
+ </div>
+ <div class="bg-white p-4 border-2 border-black">
+ <canvas id="first-vs-review-chart"></canvas>
+ </div>
+ </div>
+ </div>
+
+ <div
+ class="bg-white dark:bg-gray-800 border-4 border-black p-4 flex justify-between items-center neo-brutalism-card">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black dark:text-white">quiz</span>
+ <span class="text-xl font-black">我的答題總數</span>
+ </div>
+ <div id="user-card-count" class="text-3xl font-black bg-primary px-3 border-l-4 border-black">0 /
+ 0
+ </div>
+ </div>
+
+ <!-- 考試設定區塊 -->
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black dark:text-white">calendar_month</span>
+ <span class="text-xl font-black uppercase">考試設定</span>
+ </div>
+ <div class="space-y-3">
+ <!-- 考試項目 -->
+ <div>
+ <label class="block text-xs font-bold text-gray-600 mb-1">考試項目</label>
+ <input id="exam-name-input" type="text" placeholder="例如：甲級技術士" maxlength="100"
+ class="w-full border-2 border-black p-2 font-bold text-sm focus:outline-none focus:border-primary" />
+ </div>
+ <!-- 考試日期 -->
+ <div>
+ <label class="block text-xs font-bold text-gray-600 mb-1">考試日期</label>
+ <input id="exam-date-input" type="date"
+ class="w-full border-2 border-black p-2 font-bold text-sm focus:outline-none focus:border-primary" />
+ </div>
+ <!-- 每日目標 -->
+ <div>
+ <label class="block text-xs font-bold text-gray-600 mb-1">每日目標（題數）</label>
+ <input id="daily-goal-input" type="number" min="1" max="100" value="20"
+ class="w-full border-2 border-black p-2 font-bold text-sm focus:outline-none focus:border-primary" />
+ <div class="text-[10px] text-gray-400 mt-1">建議設定 10-30 題，依個人時間調整</div>
+ </div>
+ <!-- 儲存按鈕 -->
+ <button id="save-exam-settings-btn" onclick="saveExamSettings()"
+ class="w-full bg-primary border-4 border-black py-3 px-4 font-black text-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ 儲存設定
+ </button>
+ </div>
+ </div>
+ <div id="admin-backup-card"
+ class="hidden bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black dark:text-white">cloud_upload</span>
+ <span class="text-xl font-black uppercase">資料備份</span>
+ </div>
+ <div class="grid grid-cols-2 gap-4">
+ <!-- 匯出按鈕已隱藏 -->
+ <button id="export-cards-btn" style="display:none;"
+ class="w-full bg-primary border-4 border-black py-3 px-2 font-black flex items-center justify-center text-center leading-tight neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ 匯出卡片資料 (JSON)
+ </button>
+ <button id="import-cards-btn" onclick="window.location.href='import.html'"
+ class="w-full bg-white border-4 border-black py-3 px-2 font-black flex items-center justify-center text-center leading-tight neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ 匯入所有卡片
+ </button>
+ </div>
+ </div>
+ <div class="bg-white dark:bg-gray-800 border-4 border-black p-4 space-y-4 neo-brutalism-card">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-black dark:text-white">share</span>
+ <span class="text-xl font-black uppercase">社群追蹤</span>
+ </div>
+ <div class="grid grid-cols-4 gap-3">
+ <a href="https://www.threads.net/@cecelove1209?igshid=NTc4MTIwNjQ2YQ==" target="_blank"
+ class="aspect-square bg-black border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ <span class="text-white font-black text-xl">@</span>
+ </a>
+ <a href="https://www.facebook.com/HRKeepGoing/?locale=zh_TW" target="_blank"
+ class="aspect-square bg-[#1877F2] border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ <span class="text-white font-black text-xl">f</span>
+ </a>
+ <a href="https://www.linkedin.com/company/%E6%89%8D%E5%BA%AB%E4%BA%BA%E5%8A%9B%E8%B3%87%E6%BA%90%E9%A1%A7%E5%95%8F%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/?originalSubdomain=tw"
+ target="_blank"
+ class="aspect-square bg-[#0077B5] border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ <span class="text-white font-black text-xl">in</span>
+ </a>
+ <a href="https://line.me/ti/g2/KpyzdjDZpxYbg9Zpdl5Qpl7tt5C106eRyKFIBw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default"
+ target="_blank"
+ class="aspect-square bg-[#06C755] border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+ <span class="material-symbols-outlined text-white">chat_bubble</span>
+ </a>
+ </div>
+ </div>
+ </main>
+ <!-- Bottom Navigation Component -->
+ <div id="bottom-nav" data-active-page="profile"></div>
+ </div>
+
+ <!-- Crop Modal -->
+ <div id="crop-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
+ <div class="bg-white border-4 border-black w-full max-w-md p-4 space-y-4 shadow-[8px_8px_0px_0px_#FFD600]">
+ <h3 class="text-xl font-black">調整頭像</h3>
+ <div class="relative w-full h-64 bg-gray-100 border-2 border-black">
+ <img id="crop-image" src="" alt="To Crop" class="max-w-full block">
+ </div>
+ <div class="flex gap-2">
+ <button id="cancel-crop-btn"
+ class="flex-1 bg-white border-2 border-black py-2 font-bold hover:bg-gray-100">取消</button>
+ <button id="confirm-crop-btn"
+ class="flex-1 bg-primary border-2 border-black py-2 font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">確認更換</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- ==================== Supabase 整合 ==================== -->
+ <!-- Supabase SDK -->
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+ <!-- 專案配置與 API Service -->
+ <script src="config.js"></script>
+ <script src="js/api-service.js"></script>
+ <script src="js/init.js"></script>
+ <script src="js/modal-system.js"></script>
+ <script src="js/components/bottom-nav.js"></script>
+
+ <script>
+ // 從 sessionStorage 載入使用者資料（立即顯示）
+ function loadFromCache() {
+ const cached = sessionStorage.getItem('userData');
+ if (cached) {
+ const userData = JSON.parse(cached);
+ updateProfilePageUI(userData);
+ if (userData.username) {
+ document.getElementById('user-nickname').textContent = userData.username;
+ }
+ return true;
+ }
+ return false;
+ }
+
+ document.addEventListener('DOMContentLoaded', async () => {
+ // 1. 先從快取載入（最快）
+ loadFromCache();
+
+ const nickname = localStorage.getItem('userNickname');
+ if (nickname) {
+ document.getElementById('user-nickname').textContent = nickname;
+ }
+
+ // 2. 如果有 Supabase 連接，嘗試獲取最新資料
+ await apiService.initialize();
+
+ if (apiService.currentUser) {
+ const profileResult = await apiService.getUserProfile(apiService.currentUser.id);
+ if (profileResult.success) {
+ // 更新顯示名稱
+ document.getElementById('user-nickname').textContent = profileResult.data.username;
+
+ // 同步更新 LocalStorage，確保下次載入也是最新的
+ localStorage.setItem('userNickname', profileResult.data.username);
+
+ // 快取到 sessionStorage
+ sessionStorage.setItem('userData', JSON.stringify(profileResult.data));
+
+ // 更新其他 UI (Level, XP 等)
+ updateProfilePageUI(profileResult.data); // 這會處理頭像
+
+ // 載入考試設定
+ loadExamSettings(profileResult.data);
+
+ // ==================== Admin Dashboard ====================
+ // 檢查是否為管理員
+ if (typeof ADMIN_UUIDS !== 'undefined' && ADMIN_UUIDS.includes(apiService.currentUser.id)) {
+ console.log('管理員已登入，載入儀表板...');
+ await initAdminDashboard();
+ }
+ }
+ }
+
+ // ==================== Avatar Upload Logic ====================
+ const avatarInput = document.getElementById('avatar-input');
+ const cropModal = document.getElementById('crop-modal');
+ const cropImage = document.getElementById('crop-image');
+ const cancelCropBtn = document.getElementById('cancel-crop-btn');
+ const confirmCropBtn = document.getElementById('confirm-crop-btn');
+ let cropper = null;
+
+ if (avatarInput) {
+ avatarInput.addEventListener('change', (e) => {
+ const file = e.target.files[0];
+ if (!file) return;
+
+ const reader = new FileReader();
+ reader.onload = (event) => {
+ cropImage.src = event.target.result;
+ cropModal.classList.remove('hidden');
+
+ // Destroy previous cropper if exists
+ if (cropper) {
+ cropper.destroy();
+ }
+
+ // Initialize Cropper
+ cropper = new Cropper(cropImage, {
+ aspectRatio: 1, // 1:1 Square
+ viewMode: 1,
+ minCropBoxWidth: 50,
+ minCropBoxHeight: 50,
+ autoCropArea: 0.8
+ });
+ };
+ reader.readAsDataURL(file);
+ // Reset input value so same file can be selected again
+ avatarInput.value = '';
+ });
+ }
+
+ cancelCropBtn.addEventListener('click', () => {
+ cropModal.classList.add('hidden');
+ if (cropper) {
+ cropper.destroy();
+ cropper = null;
+ }
+ });
+
+ confirmCropBtn.addEventListener('click', () => {
+ if (!cropper) return;
+
+ // Get cropped canvas
+ const canvas = cropper.getCroppedCanvas({
+ width: 300,
+ height: 300
+ });
+
+ if (!canvas) return;
+
+ // Show loading state on button
+ const originalText = confirmCropBtn.innerText;
+ confirmCropBtn.innerText = '上傳中...';
+ confirmCropBtn.disabled = true;
+
+ canvas.toBlob(async (blob) => {
+ if (!blob) {
+ ModalSystem.alert('錯誤', '裁切失敗');
+ confirmCropBtn.innerText = originalText;
+ confirmCropBtn.disabled = false;
+ return;
+ }
+
+ if (!apiService.currentUser) {
+ alert('請先登入');
+ return;
+ }
+
+ // Call API to upload
+ const result = await apiService.uploadAvatar(apiService.currentUser.id, blob);
+
+ if (result.success) {
+ // Update UI immediately (using generated Blob URL or result URL)
+ // const objectUrl = URL.createObjectURL(blob);
+ // updateAvatarDisplay(objectUrl);
+
+ // Result URL is better
+ const newUrl = result.avatarUrl;
+ // Avoid caching
+ const displayUrl = newUrl + '?t=' + new Date().getTime();
+ updateAvatarDisplay(displayUrl);
+
+ // Close modal
+ cropModal.classList.add('hidden');
+ if (cropper) {
+ cropper.destroy();
+ cropper = null;
+ }
+
+ // Update cache
+ const cached = JSON.parse(sessionStorage.getItem('userData') || '{}');
+ cached.avatar_url = newUrl;
+ sessionStorage.setItem('userData', JSON.stringify(cached));
+
+ } else {
+ ModalSystem.alert('上傳失敗', result.error?.message || '未知錯誤');
+ }
+
+ // Reset button
+ confirmCropBtn.innerText = originalText;
+ confirmCropBtn.disabled = false;
+
+ }, 'image/png');
+ });
+
+ function updateAvatarDisplay(url) {
+ const imgEl = document.getElementById('avatar-image');
+ const iconEl = document.getElementById('avatar-icon');
+ if (url) {
+ imgEl.src = url;
+ imgEl.classList.remove('hidden');
+ iconEl.classList.add('hidden');
+ } else {
+ imgEl.classList.add('hidden');
+ iconEl.classList.remove('hidden');
+ }
+ }
+
+
+ // 綁定匯出按鈕事件
+ const exportBtn = document.getElementById('export-cards-btn');
+ if (exportBtn) {
+ exportBtn.addEventListener('click', async () => {
+ if (!apiService.currentUser) {
+ ModalSystem.alert('請先登入', '需要登入才能匯出資料');
+ return;
+ }
+
+ // 顯示 Loading
+ const originalText = exportBtn.innerText;
+ exportBtn.innerText = '匯出中...';
+ exportBtn.disabled = true;
+
+ try {
+ const result = await apiService.getAllUserCards(apiService.currentUser.id);
+
+ if (result.success) {
+ const dataStr = JSON.stringify(result.data, null, 2);
+ const blob = new Blob([dataStr], { type: 'application/json' });
+ const url = URL.createObjectURL(blob);
+
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = `vibecoding_cards_backup_${new Date().toISOString().split('T')[0]}.json`;
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
+ URL.revokeObjectURL(url);
+ } else {
+ ModalSystem.alert('匯出失敗', result.error?.message || '未知錯誤');
+ }
+ } catch (e) {
+ console.error(e);
+ ModalSystem.alert('錯誤', '匯出發生錯誤');
+ } finally {
+ exportBtn.innerText = originalText;
+ exportBtn.disabled = false;
+ }
+ });
+ }
+
+
+
+ });
+
+ // ==================== Admin Dashboard Functions ====================
+ let registrationsChart, masteryChart;
+ let dailyAnswersChart, dailyActiveUsersChart, learningTrendsChart, answerTimeChart;
+ let overallAccuracyChart, firstVsReviewChart;
+
+ async function initAdminDashboard() {
+ // 顯示 Dashboard
+ const dashboardEl = document.getElementById('admin-dashboard');
+ if (dashboardEl) {
+ dashboardEl.classList.remove('hidden');
+ }
+
+ // 顯示資料備份 (僅限管理員)
+ const backupCard = document.getElementById('admin-backup-card');
+ if (backupCard) {
+ backupCard.classList.remove('hidden');
+ }
+
+ // 匯入 JSON 按鈕僅最高管理者可見
+ const importBtn = document.getElementById('import-cards-btn');
+ if (importBtn && (typeof SUPER_ADMIN_UUIDS === 'undefined' || !SUPER_ADMIN_UUIDS.includes(apiService.currentUser.id))) {
+ importBtn.style.display = 'none';
+ }
+
+ // 載入並渲染圖表/區塊（各自獨立 try-catch，避免一個失敗導致全部中斷）
+ const dashboardTasks = [
+ { name: '每日註冊趨勢', fn: () => renderRegistrationsChart() },
+ { name: '全站魔王題', fn: () => renderTopIncorrectCardsDashboard() },
+ { name: '熟練度分佈', fn: () => renderMasteryChart() },
+ { name: '每日答題數', fn: () => renderDailyAnswersChart() },
+ { name: '每日活躍用戶', fn: () => renderDailyActiveUsersChart() },
+ { name: '學習趨勢', fn: () => renderLearningTrendsChart('week') },
+ { name: '答題時段分佈', fn: () => renderAnswerTimeDistributionChart() },
+ { name: '整體正確率趨勢', fn: () => renderOverallAccuracyTrendChart('week') },
+ { name: '首次vs複習正確率', fn: () => renderFirstVsReviewAccuracyChart() },
+ ];
+
+ await Promise.allSettled(dashboardTasks.map(async (task) => {
+ try {
+ await task.fn();
+ } catch (error) {
+ console.error(`管理員儀表板 - ${task.name} 載入失敗:`, error);
+ }
+ }));
+ }
+
+ async function renderRegistrationsChart() {
+ const result = await apiService.getAdminDailyRegistrations(30);
+ if (!result.success) {
+ console.error('取得註冊數據失敗:', result.error);
+ return;
+ }
+
+ const ctx = document.getElementById('registrations-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => {
+ const date = new Date(item.date);
+ return `${date.getMonth() + 1}/${date.getDate()}`;
+ });
+ const data = result.data.map(item => item.count);
+
+ // 銷毀舊圖表（如果存在）
+ if (registrationsChart) {
+ registrationsChart.destroy();
+ }
+
+ registrationsChart = new Chart(ctx, {
+ type: 'line',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '每日註冊人數',
+ data: data,
+ borderColor: '#FFD600',
+ backgroundColor: 'rgba(255, 214, 0, 0.1)',
+ borderWidth: 3,
+ tension: 0.3,
+ fill: true,
+ pointBackgroundColor: '#FFD600',
+ pointBorderColor: '#000000',
+ pointBorderWidth: 2,
+ pointRadius: 4
+ }]
+ },
+ options: {
+ responsive: true,
+ maintainAspectRatio: true,
+ plugins: {
+ legend: {
+ display: true,
+ labels: {
+ font: { family: 'Inter', weight: 'bold', size: 12 },
+ color: '#000000'
+ }
+ },
+ title: {
+ display: false
+ }
+ },
+ scales: {
+ y: {
+ beginAtZero: true,
+ ticks: {
+ stepSize: 1,
+ font: { family: 'Inter', weight: 'bold' }
+ },
+ grid: {
+ color: 'rgba(0, 0, 0, 0.1)'
+ }
+ },
+ x: {
+ ticks: {
+ font: { family: 'Inter', weight: 'bold' }
+ },
+ grid: {
+ display: false
+ }
+ }
+ }
+ }
+ });
+ }
+
+ async function renderTopIncorrectCardsDashboard() {
+ const result = await apiService.getAdminTopIncorrectCards(10); // 取前 10 名
+
+ const loadingEl = document.getElementById('top-incorrect-cards-loading');
+ const listEl = document.getElementById('top-incorrect-cards-list');
+ const emptyEl = document.getElementById('top-incorrect-cards-empty');
+
+ // 隱藏載入狀態
+ if (loadingEl) loadingEl.classList.add('hidden');
+
+ if (!result.success) {
+ console.error('取得錯誤題目數據失敗:', result.error);
+ if (emptyEl) emptyEl.classList.remove('hidden');
+ return;
+ }
+
+ if (!result.data || result.data.length === 0) {
+ // 沒有數據，顯示空狀態
+ if (emptyEl) emptyEl.classList.remove('hidden');
+ return;
+ }
+
+ // 有數據，渲染列表
+ if (listEl) {
+ listEl.classList.remove('hidden');
+ listEl.innerHTML = result.data.map((q, index) => {
+ const errorRate = (q.error_rate * 100).toFixed(1);
+ const subject = q.subject || '未分類';
+ const chapter = q.chapter || '';
+ const questionNo = q.question_no || '';
+ const questionText = q.question_text || '題目內容未知';
+
+ // 根據錯誤率決定顏色
+ let bgColor = '#FFF3E0'; // 預設橘色
+ let borderColor = '#FF9800';
+ if (errorRate >= 80) {
+ bgColor = '#FFEBEE'; // 紅色
+ borderColor = '#F44336';
+ } else if (errorRate >= 60) {
+ bgColor = '#FFF3E0'; // 橘色
+ borderColor = '#FF9800';
+ } else if (errorRate >= 40) {
+ bgColor = '#FFF9C4'; // 黃色
+ borderColor = '#FBC02D';
+ } else {
+ bgColor = '#F5F5F5'; // 灰色 (錯誤率低)
+ borderColor = '#9E9E9E';
+ }
+
+ // 確保章節與題號顯示格式美觀
+ let questionIdDisplay = subject;
+ if (chapter) questionIdDisplay += ` - ${chapter}`;
+ if (questionNo) questionIdDisplay += ` - Q${questionNo}`;
+
+ return `
+ <div class="bg-white border-4 border-black p-4 neo-shadow-sm flex flex-col gap-2" style="background-color: ${bgColor};">
+ <div class="flex items-start gap-3">
+ <div class="flex-shrink-0 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-lg">
+ ${index + 1}
+ </div>
+ <div class="flex-grow min-w-0">
+ <div class="flex flex-col mb-1">
+ <span class="font-black text-sm text-black truncate w-full" title="${questionIdDisplay}">${questionIdDisplay}</span>
+ </div>
+ <p class="text-sm font-bold text-gray-800 line-clamp-2 md:line-clamp-none w-full">${questionText}</p>
+ </div>
+ </div>
+ <!-- 數據區塊 -->
+ <div class="mt-2 border-t-2 border-black pt-2 flex flex-wrap gap-2 text-xs font-black w-full">
+ <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap" style="color: ${borderColor};">
+ 錯誤率: ${errorRate}%
+ </span>
+ <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap text-zinc-700">
+ 全局作答: ${q.total_reviewed}
+ </span>
+ <span class="bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0_0_#000] flex-1 text-center overflow-x-auto whitespace-nowrap text-red-600">
+ 全局答錯: ${q.total_incorrect}
+ </span>
+ </div>
+ </div>
+ `;
+ }).join('');
+ }
+ }
+
+ async function renderMasteryChart() {
+ const result = await apiService.getAdminMasteryDistribution();
+ if (!result.success) {
+ console.error('取得熟練度分佈數據失敗:', result.error);
+ return;
+ }
+
+ const ctx = document.getElementById('mastery-chart');
+ if (!ctx) return;
+
+ const labels = ['未熟悉', '初學', '進階', '熟練', '精通', '大師'];
+ const data = [
+ result.data[0] || 0,
+ result.data[1] || 0,
+ result.data[2] || 0,
+ result.data[3] || 0,
+ result.data[4] || 0,
+ result.data[5] || 0
+ ];
+
+ // 銷毀舊圖表（如果存在）
+ if (masteryChart) {
+ masteryChart.destroy();
+ }
+
+ masteryChart = new Chart(ctx, {
+ type: 'doughnut',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '學習進度數量',
+ data: data,
+ backgroundColor: [
+ '#CCCCCC',
+ '#A8D5BA',
+ '#FFD93D',
+ '#FF9F40',
+ '#FF6384',
+ '#9966FF'
+ ],
+ borderColor: '#000000',
+ borderWidth: 3
+ }]
+ },
+ options: {
+ responsive: true,
+ maintainAspectRatio: true,
+ plugins: {
+ legend: {
+ display: true,
+ position: 'bottom',
+ labels: {
+ font: { family: 'Inter', weight: 'bold', size: 12 },
+ color: '#000000',
+ padding: 15
+ }
+ },
+ title: {
+ display: false
+ }
+ }
+ }
+ });
+ }
+
+ async function renderDailyAnswersChart() {
+ const result = await apiService.getAdminDailyAnswers(30);
+ if (!result.success) return;
+
+ const ctx = document.getElementById('daily-answers-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => {
+ const date = new Date(item.date);
+ return `${date.getMonth() + 1}/${date.getDate()}`;
+ });
+ const data = result.data.map(item => item.count);
+
+ if (dailyAnswersChart) dailyAnswersChart.destroy();
+
+ dailyAnswersChart = new Chart(ctx, {
+ type: 'line',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '每日答題數',
+ data: data,
+ borderColor: '#2196F3',
+ backgroundColor: 'rgba(33, 150, 243, 0.1)',
+ borderWidth: 3,
+ tension: 0.3,
+ fill: true,
+ pointBackgroundColor: '#2196F3',
+ pointBorderColor: '#000000',
+ pointBorderWidth: 2,
+ pointRadius: 4
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
+ scales: {
+ y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter', weight: 'bold' } } },
+ x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
+ }
+ }
+ });
+ }
+
+ async function renderDailyActiveUsersChart() {
+ const result = await apiService.getAdminDailyActiveUsers(30);
+ if (!result.success) return;
+
+ const ctx = document.getElementById('daily-active-users-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => {
+ const date = new Date(item.date);
+ return `${date.getMonth() + 1}/${date.getDate()}`;
+ });
+ const data = result.data.map(item => item.count);
+
+ if (dailyActiveUsersChart) dailyActiveUsersChart.destroy();
+
+ dailyActiveUsersChart = new Chart(ctx, {
+ type: 'bar',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '每日活躍用戶',
+ data: data,
+ backgroundColor: '#4CAF50',
+ borderColor: '#000000',
+ borderWidth: 2
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
+ scales: {
+ y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter', weight: 'bold' } } },
+ x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
+ }
+ }
+ });
+ }
+
+ async function renderLearningTrendsChart(period = 'week') {
+ const result = await apiService.getAdminLearningTrends(period);
+ if (!result.success) return;
+
+ const ctx = document.getElementById('learning-trends-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => {
+ const date = new Date(item.period_start);
+ if (period === 'month') {
+ return `${date.getFullYear()}/${date.getMonth() + 1}`;
+ } else {
+ return `${date.getMonth() + 1}/${date.getDate()} 當週`;
+ }
+ });
+ const data = result.data.map(item => item.count);
+
+ if (learningTrendsChart) learningTrendsChart.destroy();
+
+ learningTrendsChart = new Chart(ctx, {
+ type: 'bar',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: period === 'month' ? '每月答題數' : '每週答題數',
+ data: data,
+ backgroundColor: '#FF9800',
+ borderColor: '#000000',
+ borderWidth: 2
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
+ scales: {
+ y: { beginAtZero: true, ticks: { font: { family: 'Inter', weight: 'bold' } } },
+ x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
+ }
+ }
+ });
+ }
+
+ async function renderAnswerTimeDistributionChart() {
+ const result = await apiService.getAdminAnswerTimeDistribution(30);
+ if (!result.success) return;
+
+ const ctx = document.getElementById('answer-time-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => `${item.hour}時`);
+ const data = result.data.map(item => item.count);
+
+ if (answerTimeChart) answerTimeChart.destroy();
+
+ const maxVal = Math.max(...data, 1);
+ const backgroundColors = data.map(val => {
+ const intensity = val / maxVal;
+ // Red color with varying opacity based on heat
+ return `rgba(244, 67, 54, ${Math.max(0.1, intensity)})`;
+ });
+
+ answerTimeChart = new Chart(ctx, {
+ type: 'bar',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '時段答題熱度 (近30天)',
+ data: data,
+ backgroundColor: backgroundColors,
+ borderColor: '#000000',
+ borderWidth: 2
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
+ scales: {
+ y: { beginAtZero: true, ticks: { font: { family: 'Inter', weight: 'bold' } } },
+ x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
+ }
+ }
+ });
+ }
+ async function renderOverallAccuracyTrendChart(period = 'week') {
+ const result = await apiService.getAdminOverallAccuracyTrend(period);
+ if (!result.success) {
+ console.error('取得整體正確率折線數據失敗:', result.error);
+ return;
+ }
+
+ const ctx = document.getElementById('overall-accuracy-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => item.date);
+ const accuracyData = result.data.map(item => item.accuracy);
+
+ if (overallAccuracyChart) {
+ overallAccuracyChart.destroy();
+ }
+
+ overallAccuracyChart = new Chart(ctx, {
+ type: 'line',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '整體正確率 (%)',
+ data: accuracyData,
+ borderColor: '#10B981',
+ backgroundColor: 'rgba(16, 185, 129, 0.1)',
+ borderWidth: 3,
+ tension: 0.3,
+ fill: true,
+ pointBackgroundColor: '#10B981',
+ pointBorderColor: '#000000',
+ pointBorderWidth: 2,
+ pointRadius: 4
+ }]
+ },
+ options: {
+ responsive: true,
+ maintainAspectRatio: true,
+ plugins: {
+ legend: { display: true, labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } }
+ },
+ scales: {
+ y: {
+ beginAtZero: true,
+ max: 100,
+ ticks: { stepSize: 20, font: { family: 'Inter', weight: 'bold' }, callback: function (value) { return value + '%' } },
+ grid: { color: 'rgba(0, 0, 0, 0.1)' }
+ },
+ x: {
+ ticks: { font: { family: 'Inter', weight: 'bold' } },
+ grid: { display: false }
+ }
+ }
+ }
+ });
+ }
+
+ async function renderFirstVsReviewAccuracyChart() {
+ const result = await apiService.getAdminFirstVsReviewAccuracy();
+ if (!result.success) {
+ console.error('取得首次 vs 複習正確率數據失敗:', result.error);
+ return;
+ }
+
+ const ctx = document.getElementById('first-vs-review-chart');
+ if (!ctx) return;
+
+ const labels = result.data.map(item => item.category);
+ const data = result.data.map(item => item.accuracy);
+
+ if (firstVsReviewChart) {
+ firstVsReviewChart.destroy();
+ }
+
+ firstVsReviewChart = new Chart(ctx, {
+ type: 'bar',
+ data: {
+ labels: labels,
+ datasets: [{
+ label: '正確率 (%)',
+ data: data,
+ backgroundColor: ['#60A5FA', '#F59E0B'],
+ borderColor: '#000000',
+ borderWidth: 3
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: {
+ legend: { display: false },
+ tooltip: {
+ callbacks: {
+ label: function (context) { return context.parsed.y + '%'; }
+ }
+ }
+ },
+ scales: {
+ y: {
+ beginAtZero: true,
+ max: 100,
+ ticks: { font: { family: 'Inter', weight: 'bold' }, callback: function (value) { return value + '%' } }
+ },
+ x: { ticks: { font: { family: 'Inter', weight: 'bold' } } }
+ }
+ }
+ });
+ }
+
+
+
+
+ function updateProfilePageUI(userData) {
+ // 使用 LevelSystem 計算顯示狀態
+ let levelState;
+ if (typeof LevelSystem !== 'undefined') {
+ const currentXP = userData.current_xp || 0;
+ const perfectCards = userData.correct_answer_count || 0;
+ levelState = LevelSystem.calculateState(currentXP, perfectCards);
+ } else {
+ console.warn('LevelSystem not loaded, falling back to simple display');
+ levelState = {
+ actualLevel: userData.current_level || 1,
+ progressInLevel: 0,
+ xpForNextLevel: 100,
+ isCapped: false,
+ displayProgress: 0
+ };
+ }
+
+ // 更新等級
+ const levelBadge = document.getElementById('user-level');
+ if (levelBadge) {
+ levelBadge.textContent = 'Lv. ' + levelState.actualLevel;
+ }
+
+ // 更新 XP 文字
+ const xpText = document.getElementById('user-xp-text');
+ if (xpText) {
+ if (levelState.isCapped) {
+ xpText.textContent = `MAX (Need Perfect Card)`;
+ } else {
+ xpText.textContent = `${levelState.progressInLevel.toLocaleString()} / ${levelState.xpForNextLevel.toLocaleString()}`;
+ }
+ }
+
+ // 更新 XP 進度條
+ const xpBar = document.getElementById('user-xp-bar');
+ if (xpBar) {
+ xpBar.style.width = `${Math.min(levelState.displayProgress, 100)}%`;
+
+ // 處理金色閃爍 (Capped State)
+ if (levelState.isCapped) {
+ xpBar.classList.add('capped-gold-shimmer');
+ xpBar.classList.remove('bg-black'); // Profile page default is black
+ } else {
+ xpBar.classList.remove('capped-gold-shimmer');
+ xpBar.classList.add('bg-black'); // Restore default
+ }
+ }
+
+ // 更新題目數量（已作答 / 可存取題目總數）
+ const cardCount = document.getElementById('user-card-count');
+ if (cardCount) {
+ const answered = userData.answered_questions || 0;
+ const total = userData.accessible_questions !== undefined ? userData.accessible_questions : (userData.total_questions || 0);
+ cardCount.textContent = `${answered} / ${total}`;
+ }
+
+ // [New] 更新頭像
+ const imgEl = document.getElementById('avatar-image');
+ const iconEl = document.getElementById('avatar-icon');
+ if (imgEl && iconEl) {
+ if (userData.avatar_url) {
+ // Start with basic URL
+ let finalUrl = userData.avatar_url;
+ // Simply append time if it doesn't have query params, just to be safe, though usually handled by upload logic
+ // But re-rendering profile page might use cached URL.
+ // Let's rely on standard src.
+ imgEl.src = finalUrl;
+ imgEl.classList.remove('hidden');
+ iconEl.classList.add('hidden');
+ } else {
+ imgEl.classList.add('hidden');
+ iconEl.classList.remove('hidden');
+ }
+ }
+ }
+
+ /**
+ * 載入考試設定
+ */
+ function loadExamSettings(userData) {
+ const examNameInput = document.getElementById('exam-name-input');
+ const examDateInput = document.getElementById('exam-date-input');
+ const dailyGoalInput = document.getElementById('daily-goal-input');
+
+ if (examNameInput && userData.exam_name) {
+ examNameInput.value = userData.exam_name;
+ }
+ if (examDateInput && userData.exam_date) {
+ examDateInput.value = userData.exam_date;
+ }
+ if (dailyGoalInput && userData.daily_goal !== undefined) {
+ dailyGoalInput.value = userData.daily_goal;
+ }
+ }
+
+ /**
+ * 儲存考試設定
+ */
+ async function saveExamSettings() {
+ if (!apiService.currentUser) {
+ alert('請先登入');
+ return;
+ }
+
+ const examName = document.getElementById('exam-name-input').value.trim();
+ const examDate = document.getElementById('exam-date-input').value;
+ const dailyGoal = parseInt(document.getElementById('daily-goal-input').value) || 20;
+
+ // 驗證
+ if (!examName) {
+ alert('請輸入考試項目');
+ return;
+ }
+ if (!examDate) {
+ alert('請選擇考試日期');
+ return;
+ }
+ const selectedDate = new Date(examDate);
+ const today = new Date();
+ today.setHours(0, 0, 0, 0);
+ if (selectedDate < today) {
+ alert('考試日期須為未來日期');
+ return;
+ }
+ if (dailyGoal < 1 || dailyGoal > 100) {
+ alert('每日目標須在 1-100 題之間');
+ return;
+ }
+
+ // 顯示載入狀態
+ const btn = document.getElementById('save-exam-settings-btn');
+ const originalText = btn.textContent;
+ btn.textContent = '儲存中...';
+ btn.disabled = true;
+
+ try {
+ // 直接使用 Supabase Client 更新 users 表
+ const { data, error } = await apiService.supabase
+ .from('users')
+ .update({
+ exam_name: examName,
+ exam_date: examDate,
+ daily_goal: dailyGoal
+ })
+ .eq('id', apiService.currentUser.id);
+
+ if (error) throw error;
+
+ // 更新快取
+ const cached = JSON.parse(sessionStorage.getItem('userData') || '{}');
+ cached.exam_name = examName;
+ cached.exam_date = examDate;
+ cached.daily_goal = dailyGoal;
+ sessionStorage.setItem('userData', JSON.stringify(cached));
+
+ alert('✅ 考試設定已儲存！');
+ } catch (error) {
+ console.error('儲存失敗:', error);
+ alert('❌ 儲存失敗：' + (error.message || '未知錯誤'));
+ } finally {
+ btn.textContent = originalText;
+ btn.disabled = false;
+ }
+ }
+ </script>
 </body>
 
 </html>
+
