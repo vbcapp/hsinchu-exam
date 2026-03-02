@@ -597,8 +597,8 @@
                     <h2 class="text-sm font-black uppercase">進步的我</h2>
                     <span class="section-subtitle">— 趨勢與成長確認</span>
                 </div>
-                <!-- 3. 三欄小卡：累計答題 / 今日正確率 / 近期進步 -->
-                <div class="grid grid-cols-3 gap-2">
+                <!-- 3. 兩欄小卡：累計答題 / 近期進步 -->
+                <div class="grid grid-cols-2 gap-2">
                     <!-- 卡片一：累計答題概覽 -->
                     <div class="neo-brutalism-card bg-white p-2.5">
                         <div class="flex items-center gap-1 mb-1">
@@ -615,20 +615,6 @@
                             <span class="text-gray-400 font-bold text-xs">題</span>
                         </div>
                         <div class="text-xs text-gray-400 mt-0.5">已作答過的題目</div>
-                    </div>
-
-                    <!-- 卡片二：今日正確率 -->
-                    <div class="neo-brutalism-card bg-white p-2.5">
-                        <div class="flex items-center gap-1 mb-1">
-                            <span class="material-symbols-outlined text-blue-500 text-xs">today</span>
-                            <span class="text-xs font-bold text-gray-500 uppercase">今日正確率</span>
-                            <button onclick="showCardHelpModal('todayAccuracy')"
-                                class="w-4 h-4 bg-blue-500 text-white border-[1.5px] border-black rounded-full flex items-center justify-center text-xs font-black hover:bg-blue-600 hover:scale-110 transition-transform cursor-pointer ml-auto shrink-0">?</button>
-                        </div>
-                        <div id="today-accuracy-display">
-                            <span id="stat-today-accuracy" class="text-lg font-black text-blue-600">--%</span>
-                        </div>
-                        <div id="today-accuracy-desc" class="text-xs text-gray-400 mt-0.5">今天的表現</div>
                     </div>
 
                     <!-- 卡片三：近期進步 -->
@@ -1401,22 +1387,6 @@
             document.getElementById('stat-correct-count').textContent = stats.correctQuestionCount;
             document.getElementById('stat-answered-count-2').textContent = stats.totalAnswered;
 
-            // 卡片二：今日正確率
-            const todayAccuracyEl = document.getElementById('stat-today-accuracy');
-            const todayDescEl = document.getElementById('today-accuracy-desc');
-
-            if (stats.todayAccuracy !== null && stats.todayAccuracy !== undefined) {
-                todayAccuracyEl.textContent = stats.todayAccuracy + '%';
-                todayAccuracyEl.className = 'text-lg font-black text-blue-600';
-                todayDescEl.textContent = '今日 ' + stats.todayCorrect + '/' + stats.todayTotal + ' 題答對';
-                todayDescEl.className = 'text-xs text-blue-500 mt-0.5';
-            } else {
-                todayAccuracyEl.textContent = '尚未作答';
-                todayAccuracyEl.className = 'text-sm font-black text-gray-400';
-                todayDescEl.textContent = '今天還沒開始練習喔';
-                todayDescEl.className = 'text-xs text-gray-400 mt-0.5';
-            }
-
             // 卡片三：進步指標（預設顯示 1 天）
             renderImprovementCard(stats, currentImprovementPeriod);
 
@@ -1535,45 +1505,6 @@
                         </div>
                         <button onclick="closeCardHelpModal()"
                             class="w-full bg-green-500 text-white border-4 border-black py-3 px-4 font-black text-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-4 hover:bg-green-600">
-                            我知道了！
-                        </button>
-                    `
-                },
-                todayAccuracy: {
-                    icon: 'today',
-                    title: '什麼是「今日正確率」？',
-                    body: `
-                        <div class="space-y-4 text-sm">
-                            <div class="flex items-start gap-3 bg-blue-50 border-2 border-blue-400 p-3">
-                                <span class="text-2xl shrink-0">📊</span>
-                                <div>
-                                    <div class="font-black text-base mb-1">這張卡片在說什麼？</div>
-                                    <p class="text-sm leading-relaxed">
-                                        顯示你<strong class="text-blue-600 font-black">今天</strong>所有答題中，答對的比例。
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <span class="text-2xl shrink-0">🎯</span>
-                                <div>
-                                    <div class="font-black text-base mb-1">為什麼只看今天？</div>
-                                    <p class="text-sm leading-relaxed">
-                                        每天都是新的開始！今日正確率讓你專注在<strong class="font-black">當下的表現</strong>，不被過去的失誤影響心情。
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <span class="text-2xl shrink-0">💡</span>
-                                <div>
-                                    <div class="font-black text-base mb-1">如果顯示「尚未作答」？</div>
-                                    <p class="text-sm leading-relaxed">
-                                        代表你今天還沒開始練習，去答幾題就會看到數字囉！
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="closeCardHelpModal()"
-                            class="w-full bg-blue-500 text-white border-4 border-black py-3 px-4 font-black text-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-4 hover:bg-blue-600">
                             我知道了！
                         </button>
                     `
