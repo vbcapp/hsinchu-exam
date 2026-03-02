@@ -525,7 +525,7 @@
                         <div id="daily-goal-progress-bar" class="h-full bg-amber-500 transition-all duration-500"
                             style="width: 0%"></div>
                     </div>
-                    <div class="flex justify-between mt-1 text-[12px] text-gray-400">
+                    <div class="flex justify-between mt-1 text-xs text-gray-400">
                         <span>0%</span>
                         <span id="daily-goal-percent" class="font-bold text-amber-600">--% 完成</span>
                         <span>100%</span>
@@ -1216,34 +1216,34 @@
             if (todayAnswered === 0) {
                 // 尚未開始
                 statusTextEl.innerHTML = '今天還沒開始答題，加油！💪';
-                statusTextEl.className = 'text-[10px] text-gray-500';
+                statusTextEl.className = 'text-xs text-gray-500';
                 statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-gray-300">schedule</span>';
                 progressBar.className = 'h-full bg-gray-300 transition-all duration-500';
             } else if (progressPercent < 50) {
                 // 進度不到一半
                 const remaining = dailyGoalTarget - todayAnswered;
                 statusTextEl.innerHTML = `還差 <span class="font-bold text-amber-600">${remaining}</span> 題達標，繼續加油！`;
-                statusTextEl.className = 'text-[10px] text-gray-600';
+                statusTextEl.className = 'text-xs text-gray-600';
                 statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-amber-400">hourglass_empty</span>';
                 progressBar.className = 'h-full bg-amber-400 transition-all duration-500';
             } else if (progressPercent < 100) {
                 // 進度過半但未完成
                 const remaining = dailyGoalTarget - todayAnswered;
                 statusTextEl.innerHTML = `只差 <span class="font-bold text-orange-600">${remaining}</span> 題就達標了！衝刺 🔥`;
-                statusTextEl.className = 'text-[10px] text-orange-600';
+                statusTextEl.className = 'text-xs text-orange-600';
                 statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-orange-500">local_fire_department</span>';
                 progressBar.className = 'h-full bg-orange-500 transition-all duration-500';
             } else if (progressPercent === 100) {
                 // 剛好達標
                 statusTextEl.innerHTML = '🎉 <span class="font-bold text-green-600">今日目標達成！</span>';
-                statusTextEl.className = 'text-[10px] text-green-600';
+                statusTextEl.className = 'text-xs text-green-600';
                 statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-green-500">check_circle</span>';
                 progressBar.className = 'h-full bg-green-500 transition-all duration-500';
             } else {
                 // 超標
                 const exceeded = todayAnswered - dailyGoalTarget;
                 statusTextEl.innerHTML = `⭐ <span class="font-bold text-purple-600">超標 ${exceeded} 題！今天太認真了！</span>`;
-                statusTextEl.className = 'text-[10px] text-purple-600';
+                statusTextEl.className = 'text-xs text-purple-600';
                 statusIconEl.innerHTML = '<span class="material-symbols-outlined text-4xl text-purple-500">emoji_events</span>';
                 progressBar.className = 'h-full bg-purple-500 transition-all duration-500';
             }
@@ -1259,13 +1259,13 @@
             const consecutiveDaysEl = document.getElementById('consecutive-days');
             if (data.consecutiveDays > 0) {
                 consecutiveDaysEl.innerHTML = `🔥 連續 <span class="font-bold text-orange-600">${data.consecutiveDays}</span> 天都有進步！`;
-                consecutiveDaysEl.className = 'mt-1 text-[10px] text-orange-600';
+                consecutiveDaysEl.className = 'mt-1 text-xs text-orange-600';
             } else if (data.todayMastered === 0) {
                 consecutiveDaysEl.innerHTML = '今日尚未新增熟練題目，加油！';
-                consecutiveDaysEl.className = 'mt-1 text-[10px] text-gray-500';
+                consecutiveDaysEl.className = 'mt-1 text-xs text-gray-500';
             } else {
                 consecutiveDaysEl.innerHTML = '👍 今天有新增熟練題目';
-                consecutiveDaysEl.className = 'mt-1 text-[10px] text-green-600';
+                consecutiveDaysEl.className = 'mt-1 text-xs text-green-600';
             }
         }
 
@@ -1284,18 +1284,18 @@
 
             if (improvement > 0) {
                 comparisonEl.innerHTML = `📈 高於你的平均 ${historicalAccuracy}% <span class="text-green-600 font-bold">🔥 +${improvement}%</span>`;
-                comparisonEl.className = 'text-[10px] text-green-600 mt-1';
+                comparisonEl.className = 'text-xs text-green-600 mt-1';
             } else if (improvement < 0) {
                 comparisonEl.innerHTML = `📉 低於你的平均 ${historicalAccuracy}% <span class="text-red-600 font-bold">${improvement}%</span>`;
-                comparisonEl.className = 'text-[10px] text-red-600 mt-1';
+                comparisonEl.className = 'text-xs text-red-600 mt-1';
             } else {
                 comparisonEl.innerHTML = `➡️ 與你的平均 ${historicalAccuracy}% 持平`;
-                comparisonEl.className = 'text-[10px] text-gray-600 mt-1';
+                comparisonEl.className = 'text-xs text-gray-600 mt-1';
             }
 
             if (data.isBestPerformance) {
                 bestPerformanceEl.innerHTML = '⭐ <span class="font-bold text-yellow-600">這是你本週最佳表現！</span>';
-                bestPerformanceEl.className = 'mt-1 text-[10px] text-yellow-600';
+                bestPerformanceEl.className = 'mt-1 text-xs text-yellow-600';
             } else {
                 bestPerformanceEl.innerHTML = '';
             }
@@ -1327,17 +1327,17 @@
                          onclick="window.location.href='test.html?id=${item.questionId}'">
                         <div class="flex items-start justify-between gap-2">
                             <div class="flex-1">
-                                <div class="inline-block bg-black text-white text-[9px] font-bold px-2 py-0.5 mb-1">
+                                <div class="inline-block bg-black text-white text-xs font-bold px-2 py-0.5 mb-1">
                                     ${item.subject} - ${item.chapter}
                                 </div>
                                 <div class="text-xs font-bold text-gray-800 leading-tight mb-1">${question}</div>
-                                <div class="text-[10px] text-red-600">
+                                <div class="text-xs text-red-600">
                                     最常選錯：<span class="font-black">選項 ${mostWrongAnswer}</span>（錯 ${wrongCount} 次）
                                 </div>
                             </div>
                             <div class="shrink-0 text-right">
                                 <div class="text-lg font-black text-red-600">${item.timesWrong}</div>
-                                <div class="text-[9px] text-gray-500">答錯次數</div>
+                                <div class="text-xs text-gray-500">答錯次數</div>
                             </div>
                         </div>
                     </div>
@@ -1783,7 +1783,7 @@
                     ${rankBadge}
                     <div class="flex justify-between items-start mb-2 gap-2">
                         <div class="flex-1">
-                            <div class="inline-block bg-black text-white text-[10px] font-bold px-2 py-0.5 mb-1">${tagText}</div>
+                            <div class="inline-block bg-black text-white text-xs font-bold px-2 py-0.5 mb-1">${tagText}</div>
                             <h3 class="text-sm font-black leading-tight">${truncatedQ}</h3>
                         </div>
                         <div class="flex flex-col items-end shrink-0 pl-2 border-l-2 border-dashed border-gray-300">
