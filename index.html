@@ -157,7 +157,8 @@
     <!-- Add LevelSystem Script -->
     <script src="js/level-system.js"></script>
 
-<body class="bg-zinc-100 dark:bg-background-dark text-[#1a1a1a] dark:text-white overflow-hidden">
+<body
+    class="bg-zinc-100 dark:bg-background-dark text-[#1a1a1a] dark:text-white overflow-hidden leading-relaxed font-normal">
     <div class="relative flex h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
         <header
             class="flex-none bg-zinc-100 dark:bg-background-dark border-b-2 border-black px-4 py-4 flex items-center justify-between z-10">
@@ -165,7 +166,7 @@
                 <div class="bg-primary neo-border p-1 flex items-center justify-center">
                     <span class="material-symbols-outlined text-black font-bold">terminal</span>
                 </div>
-                <h1 class="text-xl font-black italic tracking-tighter">工商安全衛生協會-新竹職訓中心</h1>
+                <h1 class="text-xl font-black tracking-tighter">工商安全衛生協會-新竹職訓中心</h1>
             </div>
             <button id="admin-create-btn" onclick="window.location.href='create.html'"
                 class="w-10 h-10 neo-border-thick bg-primary flex items-center justify-center neo-shadow-sm active:shadow-none active:translate-x-[1px] active:translate-y-[1px] hidden">
@@ -203,24 +204,23 @@
                 </div>
                 <div class="flex-1 space-y-1">
                     <div class="flex items-end justify-between">
-                        <div id="user-level"
-                            class="text-primary text-2xl font-black italic tracking-tighter leading-none">Lv. -</div>
-                        <div id="user-xp-text" class="text-[12px] font-bold text-primary italic pr-1">-/-</div>
+                        <div id="user-level" class="text-primary text-2xl font-black tracking-tighter leading-none">Lv.
+                            -</div>
+                        <div id="user-xp-text" class="text-[12px] font-bold text-primary pr-1">-/-</div>
                     </div>
                     <div class="w-full h-2 border border-zinc-600 bg-zinc-900 overflow-hidden">
                         <div id="user-xp-bar" class="h-full bg-primary" style="width: 0%;"></div>
                     </div>
                     <div id="perfect-card-requirement"
-                        class="text-[10px] font-bold text-white tracking-widest uppercase opacity-80">升級資格：滿分卡 - / -
+                        class="text-xs font-bold text-white tracking-widest uppercase opacity-80">升級資格：滿分卡 - / -
                     </div>
                 </div>
             </div>
 
             <div class="space-y-6">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-2xl font-black italic tracking-tighter uppercase">題目卡庫</h2>
-                    <span
-                        class="text-[10px] font-bold opacity-50 bg-zinc-200 dark:bg-zinc-800 px-2 py-1 neo-border"><span
+                    <h2 class="text-2xl font-black tracking-tighter uppercase">題目卡庫</h2>
+                    <span class="text-xs font-bold opacity-50 bg-zinc-200 dark:bg-zinc-800 px-2 py-1 neo-border"><span
                             id="user-correct-count">-</span> / <span id="user-card-count">-</span> (答對題數 / 總題數)</span>
                 </div>
                 <div class="flex gap-2">
