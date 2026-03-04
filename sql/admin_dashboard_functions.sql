@@ -183,6 +183,54 @@ GRANT EXECUTE ON FUNCTION get_admin_overall_accuracy_trend(text) TO authenticate
 COMMENT ON FUNCTION get_admin_overall_accuracy_trend IS '取得按週或月的整體正確率趨勢（管理員儀表板用）';
 
 -- =============================================
+-- 5.1 章節正確率趨勢 (折線圖)
+-- 回傳: { date, accuracy }[]
+-- =============================================
+CREATE OR REPLACE FUNCTION get_admin_chapter_accuracy_trend(p_chapter text, period_type text DEFAULT 'week')
+RETURNS TABLE(date text, accuracy numeric)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    IF period_type = 'month' THEN
+        RETURN QUERY
+        SELECT
+            TO_CHAR(DATE_TRUNC('month', ar.created_at), 'YYYY/MM') AS date,
+            ROUND(
+                COUNT(CASE WHEN ar.is_correct THEN 1 END)::numeric * 100.0
+                / NULLIF(COUNT(ar.id), 0),
+                1
+            ) AS accuracy
+        FROM answer_records ar
+        INNER JOIN questions q ON ar.question_id = q.id
+        WHERE ar.created_at >= CURRENT_DATE - INTERVAL '12 months'
+          AND q.chapter = p_chapter
+        GROUP BY DATE_TRUNC('month', ar.created_at)
+        ORDER BY DATE_TRUNC('month', ar.created_at);
+    ELSE
+        -- 預設: week
+        RETURN QUERY
+        SELECT
+            TO_CHAR(DATE_TRUNC('week', ar.created_at), 'MM/DD') || ' 當週' AS date,
+            ROUND(
+                COUNT(CASE WHEN ar.is_correct THEN 1 END)::numeric * 100.0
+                / NULLIF(COUNT(ar.id), 0),
+                1
+            ) AS accuracy
+        FROM answer_records ar
+        INNER JOIN questions q ON ar.question_id = q.id
+        WHERE ar.created_at >= CURRENT_DATE - INTERVAL '12 weeks'
+          AND q.chapter = p_chapter
+        GROUP BY DATE_TRUNC('week', ar.created_at)
+        ORDER BY DATE_TRUNC('week', ar.created_at);
+    END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_admin_chapter_accuracy_trend(text, text) TO authenticated;
+COMMENT ON FUNCTION get_admin_chapter_accuracy_trend IS '取得按週或月的特定章節正確率趨勢（管理員儀表板用）';
+
+-- =============================================
 -- 6. 首次 vs 複習正確率 (長條圖)
 -- 回傳: { category, accuracy }[]
 -- 首次 = times_reviewed = 1 時的作答

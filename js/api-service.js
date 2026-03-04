@@ -2368,6 +2368,23 @@ class ApiService {
     }
 
     /**
+     * [Admin] 章節正確率趨勢 (折線圖)
+     * @param {string} chapter - 章節名稱
+     * @param {string} period - 'week' (12週) 或 'month' (12個月)
+     */
+    async getAdminChapterAccuracyTrend(chapter, period = 'week') {
+        try {
+            const { data, error } = await this.supabase
+                .rpc('get_admin_chapter_accuracy_trend', { p_chapter: chapter, period_type: period });
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 取得首次 vs 複習正確率
      */
     async getAdminFirstVsReviewAccuracy() {
