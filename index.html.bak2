@@ -3,8 +3,6 @@
 
 <head>
     <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="css/vibe-style.css">
-
 
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -24,12 +22,143 @@
         }
     </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="js/theme-config.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "var(--color-primary)",
+                        "background-light": "var(--color-bg-light)",
+                        "background-dark": "var(--color-bg-dark)",
+                        "surface": "var(--color-surface)",
+                        "text-base": "var(--color-text-base)",
+                        "border-main": "var(--color-border-main)",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .neo-shadow {
+            box-shadow: var(--card-shadow);
+        }
+        .neo-shadow-sm {
+            box-shadow: var(--card-shadow-sm);
+        }
+        .neo-border {
+            border: var(--border-base);
+        }
+        .neo-border-thick {
+            border: var(--border-thick);
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: max(884px, 100dvh);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
+        }
+        a.material-symbols-outlined {
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+
+        .capped-gold-shimmer {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--color-primary) !important; /* Force gold connection */
+        }
+        .capped-gold-shimmer::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.6),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            100% {
+                left: 200%;
+            }
+        }
+        /* Capped 狀態發光動畫 */
+        @keyframes cappedGlow {
+            0%, 100% {
+                box-shadow: 0 0 5px 2px var(--color-primary-glow);
+            }
+            50% {
+                box-shadow: 0 0 15px 5px var(--color-primary-glow);
+            }
+        }
+        .capped-glow {
+            animation: cappedGlow 1.5s ease-in-out infinite;
+            cursor: pointer;
+        }
+        .text-small {
+            font-size: 0.875rem !important; /* 14px */
+            line-height: 1.1 !important;
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .toast-enter {
+            animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Mastery Card Styles - Elite Gold */
+        .mastery-gold {
+            background: linear-gradient(135deg, #fffcf0 0%, #fff9d6 100%) !important;
+            border-color: var(--color-primary) !important;
+            box-shadow: var(--card-shadow-gold) !important;
+        }
+        .mastery-gold-dark {
+            background: linear-gradient(135deg, #2d2a10 0%, #1a1805 100%) !important;
+            border-color: var(--color-primary) !important;
+            box-shadow: var(--card-shadow) !important;
+        }
+        .medal-glow {
+            box-shadow: 0 0 15px var(--color-primary-glow);
+            animation: pulse-gold 2s infinite;
+        }
+        @keyframes pulse-gold {
+            0% { transform: scale(1); box-shadow: 0 0 5px var(--color-primary-glow); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px var(--color-primary-glow); }
+            100% { transform: scale(1); box-shadow: 0 0 5px var(--color-primary-glow); }
+        }
+    </style>
     <!-- Add LevelSystem Script -->
     <script src="js/level-system.js"></script>
 

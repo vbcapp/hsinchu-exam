@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\text\sandys-exam-card-system\fix_tailwind_overrides.py", line 121, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\USER\Desktop\text\sandys-exam-card-system\fix_tailwind_overrides.py", line 97, in main
+    print(f"{mode} 修正 Tailwind Config 覆蓋問題\n" + "=" * 55)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp950' codec can't encode character '\u2705' in position 0: illegal multibyte sequence

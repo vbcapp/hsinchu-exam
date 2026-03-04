@@ -17,6 +17,31 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,700;0,900;1,700;1,900&amp;display=swap"
         rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FACC15", // Bright Yellow
+                        danger: "#EF4444", // Red
+                        "background-light": "#F4F4F1",
+                        "background-dark": "#121212",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1.5rem",
+                    },
+                    boxShadow: {
+                        'neo': '8px 8px 0px 0px rgba(0, 0, 0, 1)',
+                        'neo-sm': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                    }
+                },
+            },
+        };
+    </script>
     <style>
         body {
             min-height: 100dvh;

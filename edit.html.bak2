@@ -3,20 +3,65 @@
 
 <head>
     <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="css/vibe-style.css">
-
 
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Edit Card - 工商安全衛生協會-新竹職訓中心</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script src="js/theme-config.js"></script>
-
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,700;0,900;1,700;1,900&amp;display=swap"
         rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FACC15", // Bright Yellow
+                        danger: "#EF4444", // Red
+                        "background-light": "#F4F4F1",
+                        "background-dark": "#121212",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1.5rem",
+                    },
+                    boxShadow: {
+                        'neo': '8px 8px 0px 0px rgba(0, 0, 0, 1)',
+                        'neo-sm': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .neo-border {
+            border: 3px solid black;
+        }
+        .neo-shadow {
+            box-shadow: var(--card-shadow-lg);
+        }
+        .neo-shadow-sm {
+            box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        input, textarea, select {
+            @apply neo-border rounded-xl px-3 py-2 w-full bg-white dark:bg-zinc-800 text-black dark:text-white font-bold focus:outline-none;
+        }
+        label {
+            @apply block text-xs font-black mb-1 text-black dark:text-white;
+        }
+    </style>
     <style>
         body {
             min-height: 100dvh;

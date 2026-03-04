@@ -3,21 +3,57 @@
 
 <head>
     <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="css/vibe-style.css">
-
 
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>工商安全衛生協會-新竹職訓中心 - 帳號設定</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="js/theme-config.js"></script>
-
     <link
         href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f9d006",
+                        "background-light": "#fcfbf8",
+                        "background-dark": "#1a1a1a",
+                        "brutal-black": "#000000",
+                        "danger": "#ff4d4d",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0px",
+                        "lg": "2px",
+                        "xl": "4px",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "brutal": "4px 4px 0px 0px rgba(0,0,0,1)",
+                        "brutal-sm": "2px 2px 0px 0px rgba(0,0,0,1)",
+                        "brutal-lg": "6px 6px 0px 0px rgba(0,0,0,1)",
+                    }
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .neo-shadow { box-shadow: var(--card-shadow); }
+            .neo-shadow-sm { box-shadow: var(--card-shadow-sm); }
+            .neo-shadow-danger { box-shadow: 4px 4px 0px 0px #ff4d4d; }
+            .neo-border { border: 2px solid #000000; }
+            .neo-border-danger { border: 2px solid #ff4d4d; }
+        }
+        body { font-family: 'Space Grotesk', sans-serif; }
+    </style>
     <style>
         body {
             min-height: max(884px, 100dvh);

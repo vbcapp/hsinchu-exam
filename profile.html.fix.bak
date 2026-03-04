@@ -20,6 +20,26 @@
  rel="stylesheet" />
  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+ <script>
+ tailwind.config = {
+ darkMode:"class",
+ theme: {
+ extend: {
+ colors: {
+ primary:"#FFD600",
+"background-light":"#EEEEEE",
+"background-dark":"#111827",
+ },
+ fontFamily: {
+ display: ["Inter","sans-serif"],
+ },
+ borderRadius: {
+ DEFAULT:"0px",
+ },
+ },
+ },
+ };
+ </script>
  <style>
  body {
  min-height: max(884px, 100dvh);
@@ -33,7 +53,7 @@
  .capped-gold-shimmer {
  position: relative;
  overflow: hidden;
- background-color: var(--color-primary) !important;
+ background-color: #ffd400 !important;
  /* Force gold connection */
  }
 

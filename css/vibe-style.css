@@ -1,0 +1,187 @@
+/*
+ * css/vibe-style.css
+ * 全站共用工具類別 CSS（搭配 Tailwind CDN 的 type="text/tailwindcss" 等效）
+ *
+ * 依賴：design-tokens.css 需在此檔之前載入。
+ */
+
+/* ── Neo-brutalism 陰影 ─────────────────────────────────── */
+.neo-shadow {
+    box-shadow: var(--card-shadow);
+}
+
+.neo-shadow-sm {
+    box-shadow: var(--card-shadow-sm);
+}
+
+.neo-shadow-lg {
+    box-shadow: var(--card-shadow-lg);
+}
+
+/* ── Neo-brutalism 邊框 ─────────────────────────────────── */
+.neo-border {
+    border: var(--border-base);
+}
+
+.neo-border-thick {
+    border: var(--border-thick);
+}
+
+.neo-border-heavy {
+    border: var(--border-heavy);
+}
+
+.neo-border-bottom {
+    border-bottom: var(--border-bottom-thick);
+}
+
+/* ── 捲軸隱藏 ──────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ── Material Symbols 預設填充 ─────────────────────────── */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
+}
+
+a.material-symbols-outlined {
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* ── 動畫：Toast 滑入 ──────────────────────────────────── */
+.toast-enter {
+    animation: slideDown var(--transition-spring) forwards;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ── 動畫：浮動 ────────────────────────────────────────── */
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* ── 動畫：Capped 金色閃光 ─────────────────────────────── */
+.capped-gold-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-primary) !important;
+}
+
+.capped-gold-shimmer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        left: 200%;
+    }
+}
+
+/* ── 動畫：Capped 發光 ─────────────────────────────────── */
+@keyframes cappedGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px 2px var(--color-primary-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 15px 5px var(--color-primary-glow);
+    }
+}
+
+.capped-glow {
+    animation: cappedGlow 1.5s ease-in-out infinite;
+    cursor: pointer;
+}
+
+/* ── Mastery Card Styles ────────────────────────────────── */
+.mastery-gold {
+    background: linear-gradient(135deg, #fffcf0 0%, #fff9d6 100%) !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: var(--card-shadow-gold) !important;
+}
+
+.mastery-gold-dark {
+    background: linear-gradient(135deg, #2d2a10 0%, #1a1805 100%) !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+/* ── 動畫：Medal 發光 ──────────────────────────────────── */
+.medal-glow {
+    box-shadow: 0 0 15px var(--color-primary-glow);
+    animation: pulse-gold 2s infinite;
+}
+
+@keyframes pulse-gold {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 5px var(--color-primary-glow);
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px var(--color-primary-glow);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 5px var(--color-primary-glow);
+    }
+}
+
+/* ── 字體工具 ──────────────────────────────────────────── */
+.text-small {
+    font-size: var(--font-size-sm) !important;
+    line-height: 1.1 !important;
+}
+
+/* ── Neo-Brutalism 卡片 ─────────────────────────────────── */
+.neo-brutalism-card {
+    box-shadow: var(--card-shadow);
+    border: var(--border-heavy);
+}
+
+.neo-brutalism-button:active {
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}

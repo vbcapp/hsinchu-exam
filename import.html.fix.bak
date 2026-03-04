@@ -18,6 +18,26 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FFD600",
+                        "background-light": "#EEEEEE",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0px",
+                    },
+                },
+            },
+        };
+    </script>
     <style>
         body {
             min-height: max(884px, 100dvh);
@@ -28,7 +48,7 @@
             transition: all 0.2s ease;
         }
         .drop-zone.dragover {
-            background-color: var(--color-primary) !important;
+            background-color: #FFD600 !important;
             border-style: solid !important;
         }
 
@@ -42,7 +62,7 @@
         }
         .json-preview::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border: var(--border-base);
+            border: 2px solid #000;
         }
         .json-preview::-webkit-scrollbar-thumb {
             background: #000;

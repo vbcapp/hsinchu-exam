@@ -1,15 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="css/vibe-style.css">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>熟練度卡片 UI 方案預覽</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="js/theme-config.js"></script>
-
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         body {

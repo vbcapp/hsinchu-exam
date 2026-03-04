@@ -17,6 +17,43 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FACC15",
+                        secondary: "#FB7185",
+                        "background-light": "#FFFFFF",
+                        "background-dark": "#121212",
+                        "accent-orange": "#F97316",
+                        "electric-green": "#22C55E",
+                        "correct-green": "#F0FDF4",
+                        "correct-border": "#22C55E",
+                        "incorrect-red": "#FEF2F2",
+                        "incorrect-border": "#EF4444",
+                        "neo-indigo": "#3730A3",
+                        "note-yellow": "#FEFCE8"
+                    },
+                    fontFamily: {
+                        display: ["Lexend", "Noto Sans TC", "sans-serif"],
+                        sans: ["Lexend", "Noto Sans TC", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                    },
+                    boxShadow: {
+                        'neo': '4px 4px 0px 0px #3730A3',
+                        'neo-lg': '8px 8px 0px 0px #3730A3',
+                        'neo-yellow': '4px 4px 0px 0px #CA8A04',
+                        'correct-glow': '0 0 15px rgba(34, 197, 94, 0.2)',
+                        'incorrect-glow': '0 0 15px rgba(239, 68, 68, 0.2)',
+                    }
+                },
+            },
+        };
+    </script>
     <style>
         body {
             min-height: max(884px, 100dvh);

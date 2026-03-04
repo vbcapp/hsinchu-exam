@@ -3,21 +3,56 @@
 
 <head>
     <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="css/vibe-style.css">
-
 
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>工商安全衛生協會-新竹職訓中心 - 歷史 AI 分析</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="js/theme-config.js"></script>
-
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FFD600",
+                        "background-light": "#EEEEEE",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0px",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        .neo-shadow { box-shadow: var(--card-shadow); }
+        .neo-shadow-sm { box-shadow: var(--card-shadow-sm); }
+        .neo-border { border: 2px solid #000000; }
+        .neo-border-thick { border: 3px solid #000000; }
+        .neo-border-bottom { border-bottom: 3px solid #000000; }
+        .neo-border-top { border-top: 3px solid #000000; }
+        .neo-brutalism-card {
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+            border: 4px solid black;
+        }
+        .neo-brutalism-button:active {
+            box-shadow: 0px 0px 0px 0px rgba(0,0,0,1);
+            transform: translate(2px, 2px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
+        }
+    </style>
     <style>
         body {
             min-height: max(884px, 100dvh);
@@ -44,7 +79,7 @@
             font-weight: 900;
             margin-top: 1rem;
             margin-bottom: 0.5rem;
-            border-bottom: var(--border-base);
+            border-bottom: 2px solid #000;
             padding-bottom: 0.25rem;
         }
 
@@ -100,7 +135,7 @@
             width: 90%;
             max-width: 400px;
             max-height: 80vh;
-            border: var(--border-heavy);
+            border: 4px solid black;
             box-shadow: var(--card-shadow-lg);
             transform: scale(0.9) translateY(20px);
             transition: transform 0.3s ease;
@@ -114,11 +149,11 @@
 
         .modal-header {
             padding: 1rem;
-            border-bottom: var(--border-thick);
+            border-bottom: 3px solid black;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--color-primary);
+            background: #FFD600;
         }
 
         .modal-body {
@@ -130,7 +165,7 @@
         .modal-close {
             width: 32px;
             height: 32px;
-            border: var(--border-base);
+            border: 2px solid black;
             background: white;
             display: flex;
             align-items: center;
@@ -141,7 +176,7 @@
         }
 
         .modal-close:hover {
-            background: var(--color-danger);
+            background: #FF3B30;
             color: white;
         }
     </style>

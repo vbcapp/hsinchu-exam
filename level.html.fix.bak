@@ -17,6 +17,27 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FFD600",
+                        "background-light": "#F3F4F6",
+                    },
+                    fontFamily: {
+                        display: ["Noto Sans TC", "sans-serif"],
+                        mono: ["Space Mono", "monospace"],
+                    },
+                    boxShadow: {
+                        'brutal': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'brutal-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+                    }
+                },
+            },
+        };
+    </script>
     <style>
         body {
             min-height: max(884px, 100dvh);

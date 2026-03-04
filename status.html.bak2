@@ -2,15 +2,10 @@
 <html class="light" lang="zh-TW">
 
 <head>
-    <link rel="stylesheet" href="design-tokens.css">
-    <link rel="stylesheet" href="css/vibe-style.css">
-
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>登入狀態檢查 - 工商安全衛生協會-新竹職訓中心</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="js/theme-config.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
     <style>
         body {
