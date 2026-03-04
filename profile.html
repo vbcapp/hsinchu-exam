@@ -154,11 +154,19 @@
                </div>
             </div>
 
-            <!-- Chart: Combined Daily Active Users & Average Answers -->
             <div class="vibe-card dark:bg-gray-800">
-               <div class="flex items-center gap-3 mb-4">
-                  <span class="material-symbols-outlined text-black dark:text-white">insights</span>
-                  <h3 class="text-xl font-black uppercase">每日活躍用戶與平均答題數</h3>
+               <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div class="flex items-center gap-3">
+                     <span class="material-symbols-outlined text-black dark:text-white">insights</span>
+                     <h3 class="text-xl font-black uppercase">每日活躍用戶與平均答題數</h3>
+                  </div>
+                  <select id="combined-activity-period"
+                     class="border-2 border-black font-bold p-1 bg-white text-black text-sm"
+                     onchange="renderCombinedActivityChart(Number(this.value))">
+                     <option value="3" selected>近 3 日</option>
+                     <option value="7">本週 (7日)</option>
+                     <option value="30">本月 (30日)</option>
+                  </select>
                </div>
                <div class="bg-white p-4 border-2 border-black">
                   <canvas id="combined-activity-chart"></canvas>
@@ -871,11 +879,11 @@
          });
       }
 
-      async function renderCombinedActivityChart() {
+      async function renderCombinedActivityChart(days = 3) {
          // Fetch both datasets concurrently
          const [answersResult, usersResult] = await Promise.all([
-            apiService.getAdminDailyAnswers(30),
-            apiService.getAdminDailyActiveUsers(30)
+            apiService.getAdminDailyAnswers(days),
+            apiService.getAdminDailyActiveUsers(days)
          ]);
 
          if (!answersResult.success || !usersResult.success) {
