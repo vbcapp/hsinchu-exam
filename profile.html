@@ -832,14 +832,13 @@
          const ctx = document.getElementById('mastery-chart');
          if (!ctx) return;
 
-         const labels = ['未熟悉', '初學', '進階', '熟練', '精通', '大師'];
+         const labels = ['未熟悉', '初學', '進階', '熟練', '精通'];
          const data = [
             result.data[0] || 0,
             result.data[1] || 0,
             result.data[2] || 0,
             result.data[3] || 0,
-            result.data[4] || 0,
-            result.data[5] || 0
+            result.data[4] || 0
          ];
 
          // 銷毀舊圖表（如果存在）
@@ -859,8 +858,7 @@
                      '#A8D5BA',
                      '#FFD93D',
                      '#FF9F40',
-                     '#FF6384',
-                     '#9966FF'
+                     '#FF6384'
                   ],
                   borderColor: '#000000',
                   borderWidth: 3

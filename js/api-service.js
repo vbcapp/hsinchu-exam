@@ -2318,7 +2318,7 @@ class ApiService {
 
     /**
      * 新增：取得學員熟練度 (等級) 分佈
-     * 回傳長度 6 的陣列，對應：未熟悉、初學、進階、熟練、精通、大師
+     * 回傳長度 5 的陣列，對應：未熟悉、初學、進階、熟練、精通
      */
     async getAdminMasteryDistribution() {
         try {
@@ -2328,8 +2328,8 @@ class ApiService {
 
             if (error) throw error;
 
-            // 初始化 6 個區間
-            const distribution = [0, 0, 0, 0, 0, 0];
+            // 初始化 5 個區間
+            const distribution = [0, 0, 0, 0, 0];
 
             data.forEach(user => {
                 const level = user.current_level || 1;
@@ -2339,12 +2339,10 @@ class ApiService {
                     distribution[1]++; // 初學 (Lv. 3-5)
                 } else if (level <= 10) {
                     distribution[2]++; // 進階 (Lv. 6-10)
-                } else if (level <= 15) {
-                    distribution[3]++; // 熟練 (Lv. 11-15)
-                } else if (level <= 20) {
-                    distribution[4]++; // 精通 (Lv. 16-20)
+                } else if (level <= 19) {
+                    distribution[3]++; // 熟練 (Lv. 11-19)
                 } else {
-                    distribution[5]++; // 大師 (Lv. 21+)
+                    distribution[4]++; // 精通 (Lv. 20+)
                 }
             });
 
