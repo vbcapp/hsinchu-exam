@@ -18,6 +18,22 @@
     box-shadow: var(--card-shadow-lg);
 }
 
+/* ── Neo-brutalism 卡片（排行榜 / 等級頁專用） ──────────── */
+.neo-card {
+    border: 3px solid #000000;
+    box-shadow: var(--card-shadow);
+}
+
+.neo-card-lg {
+    border: 3px solid #000000;
+    box-shadow: var(--card-shadow-lg);
+}
+
+.neo-card-user {
+    border: 4px solid #000000;
+    box-shadow: 6px 6px 0px 0px #000000;
+}
+
 /* ── Neo-brutalism 邊框 ─────────────────────────────────── */
 .neo-border {
     border: var(--border-base);
@@ -184,4 +200,41 @@ a.material-symbols-outlined {
 .neo-brutalism-button:active {
     box-shadow: none;
     transform: translate(2px, 2px);
+}
+
+/* ── 排行榜：金色/黑色文字閃爍動畫 ───────────────────────── */
+@keyframes capped-gold-shimmer {
+
+    0%,
+    100% {
+        color: var(--color-primary);
+        text-shadow: 0 0 5px var(--color-primary-glow);
+    }
+
+    50% {
+        color: #FFA500;
+        text-shadow: 0 0 15px rgba(255, 165, 0, 0.8);
+    }
+}
+
+@keyframes black-shimmer {
+
+    0%,
+    100% {
+        color: black;
+        text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+
+    50% {
+        color: #4B5563;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    }
+}
+
+.capped-shimmer {
+    animation: capped-gold-shimmer 1.5s ease-in-out infinite;
+}
+
+.black-shimmer {
+    animation: black-shimmer 1.5s ease-in-out infinite;
 }
