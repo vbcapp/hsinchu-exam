@@ -253,21 +253,25 @@ a.material-symbols-outlined {
    語義化組件 class — 替代長串 Tailwind utility classes
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Card（題目卡片容器） ───────────────────────────────── */
-/*  替代：bg-white neo-border-thick neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98]  */
+/* ── Card（通用容器卡片） ───────────────────────────────── */
+/*  替代：bg-white border-4 border-black p-4 neo-brutalism-card  */
 .vibe-card {
     background-color: #ffffff;
-    border: 3px solid #000000;
+    border: var(--border-heavy);
+    padding: var(--spacing-base);
+}
+
+/* 題目卡片專用（保留舊有的陰影、高度、互動） */
+.vibe-card-quiz {
     box-shadow: var(--card-shadow);
-    padding: 0.75rem;
     display: flex;
     flex-direction: column;
     height: 180px;
     position: relative;
-    transition: transform 150ms ease;
+    transition: transform var(--transition-fast);
 }
 
-.vibe-card:active {
+.vibe-card-quiz:active {
     transform: scale(0.98);
 }
 

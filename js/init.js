@@ -467,7 +467,7 @@ function renderCardItem(card) {
            data-card-id="${card.id}"
            data-source-type="${card.sourceType || 'user_card'}"
            data-is-published="${isPublished}"
-            class="vibe-card dark:bg-zinc-900 admin-card-item ${masteryClass}">
+            class="vibe-card vibe-card-quiz dark:bg-zinc-900 admin-card-item ${masteryClass}">
             <div class="mb-2 flex items-center justify-between">
                 <div class="flex items-center">
                     ${topTag}
