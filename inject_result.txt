@@ -1,0 +1,70 @@
+?? [?汗] Header 蝯辣瘜典 + components.js 撘
+=======================================================
+
+?? admin.html 嚗?靽格嚗?
+  [? Header ??<div id="app-header" data-variant="back">
+  [+] 瘜典 <script src="js/components.js">
+
+?? create.html 嚗?靽格嚗?
+  [? Header ??<div id="app-header" data-variant="back">
+  [+] 瘜典 <script src="js/components.js">
+
+?? edit.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? history-analysis.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? import.html 嚗?靽格嚗?
+  [? Header ??<div id="app-header" data-variant="back">
+  [+] 瘜典 <script src="js/components.js">
+
+?? index.html 嚗?靽格嚗?
+  [? Header ??<div id="app-header" data-variant="brand">
+  [+] 瘜典 <script src="js/components.js">
+
+?? level.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? login.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? preview-mastery-ui.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? profile.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? profilei.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? rank.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? rank_l.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? rank_n.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? result.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? rule.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? status.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? test.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? upgrade.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+?? weakness.html 嚗?靽格嚗?
+  [+] 瘜典 <script src="js/components.js">
+
+=======================================================
+?? ??20 / 20 ??獢?靽格
+? 蝣箄?敺銵?python -X utf8 inject_components.py --apply

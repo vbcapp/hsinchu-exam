@@ -11,6 +11,7 @@
     <title>工商安全衛生協會-新竹職訓中心 - 匯入題目</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="js/theme-config.js"></script>
+    <script src="js/components.js"></script>
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -27,6 +28,7 @@
         .drop-zone {
             transition: all 0.2s ease;
         }
+
         .drop-zone.dragover {
             background-color: var(--color-primary) !important;
             border-style: solid !important;
@@ -37,13 +39,16 @@
             max-height: 300px;
             overflow-y: auto;
         }
+
         .json-preview::-webkit-scrollbar {
             width: 8px;
         }
+
         .json-preview::-webkit-scrollbar-track {
             background: #f1f1f1;
             border: var(--border-base);
         }
+
         .json-preview::-webkit-scrollbar-thumb {
             background: #000;
         }
@@ -53,15 +58,7 @@
 <body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen">
     <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
         <!-- Header -->
-        <header class="bg-primary pt-12 pb-6 px-6 border-b-4 border-black">
-            <div class="flex items-center gap-4">
-                <button onclick="window.location.href='profile.html'"
-                    class="vibe-icon-btn bg-white" style="width:auto;height:auto;border-width:4px">
-                    <span class="material-symbols-outlined text-black block">arrow_back</span>
-                </button>
-                <h1 class="text-2xl font-black italic tracking-tight">匯入題目</h1>
-            </div>
-        </header>
+        <div id="app-header" data-variant="back" data-title="匯入題目" data-back-href="profile.html"></div>
 
         <!-- Main Content -->
         <main class="flex-grow p-6 space-y-6 pb-8">
@@ -143,8 +140,7 @@
     ...
   }
 ]'></textarea>
-                <button id="parse-json-btn"
-                    class="vibe-btn vibe-btn-secondary bg-gray-100 hover:bg-gray-200 mt-3">
+                <button id="parse-json-btn" class="vibe-btn vibe-btn-secondary bg-gray-100 hover:bg-gray-200 mt-3">
                     解析 JSON
                 </button>
             </div>
@@ -156,7 +152,8 @@
                         <span class="material-symbols-outlined text-black text-2xl">preview</span>
                         <h2 class="text-lg font-black italic uppercase">資料預覽</h2>
                     </div>
-                    <span id="preview-count" class="bg-primary px-3 py-1 border-2 border-black font-black text-sm">0 筆</span>
+                    <span id="preview-count" class="bg-primary px-3 py-1 border-2 border-black font-black text-sm">0
+                        筆</span>
                 </div>
                 <div id="preview-content" class="json-preview space-y-3">
                     <!-- 預覽內容會動態插入這裡 -->
@@ -173,8 +170,7 @@
             </div>
 
             <!-- 匯入按鈕 -->
-            <button id="import-btn" disabled
-                class="vibe-btn vibe-btn-primary">
+            <button id="import-btn" disabled class="vibe-btn vibe-btn-primary">
                 確認匯入
             </button>
         </main>
@@ -182,14 +178,14 @@
 
     <!-- 成功 Modal -->
     <div id="success-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white border-4 border-black w-full max-w-md p-6 space-y-4 shadow-[8px_8px_0px_0px_var(--color-primary)]">
+        <div
+            class="bg-white border-4 border-black w-full max-w-md p-6 space-y-4 shadow-[8px_8px_0px_0px_var(--color-primary)]">
             <div class="text-center">
                 <span class="material-symbols-outlined text-6xl text-green-500 mb-2">check_circle</span>
                 <h3 class="text-2xl font-black italic">匯入成功！</h3>
                 <p id="success-message" class="mt-2 font-bold">已成功匯入 0 筆題目</p>
             </div>
-            <button onclick="window.location.href='profile.html'"
-                class="vibe-btn vibe-btn-primary">
+            <button onclick="window.location.href='profile.html'" class="vibe-btn vibe-btn-primary">
                 返回個人中心
             </button>
         </div>

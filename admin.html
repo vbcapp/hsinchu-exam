@@ -11,6 +11,7 @@
     <title>工商安全衛生協會-新竹職訓中心 - 權限管理</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="js/theme-config.js"></script>
+    <script src="js/components.js"></script>
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -28,15 +29,7 @@
 <body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen">
     <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
         <!-- Header -->
-        <header class="bg-primary pt-12 pb-6 px-6 border-b-4 border-black">
-            <div class="flex items-center gap-4">
-                <button onclick="window.location.href='profile.html'"
-                    class="vibe-icon-btn bg-white" style="width:auto;height:auto;border-width:4px">
-                    <span class="material-symbols-outlined text-black block">arrow_back</span>
-                </button>
-                <h1 class="text-2xl font-black italic tracking-tight">權限管理</h1>
-            </div>
-        </header>
+        <div id="app-header" data-variant="back" data-title="權限管理" data-back-href="profile.html"></div>
 
         <!-- Tab Navigation -->
         <nav class="flex border-b-4 border-black bg-white">
@@ -113,7 +106,8 @@
                 <div class="flex items-center gap-3 p-2 bg-gray-100 border-2 border-black">
                     <input type="checkbox" id="select-all-chapters" onchange="toggleSelectAllChapters()"
                         class="w-5 h-5 border-2 border-black accent-primary">
-                    <label for="select-all-chapters" class="font-bold text-sm">全選 (<span id="selected-chapter-count">0</span> /
+                    <label for="select-all-chapters" class="font-bold text-sm">全選 (<span
+                            id="selected-chapter-count">0</span> /
                         <span id="total-chapter-count">0</span>)</label>
                 </div>
 
@@ -206,12 +200,10 @@
                 </div>
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3">
-                <button onclick="closeTagModal()"
-                    class="vibe-btn vibe-btn-secondary flex-1">
+                <button onclick="closeTagModal()" class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
-                <button onclick="saveTag()"
-                    class="vibe-btn vibe-btn-primary flex-1">
+                <button onclick="saveTag()" class="vibe-btn vibe-btn-primary flex-1">
                     儲存
                 </button>
             </div>
@@ -252,12 +244,10 @@
                 </div>
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3 flex-shrink-0">
-                <button onclick="closeChapterAccessModal()"
-                    class="vibe-btn vibe-btn-secondary flex-1">
+                <button onclick="closeChapterAccessModal()" class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
-                <button onclick="saveChapterAccess()"
-                    class="vibe-btn vibe-btn-primary flex-1">
+                <button onclick="saveChapterAccess()" class="vibe-btn vibe-btn-primary flex-1">
                     儲存
                 </button>
             </div>
@@ -266,7 +256,8 @@
 
     <!-- ==================== 章節批量操作 Modal ==================== -->
     <div id="chapter-batch-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white border-4 border-black w-full max-w-sm max-h-[80vh] overflow-hidden shadow-[8px_8px_0px_0px_var(--color-primary)] flex flex-col">
+        <div
+            class="bg-white border-4 border-black w-full max-w-sm max-h-[80vh] overflow-hidden shadow-[8px_8px_0px_0px_var(--color-primary)] flex flex-col">
             <div class="bg-black text-white px-4 py-3 flex-shrink-0">
                 <h3 class="font-black text-lg">批量設定章節權限</h3>
                 <p id="chapter-batch-count" class="text-sm text-gray-300 mt-1"></p>
@@ -296,12 +287,10 @@
                 </div>
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3 flex-shrink-0">
-                <button onclick="closeChapterBatchModal()"
-                    class="vibe-btn vibe-btn-secondary flex-1">
+                <button onclick="closeChapterBatchModal()" class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
-                <button onclick="executeChapterBatchOperation()"
-                    class="vibe-btn vibe-btn-primary flex-1">
+                <button onclick="executeChapterBatchOperation()" class="vibe-btn vibe-btn-primary flex-1">
                     確認
                 </button>
             </div>
@@ -321,12 +310,10 @@
                 <div id="user-tag-options" class="space-y-2"></div>
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3 flex-shrink-0">
-                <button onclick="closeUserTagModal()"
-                    class="vibe-btn vibe-btn-secondary flex-1">
+                <button onclick="closeUserTagModal()" class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
-                <button onclick="saveUserTags()"
-                    class="vibe-btn vibe-btn-primary flex-1">
+                <button onclick="saveUserTags()" class="vibe-btn vibe-btn-primary flex-1">
                     儲存
                 </button>
             </div>
@@ -356,12 +343,10 @@
                 <div id="batch-tag-options" class="space-y-2 max-h-48 overflow-y-auto"></div>
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3">
-                <button onclick="closeBatchModal()"
-                    class="vibe-btn vibe-btn-secondary flex-1">
+                <button onclick="closeBatchModal()" class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
-                <button onclick="executeBatchOperation()"
-                    class="vibe-btn vibe-btn-primary flex-1">
+                <button onclick="executeBatchOperation()" class="vibe-btn vibe-btn-primary flex-1">
                     確認
                 </button>
             </div>
