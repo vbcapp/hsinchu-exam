@@ -34,6 +34,15 @@
     box-shadow: 6px 6px 0px 0px #000000;
 }
 
+/* ── Danger 邊框 / 陰影（危險區域、登出按鈕） ───────────── */
+.neo-border-danger {
+    border: 3px solid var(--color-danger);
+}
+
+.neo-shadow-danger {
+    box-shadow: 4px 4px 0px 0px var(--color-danger);
+}
+
 /* ── Neo-brutalism 邊框 ─────────────────────────────────── */
 .neo-border {
     border: var(--border-base);
