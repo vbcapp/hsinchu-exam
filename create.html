@@ -15,15 +15,15 @@
     <script src="js/components.js"></script>
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <!-- Tailwind Config -->
     <!-- Neo-Brutalism Styles -->
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen">
-    <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
+<body class="bg-background-light dark:bg-background-dark text-black dark:text-white min-h-screen">
+    <div class="vibe-app-shell">
 
         <!-- Header -->
         <div id="app-header" data-variant="back" data-title="建立考卷" data-back-href="index.html"></div>
@@ -59,7 +59,7 @@
 
             <!-- ==================== Step 1: 選擇來源 ==================== -->
             <section id="step-1" class="space-y-4">
-                <div class="bg-primary/30 border-2 border-black p-3">
+                <div class="vibe-info-box">
                     <p class="text-xs font-bold">請勾選要抽取題目的類別與章節，可多選。</p>
                 </div>
 
@@ -80,7 +80,7 @@
                     <div class="flex items-center gap-4">
                         <span id="selected-chapters-count" class="text-sm font-bold">0 個章節</span>
                         <span id="available-questions-count"
-                            class="bg-primary px-3 py-1 border-2 border-black font-black">0 題可選</span>
+                            class="vibe-count-badge">0 題可選</span>
                     </div>
                 </div>
 
@@ -178,7 +178,7 @@
                     </div>
 
                     <!-- 考卷資訊摘要 -->
-                    <div class="bg-primary/20 border-2 border-black p-3 mb-4 space-y-1">
+                    <div class="vibe-info-box-muted mb-4 space-y-1">
                         <p class="text-sm"><span class="font-black">類別：</span><span id="preview-subject">--</span></p>
                         <p class="text-sm"><span class="font-black">章節：</span><span id="preview-chapter">--</span></p>
                         <p class="text-sm"><span class="font-black">題數：</span><span id="preview-count">--</span></p>
@@ -205,7 +205,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center">
-        <div class="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_var(--color-primary)]">
+        <div class="vibe-loader-box">
             <div class="flex flex-col items-center gap-4">
                 <div class="w-12 h-12 border-4 border-black border-t-primary animate-spin"></div>
                 <p id="loading-text" class="font-black italic">處理中...</p>

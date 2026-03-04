@@ -46,6 +46,7 @@ const ADMIN_UUIDS = [
     '17da7d22-17ad-4d40-a5d2-9c2ce9216cf0', // Original Admin
     '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b', // New Admin
     '03ff6033-ce0e-41ee-9734-fce32c10b1bb',  // imnivek@gmail.com
+    '2855e3fb-1839-44ad-abda-d04ff4c598f1',
 ];
 
 // ==================== 學員白名單 ====================

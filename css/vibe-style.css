@@ -5,6 +5,88 @@
  * 依賴：design-tokens.css 需在此檔之前載入。
  */
 
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL RESET & BASE
+   ═══════════════════════════════════════════════════════════ */
+
+body {
+    font-family: var(--font-primary);
+    min-height: max(884px, 100dvh);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APP SHELL — 手機版容器
+   替代：relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5
+   ═══════════════════════════════════════════════════════════ */
+
+.vibe-app-shell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    max-width: var(--max-width-mobile);
+    margin-left: auto;
+    margin-right: auto;
+    border-left: 2px solid var(--color-border-light);
+    border-right: 2px solid var(--color-border-light);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL STYLES FROM HTML FILES
+   (Migrated from import.html, login.html, profile.html)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 拖曳上傳區域（import.html） ──────────────────────────── */
+.drop-zone {
+    transition: all 0.2s ease;
+}
+
+.drop-zone.dragover {
+    background-color: var(--color-primary) !important;
+    border-style: solid !important;
+}
+
+/* ── JSON 預覽區域（import.html） ─────────────────────────── */
+.json-preview {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.json-preview::-webkit-scrollbar {
+    width: 8px;
+}
+
+.json-preview::-webkit-scrollbar-track {
+    background: var(--color-neutral-100);
+    border: var(--border-base);
+}
+
+.json-preview::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+}
+
+/* ── Collapsible 元件（login.html） ──────────────────────── */
+.collapsible-content {
+    transition: max-height var(--transition-base), opacity var(--transition-base);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.collapsible-content.open {
+    max-height: 500px;
+    opacity: 1;
+}
+
+.arrow-icon {
+    transition: transform var(--transition-base);
+}
+
+.arrow-icon.open {
+    transform: rotate(180deg);
+}
+
 /* ── Neo-brutalism 陰影 ─────────────────────────────────── */
 .neo-shadow {
     box-shadow: var(--card-shadow);
@@ -259,6 +341,7 @@ a.material-symbols-outlined {
     background-color: #ffffff;
     border: var(--border-heavy);
     padding: var(--spacing-base);
+    box-shadow: var(--card-shadow);
 }
 
 /* 題目卡片專用（保留舊有的陰影、高度、互動） */
@@ -395,4 +478,163 @@ a.material-symbols-outlined {
 .vibe-filter-btn.active {
     background-color: var(--color-primary);
     font-weight: 900;
+}
+
+/* ── Modal Container（彈窗容器） ─────────────────────────── */
+/*  替代：bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_var(--color-primary)]  */
+.vibe-modal {
+    background-color: #ffffff;
+    border: var(--border-heavy);
+    padding: var(--spacing-lg);
+    box-shadow: 8px 8px 0px 0px var(--color-primary);
+}
+
+.vibe-modal-sm {
+    padding: var(--spacing-base);
+}
+
+/* ── Loading Spinner Container ───────────────────────────── */
+/*  替代：bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_var(--color-primary)]  */
+.vibe-loader-box {
+    background-color: #ffffff;
+    border: var(--border-heavy);
+    padding: var(--spacing-xl);
+    box-shadow: 8px 8px 0px 0px var(--color-primary);
+}
+
+/* ── Header Section（頁首區塊，如 profile 黃色頂部） ──────── */
+/*  替代：bg-primary pt-12 pb-10 px-6 border-b-8 border-black  */
+.vibe-header-hero {
+    background-color: var(--color-primary);
+    padding: 3rem 1.5rem 2.5rem;
+    border-bottom: 8px solid var(--color-border);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ── Info Box（提示框） ──────────────────────────────────── */
+/*  替代：bg-primary/30 border-2 border-black p-3  */
+.vibe-info-box {
+    background-color: rgba(255, 212, 0, 0.3);
+    border: var(--border-base);
+    padding: var(--spacing-sm) var(--spacing-base);
+}
+
+.vibe-info-box-muted {
+    background-color: rgba(255, 212, 0, 0.2);
+    border: var(--border-base);
+    padding: var(--spacing-sm) var(--spacing-base);
+}
+
+/* ── Count Badge（計數標籤） ─────────────────────────────── */
+/*  替代：bg-primary px-3 py-1 border-2 border-black font-black  */
+.vibe-count-badge {
+    display: inline-block;
+    background-color: var(--color-primary);
+    border: var(--border-base);
+    padding: 0.25rem 0.75rem;
+    font-weight: 900;
+    font-size: var(--font-size-sm);
+}
+
+/* ── Small Square Button（小方形按鈕，如 header 圖示） ───── */
+/*  替代：bg-white border-4 border-black p-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]  */
+.vibe-square-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: var(--border-heavy);
+    padding: 0.25rem;
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.vibe-square-btn:hover {
+    transform: scale(1.05);
+}
+
+.vibe-square-btn:active {
+    box-shadow: none;
+    transform: translate(1px, 1px);
+}
+
+/* ── Input Field（輸入框） ───────────────────────────────── */
+/*  替代：w-full border-4 border-black p-3 focus:outline-none focus:ring-2 focus:ring-primary  */
+.vibe-input {
+    width: 100%;
+    border: var(--border-heavy);
+    padding: var(--spacing-sm) var(--spacing-base);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+}
+
+.vibe-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* ── Textarea（文字區域） ────────────────────────────────── */
+.vibe-textarea {
+    width: 100%;
+    border: var(--border-heavy);
+    padding: var(--spacing-base);
+    font-size: var(--font-size-sm);
+    resize: none;
+}
+
+.vibe-textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* ── Social Link Button（社群連結按鈕） ──────────────────── */
+/*  替代：aspect-square bg-black border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]  */
+.vibe-social-btn {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border-heavy);
+    box-shadow: var(--card-shadow);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.vibe-social-btn:active {
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+/* ── Divider（分隔線） ───────────────────────────────────── */
+/*  替代：flex items-center gap-4 + h-1 bg-black  */
+.vibe-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-base);
+}
+
+.vibe-divider::before,
+.vibe-divider::after {
+    content: "";
+    flex: 1;
+    height: 4px;
+    background-color: var(--color-border);
+}
+
+/* ── Error Box（錯誤訊息框） ─────────────────────────────── */
+/*  替代：bg-red-100 border-4 border-red-500 p-4  */
+.vibe-error-box {
+    background-color: #fee2e2;
+    border: var(--border-heavy);
+    border-color: var(--color-danger);
+    padding: var(--spacing-base);
+}
+
+/* ── Success Box（成功訊息框） ───────────────────────────── */
+.vibe-success-box {
+    background-color: #dcfce7;
+    border: var(--border-heavy);
+    border-color: var(--color-success);
+    padding: var(--spacing-base);
 }

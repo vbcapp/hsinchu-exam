@@ -127,8 +127,10 @@
     /* 32px */
 
     /* ── 字體（Typography） ────────────────────────────── */
-    --font-family-base: 'Space Grotesk', 'Noto Sans TC', sans-serif;
-    --font-family-display: 'Inter', sans-serif;
+    --font-primary: 'Space Grotesk', 'Noto Sans TC', sans-serif;
+    --font-family-base: var(--font-primary);
+    /* 保留向後相容，已棄用 */
+    --font-family-display: var(--font-primary);
 
     --font-size-xs: 0.75rem;
     /* 12px */

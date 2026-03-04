@@ -15,48 +15,13 @@
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&amp;display=swap" rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-        rel="stylesheet" />
-    <style>
-        body {
-            min-height: max(884px, 100dvh);
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
-        /* 拖曳上傳區域樣式 */
-        .drop-zone {
-            transition: all 0.2s ease;
-        }
-
-        .drop-zone.dragover {
-            background-color: var(--color-primary) !important;
-            border-style: solid !important;
-        }
-
-        /* JSON 預覽區域 */
-        .json-preview {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .json-preview::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .json-preview::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border: var(--border-base);
-        }
-
-        .json-preview::-webkit-scrollbar-thumb {
-            background: #000;
-        }
-    </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-black dark:text-white min-h-screen">
-    <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto border-x-2 border-black/5">
+<body class="bg-background-light dark:bg-background-dark text-black dark:text-white min-h-screen">
+    <div class="vibe-app-shell">
         <!-- Header -->
         <div id="app-header" data-variant="back" data-title="匯入題目" data-back-href="profile.html"></div>
 
@@ -128,7 +93,7 @@
                     <h2 class="text-lg font-black italic uppercase">手動貼上 JSON</h2>
                 </div>
                 <textarea id="json-input"
-                    class="w-full h-48 p-3 border-4 border-black font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    class="vibe-textarea h-48 font-mono"
                     placeholder='請在此貼上 JSON 資料...
 
 例如:
@@ -152,7 +117,7 @@
                         <span class="material-symbols-outlined text-black text-2xl">preview</span>
                         <h2 class="text-lg font-black italic uppercase">資料預覽</h2>
                     </div>
-                    <span id="preview-count" class="bg-primary px-3 py-1 border-2 border-black font-black text-sm">0
+                    <span id="preview-count" class="vibe-count-badge">0
                         筆</span>
                 </div>
                 <div id="preview-content" class="json-preview space-y-3">
@@ -161,7 +126,7 @@
             </div>
 
             <!-- 錯誤訊息區塊 -->
-            <div id="error-section" class="hidden bg-red-100 border-4 border-red-500 p-4">
+            <div id="error-section" class="vibe-error-box hidden">
                 <div class="flex items-center gap-3 mb-2">
                     <span class="material-symbols-outlined text-red-500 text-2xl">error</span>
                     <h2 class="text-lg font-black italic text-red-600">解析錯誤</h2>
@@ -179,7 +144,7 @@
     <!-- 成功 Modal -->
     <div id="success-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
         <div
-            class="bg-white border-4 border-black w-full max-w-md p-6 space-y-4 shadow-[8px_8px_0px_0px_var(--color-primary)]">
+            class="vibe-modal w-full max-w-md space-y-4">
             <div class="text-center">
                 <span class="material-symbols-outlined text-6xl text-green-500 mb-2">check_circle</span>
                 <h3 class="text-2xl font-black italic">匯入成功！</h3>
@@ -193,7 +158,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center">
-        <div class="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_var(--color-primary)]">
+        <div class="vibe-loader-box">
             <div class="flex flex-col items-center gap-4">
                 <div class="w-12 h-12 border-4 border-black border-t-primary animate-spin"></div>
                 <p class="font-black italic">匯入中...</p>
