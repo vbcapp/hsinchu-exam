@@ -42,7 +42,7 @@
         <div class="p-4 space-y-8">
             <!-- 個人資訊 -->
             <section>
-                <div class="bg-primary inline-block neo-border px-4 py-1 neo-shadow-sm mb-4">
+                <div class="vibe-section-label">
                     <h3 class="text-sm font-black uppercase tracking-tighter">個人資訊</h3>
                 </div>
                 <div class="bg-white dark:bg-zinc-800 neo-border neo-shadow p-5 flex flex-col gap-6">
@@ -58,8 +58,7 @@
                             class="w-full bg-zinc-100 dark:bg-zinc-700 neo-border px-4 py-3 font-bold focus:ring-0 focus:border-black outline-none"
                             placeholder="vibe@example.com" type="email" />
                     </div>
-                    <button onclick="updateProfile()"
-                        class="w-full bg-primary neo-border py-3 text-sm font-black uppercase neo-shadow-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">
+                    <button onclick="updateProfile()" class="vibe-btn vibe-btn-primary">
                         更新個人資料
                     </button>
                 </div>
@@ -67,7 +66,7 @@
 
             <!-- 安全設定 -->
             <section>
-                <div class="bg-primary inline-block neo-border px-4 py-1 neo-shadow-sm mb-4">
+                <div class="vibe-section-label">
                     <h3 class="text-sm font-black uppercase tracking-tighter">安全設定</h3>
                 </div>
                 <div class="bg-white dark:bg-zinc-800 neo-border neo-shadow p-5 flex flex-col gap-4">
@@ -89,7 +88,7 @@
 
             <!-- 訂閱管理 -->
             <section>
-                <div class="bg-primary inline-block neo-border px-4 py-1 neo-shadow-sm mb-4">
+                <div class="vibe-section-label">
                     <h3 class="text-sm font-black uppercase tracking-tighter">訂閱管理</h3>
                 </div>
                 <div class="bg-white dark:bg-zinc-800 neo-border neo-shadow p-5 flex flex-col gap-4">
@@ -105,8 +104,7 @@
                         </div>
                     </div>
                     <p id="subscription-expiry" class="text-sm font-medium">您的訂閱將於 2024/12/31 到期</p>
-                    <button onclick="manageSubscription()"
-                        class="w-full bg-white dark:bg-zinc-700 neo-border py-3 text-sm font-black uppercase neo-shadow-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">
+                    <button onclick="manageSubscription()" class="vibe-btn vibe-btn-secondary">
                         管理訂閱
                     </button>
                 </div>

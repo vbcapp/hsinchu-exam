@@ -247,3 +247,148 @@ a.material-symbols-outlined {
 .black-shimmer {
     animation: black-shimmer 1.5s ease-in-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   VIBE COMPONENT LIBRARY
+   語義化組件 class — 替代長串 Tailwind utility classes
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Card（題目卡片容器） ───────────────────────────────── */
+/*  替代：bg-white neo-border-thick neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98]  */
+.vibe-card {
+    background-color: #ffffff;
+    border: 3px solid #000000;
+    box-shadow: var(--card-shadow);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    height: 180px;
+    position: relative;
+    transition: transform 150ms ease;
+}
+
+.vibe-card:active {
+    transform: scale(0.98);
+}
+
+/* ── Badge（小型 badge：題號、章節） ────────────────────── */
+/*  替代：bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase  */
+.vibe-badge {
+    display: inline-block;
+    background-color: var(--color-primary);
+    border: 2px solid #000000;
+    padding: 0 0.375rem;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000000;
+}
+
+/* ── Badge Mastery（精通卡金色 badge） ───────────────────── */
+/*  替代：bg-yellow-500 border-2 border-black text-white px-1.5 py-0.5 text-[8px] font-bold uppercase  */
+.vibe-badge-mastery {
+    display: inline-block;
+    background-color: #eab308;
+    border: 2px solid #000000;
+    color: #ffffff;
+    padding: 0.125rem 0.375rem;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* ── Section Label（區塊標題 label） ────────────────────── */
+/*  替代：bg-primary inline-block neo-border px-4 py-1 neo-shadow-sm mb-4  */
+.vibe-section-label {
+    display: inline-block;
+    background-color: var(--color-primary);
+    border: 2px solid #000000;
+    box-shadow: var(--card-shadow-sm);
+    padding: 0.25rem 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ── Buttons（按鈕系列） ────────────────────────────────── */
+/*  共用基底：hover 按壓動畫  */
+.vibe-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    border: 2px solid #000000;
+    box-shadow: var(--card-shadow-sm);
+    transition: transform 100ms ease, box-shadow 100ms ease;
+    cursor: pointer;
+}
+
+.vibe-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+}
+
+.vibe-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+}
+
+/*  Primary：黃色  */
+.vibe-btn-primary {
+    background-color: var(--color-primary);
+    color: #000000;
+}
+
+/*  Secondary：白色  */
+.vibe-btn-secondary {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/*  Danger：紅色  */
+.vibe-btn-danger {
+    background-color: var(--color-danger);
+    color: #ffffff;
+}
+
+/* ── Icon Button（方形圖示按鈕） ────────────────────────── */
+/*  替代：w-10 h-10 neo-border-thick bg-primary flex items-center justify-center neo-shadow-sm active:shadow-none active:translate-x-[1px] active:translate-y-[1px]  */
+.vibe-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: var(--color-primary);
+    border: 3px solid #000000;
+    box-shadow: var(--card-shadow-sm);
+    cursor: pointer;
+    transition: transform 100ms ease, box-shadow 100ms ease;
+}
+
+.vibe-icon-btn:active {
+    box-shadow: none;
+    transform: translate(1px, 1px);
+}
+
+/* ── Filter Button（水平篩選 chip） ─────────────────────── */
+/*  替代：flex-none px-4 py-2 neo-border-thick bg-white font-bold text-xs neo-shadow-sm  */
+.vibe-filter-btn {
+    flex: none;
+    padding: 0.5rem 1rem;
+    background-color: #ffffff;
+    border: 3px solid #000000;
+    box-shadow: var(--card-shadow-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.vibe-filter-btn.active {
+    background-color: var(--color-primary);
+    font-weight: 900;
+}

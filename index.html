@@ -44,8 +44,7 @@
                 </div>
                 <h1 class="text-xl font-black tracking-tighter">工商安全衛生協會-新竹職訓中心</h1>
             </div>
-            <button id="admin-create-btn" onclick="window.location.href='create.html'"
-                class="w-10 h-10 neo-border-thick bg-primary flex items-center justify-center neo-shadow-sm active:shadow-none active:translate-x-[1px] active:translate-y-[1px] hidden">
+            <button id="admin-create-btn" onclick="window.location.href='create.html'" class="vibe-icon-btn hidden">
                 <span class="material-symbols-outlined text-black font-bold">add</span>
             </button>
         </header>
@@ -114,10 +113,9 @@
                     </button>
                 </div>
                 <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="filter-buttons">
-                    <button data-filter="all"
-                        class="filter-btn flex-none px-4 py-2 neo-border-thick bg-primary font-black text-xs neo-shadow-sm active">全部</button>
+                    <button data-filter="all" class="filter-btn vibe-filter-btn active">全部</button>
                     <button data-filter="unfamiliar"
-                        class="filter-btn flex-none px-4 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm text-red-500">❤</button>
+                        class="filter-btn vibe-filter-btn dark:bg-zinc-800 text-red-500">❤</button>
                     <!-- 章節按鈕將由 JavaScript 動態載入 -->
                 </div>
                 <div id="cards-container" class="grid grid-cols-2 gap-4">
@@ -138,7 +136,8 @@
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="filter-backdrop"></div>
         <div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 rounded-t-xl overflow-hidden neo-border-thick transition-transform transform translate-y-full"
             id="filter-content">
-            <div class="p-4 border-b-2 border-border-main flex justify-between items-center bg-surface dark:bg-zinc-800">
+            <div
+                class="p-4 border-b-2 border-border-main flex justify-between items-center bg-surface dark:bg-zinc-800">
                 <h3 class="font-black text-lg uppercase">篩選類別</h3>
                 <button id="close-filter" class="material-symbols-outlined font-bold">close</button>
             </div>

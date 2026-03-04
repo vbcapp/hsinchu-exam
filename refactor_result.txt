@@ -1,0 +1,12 @@
+?? [?汗] ?寥??踵? Tailwind class ?箄?蝢拙?蝯辣
+=======================================================
+
+?? profile.html 嚗?靽格嚗?
+  [1x] btn-primary (border-4 variant)
+
+?? weakness.html 嚗?靽格嚗?
+  [1x] btn-primary (border-4 variant)
+
+=======================================================
+?? ??2 / 20 ??獢?靽格
+? 蝣箄?敺銵?python -X utf8 refactor_classes.py --apply

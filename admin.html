@@ -31,7 +31,7 @@
         <header class="bg-primary pt-12 pb-6 px-6 border-b-4 border-black">
             <div class="flex items-center gap-4">
                 <button onclick="window.location.href='profile.html'"
-                    class="bg-white border-4 border-black p-2 neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-105 transition-transform">
+                    class="vibe-icon-btn bg-white" style="width:auto;height:auto;border-width:4px">
                     <span class="material-symbols-outlined text-black block">arrow_back</span>
                 </button>
                 <h1 class="text-2xl font-black italic tracking-tight">權限管理</h1>
@@ -66,7 +66,7 @@
                         <h2 class="text-lg font-black italic uppercase">標籤管理</h2>
                     </div>
                     <button onclick="openAddTagModal()"
-                        class="bg-primary border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                        class="vibe-btn vibe-btn-primary text-sm px-3 py-2 w-auto flex items-center gap-1">
                         <span class="material-symbols-outlined text-lg">add</span>
                         新增
                     </button>
@@ -93,12 +93,12 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="openChapterBatchModal()" id="chapter-batch-btn" disabled
-                            class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="vibe-btn vibe-btn-secondary text-sm px-3 py-2 w-auto flex items-center gap-1">
                             <span class="material-symbols-outlined text-lg">edit_note</span>
                             批量
                         </button>
                         <button onclick="syncChapters()" id="sync-chapters-btn"
-                            class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                            class="vibe-btn vibe-btn-secondary text-sm px-3 py-2 w-auto flex items-center gap-1">
                             <span class="material-symbols-outlined text-lg">sync</span>
                             同步
                         </button>
@@ -133,7 +133,7 @@
                         <h2 class="text-lg font-black italic uppercase">學員標籤</h2>
                     </div>
                     <button onclick="openBatchModal()" id="batch-action-btn" disabled
-                        class="bg-white border-4 border-black px-3 py-2 font-black text-sm neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="vibe-btn vibe-btn-secondary text-sm px-3 py-2 w-auto flex items-center gap-1">
                         <span class="material-symbols-outlined text-lg">edit_note</span>
                         批量
                     </button>
@@ -207,11 +207,11 @@
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3">
                 <button onclick="closeTagModal()"
-                    class="flex-1 bg-white border-4 border-black py-3 font-black neo-brutalism-button">
+                    class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
                 <button onclick="saveTag()"
-                    class="flex-1 bg-primary border-4 border-black py-3 font-black neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    class="vibe-btn vibe-btn-primary flex-1">
                     儲存
                 </button>
             </div>
@@ -253,11 +253,11 @@
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3 flex-shrink-0">
                 <button onclick="closeChapterAccessModal()"
-                    class="flex-1 bg-white border-4 border-black py-3 font-black neo-brutalism-button">
+                    class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
                 <button onclick="saveChapterAccess()"
-                    class="flex-1 bg-primary border-4 border-black py-3 font-black neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    class="vibe-btn vibe-btn-primary flex-1">
                     儲存
                 </button>
             </div>
@@ -297,11 +297,11 @@
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3 flex-shrink-0">
                 <button onclick="closeChapterBatchModal()"
-                    class="flex-1 bg-white border-4 border-black py-3 font-black neo-brutalism-button">
+                    class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
                 <button onclick="executeChapterBatchOperation()"
-                    class="flex-1 bg-primary border-4 border-black py-3 font-black neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    class="vibe-btn vibe-btn-primary flex-1">
                     確認
                 </button>
             </div>
@@ -322,11 +322,11 @@
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3 flex-shrink-0">
                 <button onclick="closeUserTagModal()"
-                    class="flex-1 bg-white border-4 border-black py-3 font-black neo-brutalism-button">
+                    class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
                 <button onclick="saveUserTags()"
-                    class="flex-1 bg-primary border-4 border-black py-3 font-black neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    class="vibe-btn vibe-btn-primary flex-1">
                     儲存
                 </button>
             </div>
@@ -357,11 +357,11 @@
             </div>
             <div class="p-4 border-t-2 border-black flex gap-3">
                 <button onclick="closeBatchModal()"
-                    class="flex-1 bg-white border-4 border-black py-3 font-black neo-brutalism-button">
+                    class="vibe-btn vibe-btn-secondary flex-1">
                     取消
                 </button>
                 <button onclick="executeBatchOperation()"
-                    class="flex-1 bg-primary border-4 border-black py-3 font-black neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    class="vibe-btn vibe-btn-primary flex-1">
                     確認
                 </button>
             </div>

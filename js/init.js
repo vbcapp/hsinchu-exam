@@ -302,7 +302,7 @@ async function initFilterButtons() {
             result.data.forEach(chapter => {
                 const btn = document.createElement('button');
                 btn.setAttribute('data-filter', `chapter:${chapter}`);
-                btn.className = 'filter-btn flex-none px-4 py-2 neo-border-thick bg-white dark:bg-zinc-800 font-bold text-xs neo-shadow-sm';
+                btn.className = 'filter-btn vibe-filter-btn dark:bg-zinc-800';
                 btn.textContent = chapter;
                 filterContainer.appendChild(btn);
             });
@@ -319,11 +319,9 @@ async function initFilterButtons() {
 
             // 更新按鈕樣式
             filterContainer.querySelectorAll('.filter-btn').forEach(b => {
-                b.classList.remove('bg-primary', 'font-black', 'active');
-                b.classList.add('bg-white', 'dark:bg-zinc-800', 'font-bold');
+                b.classList.remove('active');
             });
-            this.classList.remove('bg-white', 'dark:bg-zinc-800', 'font-bold');
-            this.classList.add('bg-primary', 'font-black', 'active');
+            this.classList.add('active');
         });
     });
 }
@@ -457,25 +455,25 @@ function renderCardItem(card) {
 
     // [Admin Logic] 已發布標記
     const isPublished = card.is_published;
-    const publishedTag = isPublished ? `<span class="bg-primary text-black border border-black px-1 text-[8px] font-bold uppercase ml-1">PUBLISHED</span>` : '';
+    const publishedTag = isPublished ? `<span class="vibe-badge ml-1">PUBLISHED</span>` : '';
 
     // 頂部標籤：如果是熟練卡，顯示 已精通
     const topTag = isMastered
-        ? `<span class="bg-yellow-500 border-2 border-black text-white px-1.5 py-0.5 text-[8px] font-bold uppercase">已精通</span>`
-        : `<span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">${card.question_no || '-'}</span>`;
+        ? `<span class="vibe-badge-mastery">已精通</span>`
+        : `<span class="vibe-badge">${card.question_no || '-'}</span>`;
 
     return `
         <a href="test.html?id=${card.id}"
            data-card-id="${card.id}"
            data-source-type="${card.sourceType || 'user_card'}"
            data-is-published="${isPublished}"
-            class="bg-white dark:bg-zinc-900 neo-border-thick neo-shadow p-3 flex flex-col h-[180px] relative transition-transform active:scale-[0.98] admin-card-item ${masteryClass}">
+            class="vibe-card dark:bg-zinc-900 admin-card-item ${masteryClass}">
             <div class="mb-2 flex items-center justify-between">
                 <div class="flex items-center">
                     ${topTag}
                 </div>
                 <div class="flex items-center gap-1">
-                    <span class="bg-primary neo-border px-1.5 py-0.5 text-[8px] font-bold uppercase">${card.chapter || 'General'}</span>
+                    <span class="vibe-badge">${card.chapter || 'General'}</span>
                     ${publishedTag}
                 </div>
             </div>
