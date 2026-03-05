@@ -786,9 +786,35 @@
                     </div>
                 </div>
 
-                <!-- 7. AI 智慧分析 -->
+                <!-- 7. 需要加強的題目 (Moved here from 行動的我) -->
+                <div class="neo-brutalism-card bg-gradient-to-br from-red-50 to-orange-50 p-4">
+                    <div class="flex items-center justify-between mb-3 mt-2">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="material-symbols-outlined text-[var(--color-danger)] text-xl">priority_high</span>
+                            <span class="text-sm font-black uppercase">需要加強的題目</span>
+                        </div>
+                        <button id="expand-weakness-btn" onclick="toggleWeaknessList()" style="display: none;"
+                            class="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                            <span id="expand-weakness-text">展開全部</span>
+                            <span id="expand-weakness-icon" class="material-symbols-outlined text-sm">expand_more</span>
+                        </button>
+                    </div>
+
+                    <div id="weakness-list" class="space-y-4 pb-0">
+                        <!-- Data will be injected here -->
+                    </div>
+
+                    <div id="empty-state" class="hidden flex-col items-center justify-center py-20 px-4 text-center">
+                        <span class="material-symbols-outlined text-6xl mb-4 text-gray-400">task_alt</span>
+                        <h3 class="text-xl font-black mb-2">太棒了！</h3>
+                        <p class="text-sm font-bold text-gray-500">目前沒有發現任何弱點，繼續保持！如果有答錯的題目，它們會出現在這裡。</p>
+                    </div>
+                </div>
+
+                <!-- 8. AI 智慧分析 -->
                 <div id="ai-analysis-card"
-                    class="neo-brutalism-card bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-4">
+                    class="neo-brutalism-card bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-4 mt-3">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-purple-600 text-xl">auto_awesome</span>
@@ -813,35 +839,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- ═══════════════════════════════════════════════ -->
-            <!-- 第四層：行動的我（具體任務清單）               -->
-            <!-- ═══════════════════════════════════════════════ -->
-
-            <!-- 10. 弱點題目列表 -->
-            <div class="neo-brutalism-card bg-gradient-to-br from-red-50 to-orange-50 p-4">
-                <div class="flex items-center justify-between mb-3 mt-2">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[var(--color-danger)] text-xl">priority_high</span>
-                        <span class="text-sm font-black uppercase">需要加強的題目</span>
-                    </div>
-                    <button id="expand-weakness-btn" onclick="toggleWeaknessList()" style="display: none;"
-                        class="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
-                        <span id="expand-weakness-text">展開全部</span>
-                        <span id="expand-weakness-icon" class="material-symbols-outlined text-sm">expand_more</span>
-                    </button>
-                </div>
-
-                <div id="weakness-list" class="space-y-4 pb-0">
-                    <!-- Data will be injected here -->
-                </div>
-
-                <div id="empty-state" class="hidden flex-col items-center justify-center py-20 px-4 text-center">
-                    <span class="material-symbols-outlined text-6xl mb-4 text-gray-400">task_alt</span>
-                    <h3 class="text-xl font-black mb-2">太棒了！</h3>
-                    <p class="text-sm font-bold text-gray-500">目前沒有發現任何弱點，繼續保持！如果有答錯的題目，它們會出現在這裡。</p>
                 </div>
             </div>
         </main>
