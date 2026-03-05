@@ -2396,6 +2396,20 @@ class ApiService {
     }
 
     /**
+     * 取得全體用戶第1~5次作答正確率 (管理員儀表板用)
+     * @returns {{ round: number, accuracy: number, total: number }[]}
+     */
+    async getAdminAttemptAccuracyByRound() {
+        try {
+            const { data, error } = await this.supabase.rpc('get_admin_attempt_accuracy_by_round');
+            if (error) throw error;
+            return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
      * 取得平均達到精熟的複習次數
      */
     async getAdminAverageReviewsToMastery() {
