@@ -122,9 +122,23 @@
 
             <!-- Chart 2: Top Error Questions (全站魔王題 Top 10) -->
             <div class="vibe-card dark:bg-gray-800">
-               <div class="flex items-center gap-3 mb-4">
-                  <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
-                  <h3 class="text-xl font-black uppercase">全站魔王題 Top 10</h3>
+               <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                     <span class="material-symbols-outlined text-black dark:text-white text-3xl">🔥</span>
+                     <h3 class="text-xl font-black uppercase">全站魔王題 Top 10</h3>
+                  </div>
+                  <div class="flex gap-2">
+                     <button onclick="exportBossQuestions('json')"
+                        class="px-3 py-1.5 text-xs font-bold bg-blue-500 text-white border-2 border-black shadow-[2px_2px_0_0_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        JSON
+                     </button>
+                     <button onclick="exportBossQuestions('excel')"
+                        class="px-3 py-1.5 text-xs font-bold bg-green-500 text-white border-2 border-black shadow-[2px_2px_0_0_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">table_view</span>
+                        Excel
+                     </button>
+                  </div>
                </div>
                <div class="space-y-3">
                   <!-- Loading state -->
@@ -679,6 +693,77 @@
  </div>
  `;
             }).join('');
+         }
+      }
+
+      /**
+       * 匯出魔王題資料
+       * @param {string} format - 'json' 或 'excel'
+       */
+      async function exportBossQuestions(format) {
+         try {
+            // 取得所有魔王題（不限制數量）
+            const result = await apiService.getAdminTopIncorrectCards(100);
+
+            if (!result.success || !result.data || result.data.length === 0) {
+               alert('沒有可匯出的資料');
+               return;
+            }
+
+            const data = result.data;
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            if (format === 'json') {
+               // 匯出 JSON
+               const exportData = data.map((q, index) => ({
+                  排名: index + 1,
+                  題目ID: q.question_id,
+                  科目: q.subject || '未分類',
+                  章節: q.chapter || '',
+                  題號: q.question_no || '',
+                  題目內容: q.question_text || '',
+                  錯誤率: (q.error_rate * 100).toFixed(1) + '%',
+                  全局作答次數: q.total_reviewed,
+                  全局答錯次數: q.total_incorrect
+               }));
+
+               const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+               const url = URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.href = url;
+               a.download = `魔王題_${timestamp}.json`;
+               a.click();
+               URL.revokeObjectURL(url);
+            } else if (format === 'excel') {
+               // 匯出 CSV (Excel 可開啟)
+               const headers = ['排名', '題目ID', '科目', '章節', '題號', '題目內容', '錯誤率', '全局作答次數', '全局答錯次數'];
+               const rows = data.map((q, index) => [
+                  index + 1,
+                  q.question_id,
+                  q.subject || '未分類',
+                  q.chapter || '',
+                  q.question_no || '',
+                  `"${(q.question_text || '').replace(/"/g, '""')}"`, // 處理引號
+                  (q.error_rate * 100).toFixed(1) + '%',
+                  q.total_reviewed,
+                  q.total_incorrect
+               ]);
+
+               // 加上 BOM 讓 Excel 正確識別 UTF-8
+               const BOM = '\uFEFF';
+               const csvContent = BOM + headers.join(',') + '\n' + rows.map(row => row.join(',')).join('\n');
+
+               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+               const url = URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.href = url;
+               a.download = `魔王題_${timestamp}.csv`;
+               a.click();
+               URL.revokeObjectURL(url);
+            }
+         } catch (error) {
+            console.error('匯出失敗:', error);
+            alert('匯出失敗，請稍後再試');
          }
       }
 
