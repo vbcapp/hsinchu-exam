@@ -1601,6 +1601,7 @@
 
             // 生成堆疊百分比長條圖
             let barsHtml = '';
+            const totalBars = data.length;
             data.forEach((day, index) => {
                 const total = day.correct + day.incorrect;
                 const accuracyPct = total > 0 ? Math.round((day.correct / total) * 100) : 0;
@@ -1608,6 +1609,10 @@
 
                 const greenHeight = total > 0 ? (accuracyPct / 100) * (chartHeight - 8) : 0;
                 const redHeight = total > 0 ? (errorPct / 100) * (chartHeight - 8) : 0;
+
+                // Tooltip 位置：右側的柱狀圖 tooltip 靠右對齊，避免超出容器
+                const isRightSide = index >= totalBars - 3;
+                const tooltipPosition = isRightSide ? 'right-0' : 'left-1/2 -translate-x-1/2';
 
                 barsHtml += `
                     <div class="flex-1 flex flex-col items-center justify-end relative group" style="height:${chartHeight}px;">
@@ -1625,7 +1630,7 @@
                         <div class="w-full max-w-[20px] border-2 border-dashed border-gray-200" style="height:${chartHeight - 8}px;"></div>
                         `}
                         <!-- Tooltip -->
-                        <div class="absolute bottom-full mb-2 hidden group-hover:block bg-black text-white text-sm px-2 py-1 whitespace-nowrap z-20 font-bold">
+                        <div class="absolute bottom-full mb-2 hidden group-hover:block bg-black text-white text-sm px-2 py-1 whitespace-nowrap z-20 font-bold ${tooltipPosition}">
                             ${day.date.slice(5)}<br>
                             ${total > 0 ? `正確率: ${accuracyPct}% (對${day.correct}/錯${day.incorrect})` : '無作答'}
                         </div>
