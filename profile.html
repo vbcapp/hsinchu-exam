@@ -175,25 +175,6 @@
                </div>
             </div>
 
-            <!-- Chart 6: Learning Trends -->
-            <div class="vibe-card dark:bg-gray-800">
-               <div class="flex items-center justify-between mb-4">
-                  <div class="flex items-center gap-3">
-                     <span class="material-symbols-outlined text-black dark:text-white">calendar_month</span>
-                     <h3 class="text-xl font-black uppercase">學習趨勢</h3>
-                  </div>
-                  <select id="learning-trends-period"
-                     class="border-2 border-black font-bold p-1 bg-white text-black text-sm"
-                     onchange="renderLearningTrendsChart(this.value)">
-                     <option value="week">每週</option>
-                     <option value="month">每月</option>
-                  </select>
-               </div>
-               <div class="bg-white p-4 border-2 border-black">
-                  <canvas id="learning-trends-chart"></canvas>
-               </div>
-            </div>
-
             <!-- Chart 7: Answer Time Distribution -->
             <div class="vibe-card dark:bg-gray-800">
                <div class="flex items-center gap-3 mb-4">
@@ -605,7 +586,7 @@
 
       // ==================== Admin Dashboard Functions ====================
       let registrationsChart, masteryChart;
-      let dailyActiveUsersChart, learningTrendsChart, answerTimeChart;
+      let dailyActiveUsersChart, answerTimeChart;
       let overallAccuracyChart, firstVsReviewChart, combinedActivityChart;
       let chapterAccuracyChart;
 
@@ -637,7 +618,6 @@
             { name: '全站魔王題', fn: () => renderTopIncorrectCardsDashboard() },
             { name: '熟練度分佈', fn: () => renderMasteryChart() },
             { name: '每日活躍與答題', fn: () => renderCombinedActivityChart() },
-            { name: '學習趨勢', fn: () => renderLearningTrendsChart('week') },
             { name: '答題時段分佈', fn: () => renderAnswerTimeDistributionChart() },
             { name: '章節正確率趨勢', fn: () => renderChapterAccuracyTrendChart() },
             { name: '整體正確率趨勢', fn: () => renderOverallAccuracyTrendChart('week') },
@@ -1025,48 +1005,6 @@
                      ticks: { font: { family: 'Inter', weight: 'bold' } },
                      grid: { display: false }
                   }
-               }
-            }
-         });
-      }
-
-      async function renderLearningTrendsChart(period = 'week') {
-         const result = await apiService.getAdminLearningTrends(period);
-         if (!result.success) return;
-
-         const ctx = document.getElementById('learning-trends-chart');
-         if (!ctx) return;
-
-         const labels = result.data.map(item => {
-            const date = new Date(item.period_start);
-            if (period === 'month') {
-               return `${date.getFullYear()}/${date.getMonth() + 1}`;
-            } else {
-               return `${date.getMonth() + 1}/${date.getDate()} 當週`;
-            }
-         });
-         const data = result.data.map(item => item.count);
-
-         if (learningTrendsChart) learningTrendsChart.destroy();
-
-         learningTrendsChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-               labels: labels,
-               datasets: [{
-                  label: period === 'month' ? '每月答題數' : '每週答題數',
-                  data: data,
-                  backgroundColor: '#FF9800',
-                  borderColor: '#000000',
-                  borderWidth: 2
-               }]
-            },
-            options: {
-               responsive: true,
-               plugins: { legend: { labels: { font: { family: 'Inter', weight: 'bold' }, color: '#000' } } },
-               scales: {
-                  y: { beginAtZero: true, ticks: { font: { family: 'Inter', weight: 'bold' } } },
-                  x: { ticks: { font: { family: 'Inter', weight: 'bold' } }, grid: { display: false } }
                }
             }
          });
