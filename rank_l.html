@@ -15,7 +15,9 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&amp;family=Space+Mono:wght@400;700&amp;display=swap"
         rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
@@ -81,7 +83,6 @@
                     </div>
                     <span id="rank-2-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
                     <span id="rank-2-level" class="font-black text-2xl italic">--</span>
-                    <span id="rank-2-cards" class="text-[10px] font-bold text-gray-500">-- 張卡片</span>
                 </div>
             </div>
 
@@ -98,7 +99,6 @@
                     </div>
                     <span id="rank-1-name" class="font-black text-base truncate w-full text-center px-1">--</span>
                     <span id="rank-1-level" class="font-black text-4xl italic">--</span>
-                    <span id="rank-1-cards" class="text-[11px] font-bold text-black/60">-- 張卡片</span>
                 </div>
             </div>
 
@@ -113,7 +113,6 @@
                     </div>
                     <span id="rank-3-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
                     <span id="rank-3-level" class="font-black text-2xl italic">--</span>
-                    <span id="rank-3-cards" class="text-[10px] font-bold text-gray-500">-- 張卡片</span>
                 </div>
             </div>
         </div>
@@ -239,7 +238,6 @@
             document.getElementById(`rank-${rank}-avatar`).querySelector('img').src = avatar;
             document.getElementById(`rank-${rank}-name`).textContent = name;
             document.getElementById(`rank-${rank}-level`).textContent = user.actualLevel;
-            document.getElementById(`rank-${rank}-cards`).textContent = `${user.total_questions || 0} 張卡片`;
 
             // 如果是當前用戶，加上閃爍效果
             if (isCurrentUser) {
@@ -247,7 +245,6 @@
                 const shimmerClass = (rank === 1) ? 'black-shimmer' : 'capped-shimmer';
 
                 document.getElementById(`rank-${rank}-name`).classList.add(shimmerClass);
-                document.getElementById(`rank-${rank}-cards`).classList.add(shimmerClass);
                 // 移除 Level 的閃爍
                 document.getElementById(`rank-${rank}-level`).classList.remove('capped-shimmer', 'black-shimmer');
                 // 卡片框高亮
@@ -256,10 +253,8 @@
                 // 移除另一個 class 以防萬一
                 const otherClass = (rank === 1) ? 'capped-shimmer' : 'black-shimmer';
                 document.getElementById(`rank-${rank}-name`).classList.remove(otherClass);
-                document.getElementById(`rank-${rank}-cards`).classList.remove(otherClass);
             } else {
                 document.getElementById(`rank-${rank}-name`).classList.remove('capped-shimmer', 'black-shimmer');
-                document.getElementById(`rank-${rank}-cards`).classList.remove('capped-shimmer', 'black-shimmer');
                 document.getElementById(`rank-${rank}-card`).classList.remove('ring-4', 'ring-primary');
             }
         }
@@ -287,7 +282,6 @@
                     </div>
                     <div class="flex-1">
                         <h3 class="font-black text-lg ${shimmerClass}">${name}</h3>
-                        <p class="text-xs font-bold ${cardsColorClass} ${shimmerClass}">${user.total_questions || 0} 張卡片</p>
                     </div>
                     <div class="text-4xl font-black italic pr-2">${user.actualLevel}</div>
                 </div>
