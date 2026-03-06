@@ -47,23 +47,41 @@ const RoleManager = {
 
     async init(supabaseClient) {
         if (this._initialized) return;
+
+        // 超時輔助函數
+        const withTimeout = (promise, ms, fallback) => {
+            return Promise.race([
+                promise,
+                new Promise((resolve) => setTimeout(() => resolve(fallback), ms))
+            ]);
+        };
+
         try {
-            // 查詢當前用戶角色
-            const { data: roleData } = await supabaseClient.rpc('get_my_role');
-            if (roleData) {
-                this.role = roleData;
+            // 查詢當前用戶角色（5秒超時）
+            const roleResult = await withTimeout(
+                supabaseClient.rpc('get_my_role'),
+                5000,
+                { data: null, error: 'timeout' }
+            );
+            if (roleResult.data) {
+                this.role = roleResult.data;
             }
 
-            // 查詢母版管理者 ID（用於共用題庫）
-            const { data: masterIdData } = await supabaseClient.rpc('get_master_admin_id');
-            if (masterIdData) {
-                this.masterAdminId = masterIdData;
+            // 查詢母版管理者 ID（5秒超時）
+            const masterIdResult = await withTimeout(
+                supabaseClient.rpc('get_master_admin_id'),
+                5000,
+                { data: null, error: 'timeout' }
+            );
+            if (masterIdResult.data) {
+                this.masterAdminId = masterIdResult.data;
             }
 
             this._initialized = true;
             console.log('RoleManager 已初始化, role:', this.role);
         } catch (err) {
             console.error('RoleManager 初始化失敗:', err);
+            this._initialized = true; // 即使失敗也標記為已初始化，避免重複嘗試
         }
     },
 

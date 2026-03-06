@@ -449,25 +449,24 @@
             }
         });
 
-        // 管理員按鈕顯示控制
-        window.addEventListener('load', () => {
-            const checkAdmin = () => {
-                const currentUser = apiService?.currentUser;
-                if (currentUser && typeof RoleManager !== 'undefined' && RoleManager.isAdmin()) {
-                    const adminBtn = document.getElementById('admin-create-btn');
-                    if (adminBtn) {
-                        adminBtn.classList.remove('hidden');
-                    }
+        // 管理員按鈕顯示控制 - 等待應用初始化完成後再檢查
+        function showAdminButtonIfAllowed() {
+            const currentUser = apiService?.currentUser;
+            if (currentUser && typeof RoleManager !== 'undefined' && RoleManager.isAdmin()) {
+                const adminBtn = document.getElementById('admin-create-btn');
+                if (adminBtn) {
+                    adminBtn.classList.remove('hidden');
                 }
-            };
-
-            // 延遲檢查，確保 apiService 已初始化
-            if (apiService?.currentUser) {
-                checkAdmin();
-            } else {
-                setTimeout(checkAdmin, 500);
             }
-        });
+        }
+
+        // 監聽應用初始化完成事件
+        window.addEventListener('appInitialized', showAdminButtonIfAllowed);
+
+        // 如果應用已經初始化完成（可能事件已經觸發過了），立即檢查
+        if (typeof appInitialized !== 'undefined' && appInitialized) {
+            showAdminButtonIfAllowed();
+        }
     </script>
 </body>
 

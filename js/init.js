@@ -264,7 +264,13 @@ async function loadUserCards() {
     }
 
     try {
-        const result = await apiService.getAccessibleQuestions(currentUser.id, { limit: 1000 });
+        // 設置超時（15秒）
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('載入超時')), 15000)
+        );
+
+        const fetchPromise = apiService.getAccessibleQuestions(currentUser.id, { limit: 1000 });
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
 
         if (result.success) {
             allCards = result.data.cards || result.data.questions || [];
@@ -282,10 +288,28 @@ async function loadUserCards() {
             applyFilter(currentFilter);
         } else {
             console.error('載入卡片失敗:', result.error);
+            showCardsError(container, '載入失敗，請重新整理頁面');
         }
     } catch (error) {
         console.error('載入卡片錯誤:', error);
+        showCardsError(container, error.message === '載入超時' ? '載入超時，請檢查網路連線後重新整理' : '載入發生錯誤，請重新整理頁面');
     }
+}
+
+/**
+ * 顯示卡片載入錯誤
+ */
+function showCardsError(container, message) {
+    if (!container) return;
+    container.innerHTML = `
+        <div class="col-span-2 flex flex-col items-center justify-center py-12 text-red-500">
+            <span class="material-symbols-outlined text-4xl mb-2">error</span>
+            <p class="text-sm font-bold">${message}</p>
+            <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-primary text-black font-bold border-2 border-black neo-shadow-sm">
+                重新整理
+            </button>
+        </div>
+    `;
 }
 
 /**
@@ -675,7 +699,41 @@ function showLevelUpAnimation(newLevel) {
     console.log('🎉 Level Up!', newLevel);
 }
 
+// 全局初始化 Promise，讓其他程式碼可以等待初始化完成
+let appInitPromise = null;
+let appInitialized = false;
+
+/**
+ * 等待應用初始化完成
+ * @returns {Promise} 初始化完成的 Promise
+ */
+function waitForAppInit() {
+    if (appInitialized) {
+        return Promise.resolve();
+    }
+    if (appInitPromise) {
+        return appInitPromise;
+    }
+    // 如果還沒開始初始化，建立一個等待的 Promise
+    return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+            if (appInitialized) {
+                clearInterval(checkInterval);
+                resolve();
+            }
+        }, 50);
+    });
+}
+
 // 頁面載入時自動初始化
 document.addEventListener('DOMContentLoaded', async () => {
-    await initializeApp();
+    appInitPromise = initializeApp().then(() => {
+        appInitialized = true;
+        // 觸發自定義事件，通知其他程式碼初始化完成
+        window.dispatchEvent(new CustomEvent('appInitialized'));
+    }).catch((err) => {
+        console.error('App 初始化失敗:', err);
+        appInitialized = true; // 即使失敗也標記為完成，避免永遠等待
+    });
+    await appInitPromise;
 });
