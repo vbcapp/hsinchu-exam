@@ -28,6 +28,11 @@ class ApiService {
             const { data: { user } } = await this.supabase.auth.getUser();
             this.currentUser = user;
 
+            // 初始化角色管理器（從資料庫讀取角色）
+            if (user && typeof RoleManager !== 'undefined') {
+                await RoleManager.init(this.supabase);
+            }
+
             return { success: true, user };
         } catch (error) {
             console.error('初始化失敗:', error);
@@ -1323,7 +1328,7 @@ class ApiService {
 
     /**
      * 複製母版題庫給新用戶
-     * 從 MASTER_ADMIN_ID 那邊將 questions 複製給新登入的用戶
+     * 從母版管理者那邊將 questions 複製給新登入的用戶
      */
     async copyMasterCardsToUser(userId, adminUuid) {
         try {
@@ -1339,7 +1344,7 @@ class ApiService {
             await this._createUserProfile(userId, username, email, avatarUrl);
 
             // 1. 檢查用戶是否已有作答進度 (在此系統，我們不複製 questions 表，
-            // 因為 PRD：「母版題庫複製: 管理員(MASTER_ADMIN_ID)的題目作為共用題庫」
+            // 因為 PRD：「母版題庫複製: 母版管理者的題目作為共用題庫」
             // 系統將直接讓學員存取共用題庫。所以「複製題庫」這一步在新的架構下是不必要的。
             // 學員不需要在 questions 表擁有自己的副本，只要操作 user_question_progress 即可。)
 

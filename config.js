@@ -26,28 +26,59 @@ const ERROR_CODES = {
 };
 
 // ==================== 管理員配置 ====================
-// 管理員 UUID 配置
-const MASTER_ADMIN_ID = '96e40a3a-5417-4cd2-bc64-beffab960331'; // 原始管理員 (母版卡片來源) ceceloveye@gmail.com
+// 角色由資料庫 users.role 欄位管理，不再寫死 UUID
+// 可在 Supabase Dashboard 直接修改 users 表的 role 欄位
+// 角色值: 'master_admin' | 'super_admin' | 'sub_admin' | 'user'
 
-// 最高管理者 UUID（可匯入 JSON、完整管理權限）
-const SUPER_ADMIN_UUIDS = [
-    '96e40a3a-5417-4cd2-bc64-beffab960331', // ceceloveye@gmail.com
-];
+/**
+ * 角色管理工具 - 從資料庫查詢角色
+ * 使用方式:
+ *   await RoleManager.init(supabaseClient)  // 初始化
+ *   RoleManager.isAdmin()                   // 是否為任何管理員
+ *   RoleManager.isSuperAdmin()              // 是否為高級管理員（可匯入 JSON）
+ *   RoleManager.isMasterAdmin()             // 是否為最高管理者
+ *   RoleManager.role                        // 取得角色字串
+ *   RoleManager.masterAdminId               // 取得母版管理者 ID
+ */
+const RoleManager = {
+    role: 'user',
+    masterAdminId: null,
+    _initialized: false,
 
-// 次高管理者 UUID（管理儀表板，但不能匯入 JSON）
-const SUB_ADMIN_UUIDS = [
-    '074640cd-6b42-4115-a7c2-4218e4e0169a', // cecelove_e@hotmail.com
-];
+    async init(supabaseClient) {
+        if (this._initialized) return;
+        try {
+            // 查詢當前用戶角色
+            const { data: roleData } = await supabaseClient.rpc('get_my_role');
+            if (roleData) {
+                this.role = roleData;
+            }
 
-// 所有管理員（包含最高+次高，用於向下相容）
-const ADMIN_UUIDS = [
-    ...SUPER_ADMIN_UUIDS,
-    ...SUB_ADMIN_UUIDS,
-    '17da7d22-17ad-4d40-a5d2-9c2ce9216cf0', // Original Admin
-    '3a5bb55c-4ffc-4373-a9b5-f211b4b4d63b', // New Admin
-    '03ff6033-ce0e-41ee-9734-fce32c10b1bb',  // imnivek@gmail.com
-    '2855e3fb-1839-44ad-abda-d04ff4c598f1',
-];
+            // 查詢母版管理者 ID（用於共用題庫）
+            const { data: masterIdData } = await supabaseClient.rpc('get_master_admin_id');
+            if (masterIdData) {
+                this.masterAdminId = masterIdData;
+            }
+
+            this._initialized = true;
+            console.log('RoleManager 已初始化, role:', this.role);
+        } catch (err) {
+            console.error('RoleManager 初始化失敗:', err);
+        }
+    },
+
+    isAdmin() {
+        return ['master_admin', 'super_admin', 'sub_admin'].includes(this.role);
+    },
+
+    isSuperAdmin() {
+        return ['master_admin', 'super_admin'].includes(this.role);
+    },
+
+    isMasterAdmin() {
+        return this.role === 'master_admin';
+    }
+};
 
 // ==================== 學員白名單 ====================
 // 只有在名單內的 Email 才能註冊或登入

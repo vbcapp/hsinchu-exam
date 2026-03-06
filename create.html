@@ -232,7 +232,7 @@
                 const user = apiService.currentUser;
 
                 // 檢查管理員權限
-                if (!user || !ADMIN_UUIDS.includes(user.id)) {
+                if (!user || !RoleManager.isAdmin()) {
                     ModalSystem.alert('權限不足', '您沒有管理員權限', () => {
                         window.location.href = 'profile.html';
                     });

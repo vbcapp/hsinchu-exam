@@ -453,7 +453,7 @@
         window.addEventListener('load', () => {
             const checkAdmin = () => {
                 const currentUser = apiService?.currentUser;
-                if (currentUser && typeof ADMIN_UUIDS !== 'undefined' && ADMIN_UUIDS.includes(currentUser.id)) {
+                if (currentUser && typeof RoleManager !== 'undefined' && RoleManager.isAdmin()) {
                     const adminBtn = document.getElementById('admin-create-btn');
                     if (adminBtn) {
                         adminBtn.classList.remove('hidden');
