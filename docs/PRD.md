@@ -1000,7 +1000,10 @@ questions (1) ──┬─→ (N) user_question_progress
      "subject": "職業安全衛生管理",
      "chapter": "第1章",
      "question": "題目內容...",
-     "options": ["選項A", "選項B", "選項C", "選項D"],
+     "option_a": "選項A",
+     "option_b": "選項B",
+     "option_c": "選項C",
+     "option_d": "選項D",
      "correct_answer": "C",
      "question_type": "single",
      "explanation": "答案解析..."

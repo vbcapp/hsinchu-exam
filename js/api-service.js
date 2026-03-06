@@ -3111,7 +3111,7 @@ class ApiService {
 
             const { data: questions, error: questionsError } = await this.supabase
                 .from('questions')
-                .select('id, question, subject, chapter, options, correct_answer, question_type')
+                .select('id, question, subject, chapter, option_a, option_b, option_c, option_d, correct_answer, question_type')
                 .in('id', questionIds);
 
             if (questionsError) throw questionsError;
@@ -3148,7 +3148,10 @@ class ApiService {
                     mostCommonWrongAnswer: mostCommonWrongAnswer,
                     wrongAnswerCounts: wrongAnswerDistribution,
                     correctAnswer: questionData.correct_answer,
-                    options: questionData.options,
+                    option_a: questionData.option_a,
+                    option_b: questionData.option_b,
+                    option_c: questionData.option_c,
+                    option_d: questionData.option_d,
                     questionType: questionData.question_type
                 };
             }).filter(item => item !== null);

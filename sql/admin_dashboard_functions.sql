@@ -275,7 +275,7 @@ COMMENT ON FUNCTION get_admin_first_vs_review_accuracy IS '取得首次作答 vs
 
 -- =============================================
 -- 7. 全站魔王題 Top N (錯誤率最高的題目)
--- 回傳: { question_id, question_text, subject, chapter, question_no, total_reviewed, total_incorrect, error_rate }[]
+-- 回傳: { question_id, question_text, subject, chapter, question_no, option_a, option_b, option_c, option_d, correct_answer, total_reviewed, total_incorrect, error_rate }[]
 -- =============================================
 CREATE OR REPLACE FUNCTION get_admin_top_incorrect_cards(top_n integer DEFAULT 10)
 RETURNS TABLE(
@@ -284,6 +284,11 @@ RETURNS TABLE(
     subject text,
     chapter text,
     question_no integer,
+    option_a text,
+    option_b text,
+    option_c text,
+    option_d text,
+    correct_answer jsonb,
     total_reviewed bigint,
     total_incorrect bigint,
     error_rate numeric
@@ -299,6 +304,11 @@ BEGIN
         q.subject,
         q.chapter,
         q.question_no,
+        q.option_a,
+        q.option_b,
+        q.option_c,
+        q.option_d,
+        q.correct_answer,
         SUM(uqp.times_reviewed)::bigint AS total_reviewed,
         SUM(uqp.times_incorrect)::bigint AS total_incorrect,
         ROUND(
@@ -307,7 +317,7 @@ BEGIN
         ) AS error_rate
     FROM user_question_progress uqp
     INNER JOIN questions q ON q.id = uqp.question_id
-    GROUP BY q.id, q.question, q.subject, q.chapter, q.question_no
+    GROUP BY q.id, q.question, q.subject, q.chapter, q.question_no, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer
     HAVING SUM(uqp.times_reviewed) > 1
     ORDER BY error_rate DESC, SUM(uqp.times_incorrect) DESC
     LIMIT top_n;

@@ -186,21 +186,13 @@
                         sessionStorage.setItem('currentCardName', data.question);
                     }
 
-                    // 處理選項：確保是陣列格式
-                    let options = [];
-                    if (Array.isArray(data.options)) {
-                        options = [...data.options];
-                    } else if (typeof data.options === 'object' && data.options !== null) {
-                        // 如果是物件，轉換為陣列
-                        options = Object.values(data.options);
-                    }
-
-                    // 確保選項有4個，如果不足則補充
-                    while (options.length < 4) {
-                        options.push(`選項 ${options.length + 1}`);
-                    }
-                    // 如果超過4個，只取前4個
-                    options = options.slice(0, 4);
+                    // 處理選項：從 option_a/b/c/d 欄位讀取
+                    let options = [
+                        data.option_a || '選項 1',
+                        data.option_b || '選項 2',
+                        data.option_c || '選項 3',
+                        data.option_d || '選項 4'
+                    ];
 
                     // 處理正確答案：轉換為數字索引（1-based）
                     let correctAnswer = 1;

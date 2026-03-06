@@ -740,14 +740,15 @@
                   let correctAnswerContent = '';
                   let correctAnswerLabel = q.correct_answer ?? null;
 
-                  if (q.options && q.correct_answer !== null && q.correct_answer !== undefined) {
+                  const optionsMap = { 0: q.option_a, 1: q.option_b, 2: q.option_c, 3: q.option_d };
+                  if (q.correct_answer !== null && q.correct_answer !== undefined) {
                      if (typeof q.correct_answer === 'number' || (typeof q.correct_answer === 'string' && !isNaN(String(q.correct_answer).trim()) && String(q.correct_answer).trim() !== '')) {
                         const idx = parseInt(q.correct_answer, 10);
-                        correctAnswerContent = q.options[idx] || '';
+                        correctAnswerContent = optionsMap[idx] || '';
                         correctAnswerLabel = String.fromCharCode(65 + idx);
                      } else if (typeof q.correct_answer === 'string') {
                         const idx = q.correct_answer.charCodeAt(0) - 65;
-                        correctAnswerContent = q.options[idx] || '';
+                        correctAnswerContent = optionsMap[idx] || '';
                         correctAnswerLabel = q.correct_answer;
                      }
                   }
@@ -761,9 +762,11 @@
                      章節: q.chapter || '',
                      題號: q.question_no || '',
                      題目內容: q.question_text || '',
-                     選項: q.options || [],
+                     option_a: q.option_a || '',
+                     option_b: q.option_b || '',
+                     option_c: q.option_c || '',
+                     option_d: q.option_d || '',
                      正確答案: answerText,
-                     options: q.options || [],
                      answer: answerText,
                      錯誤率: (q.error_rate * 100).toFixed(1) + '%',
                      全局作答: q.total_reviewed
@@ -779,28 +782,20 @@
                URL.revokeObjectURL(url);
             } else if (format === 'excel') {
                // 匯出 CSV (Excel 可開啟)
-               const headers = ['排名', '題目ID', '科目', '章節', '題號', '題目內容', '選項', '正確答案', '錯誤率', '全局作答'];
+               const headers = ['排名', '題目ID', '科目', '章節', '題號', '題目內容', '選項A', '選項B', '選項C', '選項D', '正確答案', '錯誤率', '全局作答'];
                const rows = data.map((q, index) => {
-                  // 將選項陣列格式化為字串 (例如: "A. 選項1 | B. 選項2 | C. 選項3")
-                  let optionsText = '';
-                  if (q.options && Array.isArray(q.options)) {
-                     optionsText = q.options.map((opt, idx) => {
-                        const label = String.fromCharCode(65 + idx); // A, B, C, D...
-                        return `${label}. ${opt}`;
-                     }).join(' | ');
-                  }
+                  const optionsMap = { 0: q.option_a, 1: q.option_b, 2: q.option_c, 3: q.option_d };
 
                   // 正確答案
                   let correctAnswerText = '';
-                  if (q.options && q.correct_answer !== null && q.correct_answer !== undefined) {
+                  if (q.correct_answer !== null && q.correct_answer !== undefined) {
                      if (typeof q.correct_answer === 'number' || (typeof q.correct_answer === 'string' && !isNaN(String(q.correct_answer).trim()) && String(q.correct_answer).trim() !== '')) {
                         const idx = parseInt(q.correct_answer, 10);
                         const answerLabel = String.fromCharCode(65 + idx);
-                        correctAnswerText = `${answerLabel}. ${q.options[idx] || ''}`;
+                        correctAnswerText = `${answerLabel}. ${optionsMap[idx] || ''}`;
                      } else if (typeof q.correct_answer === 'string') {
-                        // It's already a letter like 'A'
                         const idx = q.correct_answer.charCodeAt(0) - 65;
-                        correctAnswerText = `${q.correct_answer}. ${q.options[idx] || ''}`;
+                        correctAnswerText = `${q.correct_answer}. ${optionsMap[idx] || ''}`;
                      }
                   }
 
@@ -811,7 +806,10 @@
                      q.chapter || '',
                      q.question_no || '',
                      `"${(q.question_text || '').replace(/"/g, '""')}"`, // 處理引號
-                     `"${optionsText.replace(/"/g, '""')}"`, // 處理引號
+                     `"${(q.option_a || '').replace(/"/g, '""')}"`,
+                     `"${(q.option_b || '').replace(/"/g, '""')}"`,
+                     `"${(q.option_c || '').replace(/"/g, '""')}"`,
+                     `"${(q.option_d || '').replace(/"/g, '""')}"`,
                      `"${correctAnswerText.replace(/"/g, '""')}"`, // 處理引號
                      (Number(q.error_rate) * 100).toFixed(1) + '%',
                      q.total_reviewed

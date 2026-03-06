@@ -54,7 +54,10 @@
 | `chapter` | `varchar` | | 章節或主題 |
 | `question_no` | `integer` | | 排序用：題目編號 |
 | `question` | `text` | | 題目敘述內容 |
-| `options` | `jsonb` | | 選項 (陣列格式，如 `["選項A", "選項B"]`) |
+| `option_a` | `text` | | 選項 A |
+| `option_b` | `text` | | 選項 B |
+| `option_c` | `text` | | 選項 C |
+| `option_d` | `text` | | 選項 D |
 | `correct_answer` | `jsonb` | | 正確答案 |
 | `question_type` | `varchar` | | 題型 (單選/複選) |
 | `explanation` | `text` | | 答案的詳細解析 |

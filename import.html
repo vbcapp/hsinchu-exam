@@ -46,7 +46,10 @@
     "chapter": "第一章 總則",
     "question_no": "1",
     "question": "勞動基準法的主管機關為何？",
-    "options": ["勞動部", "經濟部", "內政部", "法務部"],
+    "option_a": "勞動部",
+    "option_b": "經濟部",
+    "option_c": "內政部",
+    "option_d": "法務部",
     "correct_answer": "勞動部",
     "question_type": "single",
     "explanation": "依勞動基準法第 4 條規定..."
@@ -388,12 +391,14 @@
                         }
                     }
 
-                    // 檢查 options 是否為陣列
-                    if (item.options && !Array.isArray(item.options)) {
-                        return {
-                            valid: false,
-                            message: `第 ${i + 1} 筆資料的 options 欄位格式錯誤，應為陣列`
-                        };
+                    // 檢查 option_a/b/c/d 是否為字串
+                    for (const optKey of ['option_a', 'option_b', 'option_c', 'option_d']) {
+                        if (item[optKey] && typeof item[optKey] !== 'string') {
+                            return {
+                                valid: false,
+                                message: `第 ${i + 1} 筆資料的 ${optKey} 欄位格式錯誤，應為字串`
+                            };
+                        }
                     }
 
                     // 檢查 correct_answer 是否為字串
