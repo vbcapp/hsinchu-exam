@@ -300,14 +300,14 @@ BEGIN
     RETURN QUERY
     SELECT
         q.id AS question_id,
-        q.question AS question_text,
-        q.subject,
-        q.chapter,
+        q.question::text AS question_text,
+        q.subject::text,
+        q.chapter::text,
         q.question_no,
-        q.option_a,
-        q.option_b,
-        q.option_c,
-        q.option_d,
+        q.option_a::text,
+        q.option_b::text,
+        q.option_c::text,
+        q.option_d::text,
         q.correct_answer,
         SUM(uqp.times_reviewed)::bigint AS total_reviewed,
         SUM(uqp.times_incorrect)::bigint AS total_incorrect,
@@ -318,7 +318,7 @@ BEGIN
     FROM user_question_progress uqp
     INNER JOIN questions q ON q.id = uqp.question_id
     GROUP BY q.id, q.question, q.subject, q.chapter, q.question_no, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer
-    HAVING SUM(uqp.times_reviewed) > 1
+    HAVING SUM(uqp.times_reviewed) >= 1
     ORDER BY error_rate DESC, SUM(uqp.times_incorrect) DESC
     LIMIT top_n;
 END;

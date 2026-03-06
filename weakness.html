@@ -583,15 +583,11 @@
                         </div>
                         <!-- 預估完成 -->
                         <div id="estimation-section" class="bg-white/60 border-2 border-black p-3">
-                            <div class="text-sm mb-1">
-                                💡 <span class="font-bold">照目前速度</span>（每日 <span id="current-speed"
-                                    class="font-bold text-purple-600">--</span> 題熟練）
-                            </div>
-                            <div id="estimation-text" class="text-sm font-bold text-gray-700 mb-2">
-                                <!-- 預估文字會由 JS 填入 -->
-                            </div>
-                            <div id="suggestion-text" class="text-sm text-orange-600 font-bold">
+                            <div id="suggestion-text" class="text-sm font-bold text-purple-600 mb-1">
                                 <!-- 建議文字會由 JS 填入 -->
+                            </div>
+                            <div id="estimation-text" class="text-sm text-gray-700">
+                                <!-- 預估文字會由 JS 填入 -->
                             </div>
                         </div>
                     </div>
@@ -627,7 +623,7 @@
                         </div>
                         <!-- 每日題數調整器 -->
                         <div class="flex flex-col items-center gap-1 ml-4">
-                            <span class="text-sm font-bold text-gray-400 uppercase">每日題數</span>
+                            <span class="text-sm font-bold text-gray-400 uppercase">每日熟練題數</span>
                             <div class="flex items-center gap-1">
                                 <button onclick="adjustDailyGoal(-5)"
                                     class="w-7 h-7 neo-border bg-white flex items-center justify-center font-black text-lg active:translate-y-0.5 active:shadow-none">-</button>
@@ -1108,14 +1104,9 @@
             });
 
             const avgDailySpeed = daysWithData > 0 ? Math.max(1, Math.round(totalMastered / 7)) : 5; // 預設 5
-            document.getElementById('current-speed').textContent = avgDailySpeed;
 
             // 計算預估完成天數
             const remainingQuestions = totalQuestions - masteredCount;
-            const estimatedDays = avgDailySpeed > 0 ? Math.ceil(remainingQuestions / avgDailySpeed) : 999;
-
-            // 計算緩衝天數
-            const bufferDays = daysRemaining - estimatedDays;
 
             // 更新預估文字
             const estimationText = document.getElementById('estimation-text');
@@ -1123,33 +1114,26 @@
             const progressBar = document.getElementById('progress-bar');
 
             if (remainingQuestions === 0) {
-                estimationText.innerHTML = '恭喜！<span class="text-green-600">已達成所有目標</span> 🎉';
-                suggestionText.innerHTML = '✅ 保持複習，鞏固知識';
+                suggestionText.innerHTML = '🎉 恭喜！已達成所有目標';
+                suggestionText.className = "text-sm font-bold text-green-600 mb-1";
+                estimationText.innerHTML = '保持複習，鞏固知識';
             } else if (daysRemaining < 0) {
-                estimationText.innerHTML = `已過期 <span class="text-red-500">${Math.abs(daysRemaining)}</span> 天`;
-                suggestionText.innerHTML = '⚠️ 請重新設定考試日期';
-            } else if (estimatedDays <= daysRemaining) {
-                // 進度超前或剛好
-                estimationText.innerHTML = `預計 <span class="text-green-600">${estimatedDays}</span> 天後達成 100%`;
+                suggestionText.innerHTML = '⚠️ 考試日期已過期';
+                suggestionText.className = "text-sm font-bold text-red-500 mb-1";
+                estimationText.innerHTML = '請重新設定考試日期';
+            } else if (daysRemaining > 0) {
+                // 計算每天需要熟練幾題才能準時完成
+                const suggestedDaily = Math.ceil(remainingQuestions / daysRemaining);
+                const estimatedDays = suggestedDaily > 0 ? Math.ceil(remainingQuestions / suggestedDaily) : daysRemaining;
 
-                const bufferDays = daysRemaining - estimatedDays;
-                if (bufferDays > 0) {
-                    suggestionText.innerHTML = `🌟 有 <span class="font-bold">${bufferDays}</span> 天緩衝，進度超前！`;
-                    suggestionText.className = "text-sm text-green-600 font-bold";
-                } else {
-                    suggestionText.innerHTML = '✨ 進度剛剛好，請保持！';
-                    suggestionText.className = "text-sm text-blue-600 font-bold";
-                }
+                suggestionText.innerHTML = `💡 建議：每天熟練 <span class="text-purple-700 font-black">${suggestedDaily}</span> 題`;
+                suggestionText.className = "text-sm font-bold text-purple-600 mb-1";
+                estimationText.innerHTML = `1天熟練 ${suggestedDaily} 題，<span class="font-bold">${estimatedDays}</span> 天後完成`;
             } else {
-                // 進度診斷與建議
-                const delayDays = estimatedDays - daysRemaining;
-                // 計算若要準時，每天需要多少題
-                const suggestedDailyTarget = Math.ceil(remainingQuestions * (3 / (stats.overallAccuracy / 100 || 0.5)) / daysRemaining);
-                const currentDailyGoal = dailyGoal || 1; // 預設 1
-
-                estimationText.innerHTML = `照目前速度，將比考試日期<span class="text-red-500 font-black">晚 ${delayDays} 天</span>完成。`;
-                suggestionText.innerHTML = `若要準時達標，每日目標需提升至 <span class="font-black">${suggestedDailyTarget}</span> 題（目前 ${currentDailyGoal} 題）。`;
-                suggestionText.className = "text-sm text-orange-600 font-bold";
+                // daysRemaining === 0，今天就是考試日
+                suggestionText.innerHTML = '📅 今天是考試日！';
+                suggestionText.className = "text-sm font-bold text-orange-600 mb-1";
+                estimationText.innerHTML = `還有 ${remainingQuestions} 題未熟練`;
             }
         }
 
@@ -2165,7 +2149,7 @@
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/sw.js").catch(() => {});
+                navigator.serviceWorker.register("/sw.js").catch(() => { });
             });
         }
     </script>
