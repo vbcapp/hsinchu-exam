@@ -52,235 +52,241 @@
     <script src="js/api-service.js"></script>
 </head>
 
-<body class="bg-background-light text-black pb-12">
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="text-center">
-            <span class="material-symbols-outlined text-5xl animate-spin">progress_activity</span>
-            <p class="mt-4 font-bold text-lg">載入排行榜中...</p>
+<body class="bg-surface dark:bg-background-dark text-black min-h-screen">
+    <!-- 加入手機版置中容器 -->
+    <div class="vibe-app-shell bg-background-light dark:bg-zinc-900 shadow-2xl flex flex-col min-h-screen pb-12">
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="text-center">
+                <span class="material-symbols-outlined text-5xl animate-spin">progress_activity</span>
+                <p class="mt-4 font-bold text-lg">載入排行榜中...</p>
+            </div>
         </div>
-    </div>
 
-    <header class="p-6">
-        <div class="flex items-center gap-4 mb-6">
-            <a href="rank.html"
-                class="neo-border bg-white p-2 flex items-center justify-center active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
-                <span class="material-symbols-outlined text-2xl">arrow_back</span>
-            </a>
-            <h1 class="text-3xl font-black">等級達人榜</h1>
-        </div>
-        <div class="space-y-1">
-            <p id="total-users" class="text-lg font-bold">總共 -- 位學習者</p>
-            <p id="last-update" class="text-sm font-bold text-gray-500">最後更新：--</p>
-        </div>
-    </header>
+        <header class="p-6">
+            <div class="flex items-center gap-4 mb-6">
+                <a href="rank.html"
+                    class="neo-border bg-white p-2 flex items-center justify-center active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+                    <span class="material-symbols-outlined text-2xl">arrow_back</span>
+                </a>
+                <h1 class="text-3xl font-black">等級達人榜</h1>
+            </div>
+            <div class="space-y-1">
+                <p id="total-users" class="text-lg font-bold">總共 -- 位學習者</p>
+                <p id="last-update" class="text-sm font-bold text-gray-500">最後更新：--</p>
+            </div>
+        </header>
 
-    <main class="px-6 space-y-8">
-        <!-- 前三名頒獎台 -->
-        <div id="podium-container" class="flex items-end justify-center gap-3 pt-4">
-            <!-- 第二名 -->
-            <div id="rank-2-container" class="flex-1 flex flex-col items-center">
-                <div id="rank-2-card" class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
-                    <div
-                        class="absolute -top-6 neo-border bg-white rounded-full w-12 h-12 flex items-center justify-center font-black text-xl">
-                        2</div>
-                    <div id="rank-2-avatar" class="w-12 h-12 neo-border bg-gray-200 rounded-full mb-2 overflow-hidden">
-                        <img alt="avatar" src="" />
+        <main class="px-6 space-y-8">
+            <!-- 前三名頒獎台 -->
+            <div id="podium-container" class="flex items-end justify-center gap-3 pt-4">
+                <!-- 第二名 -->
+                <div id="rank-2-container" class="flex-1 flex flex-col items-center">
+                    <div id="rank-2-card"
+                        class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
+                        <div
+                            class="absolute -top-6 neo-border bg-white rounded-full w-12 h-12 flex items-center justify-center font-black text-xl">
+                            2</div>
+                        <div id="rank-2-avatar"
+                            class="w-12 h-12 neo-border bg-gray-200 rounded-full mb-2 overflow-hidden">
+                            <img alt="avatar" src="" />
+                        </div>
+                        <span id="rank-2-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
+                        <span id="rank-2-level" class="font-black text-2xl italic">--</span>
                     </div>
-                    <span id="rank-2-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
-                    <span id="rank-2-level" class="font-black text-2xl italic">--</span>
                 </div>
-            </div>
 
-            <!-- 第一名 (冠軍) -->
-            <div id="rank-1-container" class="flex-1 flex flex-col items-center scale-110 z-10">
-                <div id="rank-1-card"
-                    class="neo-card-lg bg-primary w-full pt-8 pb-6 flex flex-col items-center relative">
-                    <div
-                        class="absolute -top-8 neo-border bg-primary rounded-full w-14 h-14 flex items-center justify-center font-black text-2xl">
-                        <span class="material-symbols-outlined text-3xl">workspace_premium</span>
+                <!-- 第一名 (冠軍) -->
+                <div id="rank-1-container" class="flex-1 flex flex-col items-center scale-110 z-10">
+                    <div id="rank-1-card"
+                        class="neo-card-lg bg-primary w-full pt-8 pb-6 flex flex-col items-center relative">
+                        <div
+                            class="absolute -top-8 neo-border bg-primary rounded-full w-14 h-14 flex items-center justify-center font-black text-2xl">
+                            <span class="material-symbols-outlined text-3xl">workspace_premium</span>
+                        </div>
+                        <div id="rank-1-avatar" class="w-16 h-16 neo-border bg-white rounded-full mb-2 overflow-hidden">
+                            <img alt="avatar" src="" />
+                        </div>
+                        <span id="rank-1-name" class="font-black text-base truncate w-full text-center px-1">--</span>
+                        <span id="rank-1-level" class="font-black text-4xl italic">--</span>
                     </div>
-                    <div id="rank-1-avatar" class="w-16 h-16 neo-border bg-white rounded-full mb-2 overflow-hidden">
-                        <img alt="avatar" src="" />
+                </div>
+
+                <!-- 第三名 -->
+                <div id="rank-3-container" class="flex-1 flex flex-col items-center">
+                    <div id="rank-3-card"
+                        class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
+                        <div
+                            class="absolute -top-6 neo-border bg-white rounded-full w-12 h-12 flex items-center justify-center font-black text-xl">
+                            3</div>
+                        <div id="rank-3-avatar"
+                            class="w-12 h-12 neo-border bg-gray-100 rounded-full mb-2 overflow-hidden">
+                            <img alt="avatar" src="" />
+                        </div>
+                        <span id="rank-3-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
+                        <span id="rank-3-level" class="font-black text-2xl italic">--</span>
                     </div>
-                    <span id="rank-1-name" class="font-black text-base truncate w-full text-center px-1">--</span>
-                    <span id="rank-1-level" class="font-black text-4xl italic">--</span>
                 </div>
             </div>
 
-            <!-- 第三名 -->
-            <div id="rank-3-container" class="flex-1 flex flex-col items-center">
-                <div id="rank-3-card" class="neo-card bg-white w-full pt-6 pb-4 flex flex-col items-center relative">
-                    <div
-                        class="absolute -top-6 neo-border bg-white rounded-full w-12 h-12 flex items-center justify-center font-black text-xl">
-                        3</div>
-                    <div id="rank-3-avatar" class="w-12 h-12 neo-border bg-gray-100 rounded-full mb-2 overflow-hidden">
-                        <img alt="avatar" src="" />
+            <!-- 第 4 名以後的列表 -->
+            <div id="rank-list" class="space-y-4">
+                <!-- 動態渲染 -->
+            </div>
+
+            <!-- 底部統計區 -->
+            <div id="stats-container" class="grid grid-cols-2 gap-4">
+                <div class="neo-card bg-white p-5">
+                    <h4 class="text-xs font-black text-gray-500 mb-1">你的排名</h4>
+                    <div class="flex items-baseline gap-1">
+                        <span id="my-rank" class="text-2xl font-black">#--</span>
                     </div>
-                    <span id="rank-3-name" class="font-black text-sm truncate w-full text-center px-1">--</span>
-                    <span id="rank-3-level" class="font-black text-2xl italic">--</span>
+                </div>
+                <div class="neo-card bg-white p-5">
+                    <h4 class="text-xs font-black text-gray-500 mb-1">你的等級</h4>
+                    <div class="flex items-baseline gap-1">
+                        <span id="my-level" class="text-2xl font-black">Lv.--</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
 
-        <!-- 第 4 名以後的列表 -->
-        <div id="rank-list" class="space-y-4">
-            <!-- 動態渲染 -->
-        </div>
+        <script>
+            // 預設頭像
+            const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFkz4f23tCsJx2XoWDwRbqOuT7ykrttxTJpEBUBj7buLZ29cFWTodfR05lCnqUVLh3ryGm95QIuMgz8Ut0bpEEuzJ9f89UpWhesieG9w93R2Fsh_3QgrvRu7hyTQXRdBvHIThU-UpRjQwE236gxRaLPmkIISJuouE3wQsycoWG8cb1CJHPoxt4pux1BXWyJhcntBJqar-6xrur66Khwxp5zPrB3dZ-SoKwcDubog8SekixtpZtWO9F63OMvpmxSGtOl6uykNrf0si3';
 
-        <!-- 底部統計區 -->
-        <div id="stats-container" class="grid grid-cols-2 gap-4">
-            <div class="neo-card bg-white p-5">
-                <h4 class="text-xs font-black text-gray-500 mb-1">你的排名</h4>
-                <div class="flex items-baseline gap-1">
-                    <span id="my-rank" class="text-2xl font-black">#--</span>
-                </div>
-            </div>
-            <div class="neo-card bg-white p-5">
-                <h4 class="text-xs font-black text-gray-500 mb-1">你的等級</h4>
-                <div class="flex items-baseline gap-1">
-                    <span id="my-level" class="text-2xl font-black">Lv.--</span>
-                </div>
-            </div>
-        </div>
-    </main>
+            document.addEventListener('DOMContentLoaded', async () => {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                const podiumContainer = document.getElementById('podium-container');
+                const rankList = document.getElementById('rank-list');
 
-    <script>
-        // 預設頭像
-        const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFkz4f23tCsJx2XoWDwRbqOuT7ykrttxTJpEBUBj7buLZ29cFWTodfR05lCnqUVLh3ryGm95QIuMgz8Ut0bpEEuzJ9f89UpWhesieG9w93R2Fsh_3QgrvRu7hyTQXRdBvHIThU-UpRjQwE236gxRaLPmkIISJuouE3wQsycoWG8cb1CJHPoxt4pux1BXWyJhcntBJqar-6xrur66Khwxp5zPrB3dZ-SoKwcDubog8SekixtpZtWO9F63OMvpmxSGtOl6uykNrf0si3';
+                try {
+                    // 初始化 API Service
+                    await apiService.initialize();
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const podiumContainer = document.getElementById('podium-container');
-            const rankList = document.getElementById('rank-list');
+                    const currentUserId = apiService.currentUser?.id;
 
-            try {
-                // 初始化 API Service
-                await apiService.initialize();
+                    // 取得排行榜資料
+                    const result = await apiService.getLeaderboard(currentUserId);
 
-                const currentUserId = apiService.currentUser?.id;
-
-                // 取得排行榜資料
-                const result = await apiService.getLeaderboard(currentUserId);
-
-                if (!result.success) {
-                    throw new Error(result.error?.message || '載入失敗');
-                }
-
-                const { data: users, totalUsers, currentUserRank, currentUserData } = result;
-
-                // 更新總人數與時間
-                document.getElementById('total-users').textContent = `總共 ${totalUsers.toLocaleString()} 位學習者`;
-                document.getElementById('last-update').textContent = `最後更新：${new Date().toLocaleString('zh-TW')}`;
-
-                // 渲染邏輯
-                if (totalUsers === 0) {
-                    // 沒有任何用戶
-                    podiumContainer.innerHTML = '<p class="text-center text-gray-500 py-8">目前還沒有學習者</p>';
-                } else if (totalUsers === 1) {
-                    // 單人模式：只顯示冠軍，隱藏 2、3 名
-                    document.getElementById('rank-2-container').classList.add('hidden');
-                    document.getElementById('rank-3-container').classList.add('hidden');
-                    document.getElementById('rank-1-container').classList.remove('flex-1');
-                    document.getElementById('rank-1-container').classList.add('w-48');
-                    renderPodiumUser(1, users[0], currentUserId);
-                } else if (totalUsers === 2) {
-                    // 只有兩人：顯示 1、2 名，隱藏 3
-                    document.getElementById('rank-3-container').classList.add('hidden');
-                    renderPodiumUser(1, users[0], currentUserId);
-                    renderPodiumUser(2, users[1], currentUserId);
-                } else {
-                    // 多人模式：渲染前三名
-                    renderPodiumUser(1, users[0], currentUserId);
-                    renderPodiumUser(2, users[1], currentUserId);
-                    renderPodiumUser(3, users[2], currentUserId);
-                }
-
-                // 渲染第 4 名以後 (最多顯示 10 名)
-                const listUsers = users.slice(3, 10);
-                let listHTML = '';
-
-                listUsers.forEach((user, index) => {
-                    const rank = index + 4;
-                    const isCurrentUser = user.id === currentUserId;
-                    listHTML += renderListItem(rank, user, isCurrentUser);
-                });
-
-                // 如果當前用戶不在前 10 名，額外顯示「你 (You)」區塊
-                if (currentUserRank > 10 && currentUserData) {
-                    listHTML += renderListItem(currentUserRank, currentUserData, true);
-                }
-
-                rankList.innerHTML = listHTML;
-
-                // 更新底部統計
-                if (currentUserRank > 0) {
-                    document.getElementById('my-rank').textContent = `#${currentUserRank}`;
-                    document.getElementById('my-level').textContent = `Lv.${currentUserData.actualLevel}`;
-                    if (currentUserData.isCapped) {
-                        document.getElementById('my-level').classList.add('capped-shimmer');
+                    if (!result.success) {
+                        throw new Error(result.error?.message || '載入失敗');
                     }
-                } else {
-                    document.getElementById('my-rank').textContent = '--';
-                    document.getElementById('my-level').textContent = '--';
+
+                    const { data: users, totalUsers, currentUserRank, currentUserData } = result;
+
+                    // 更新總人數與時間
+                    document.getElementById('total-users').textContent = `總共 ${totalUsers.toLocaleString()} 位學習者`;
+                    document.getElementById('last-update').textContent = `最後更新：${new Date().toLocaleString('zh-TW')}`;
+
+                    // 渲染邏輯
+                    if (totalUsers === 0) {
+                        // 沒有任何用戶
+                        podiumContainer.innerHTML = '<p class="text-center text-gray-500 py-8">目前還沒有學習者</p>';
+                    } else if (totalUsers === 1) {
+                        // 單人模式：只顯示冠軍，隱藏 2、3 名
+                        document.getElementById('rank-2-container').classList.add('hidden');
+                        document.getElementById('rank-3-container').classList.add('hidden');
+                        document.getElementById('rank-1-container').classList.remove('flex-1');
+                        document.getElementById('rank-1-container').classList.add('w-48');
+                        renderPodiumUser(1, users[0], currentUserId);
+                    } else if (totalUsers === 2) {
+                        // 只有兩人：顯示 1、2 名，隱藏 3
+                        document.getElementById('rank-3-container').classList.add('hidden');
+                        renderPodiumUser(1, users[0], currentUserId);
+                        renderPodiumUser(2, users[1], currentUserId);
+                    } else {
+                        // 多人模式：渲染前三名
+                        renderPodiumUser(1, users[0], currentUserId);
+                        renderPodiumUser(2, users[1], currentUserId);
+                        renderPodiumUser(3, users[2], currentUserId);
+                    }
+
+                    // 渲染第 4 名以後 (最多顯示 10 名)
+                    const listUsers = users.slice(3, 10);
+                    let listHTML = '';
+
+                    listUsers.forEach((user, index) => {
+                        const rank = index + 4;
+                        const isCurrentUser = user.id === currentUserId;
+                        listHTML += renderListItem(rank, user, isCurrentUser);
+                    });
+
+                    // 如果當前用戶不在前 10 名，額外顯示「你 (You)」區塊
+                    if (currentUserRank > 10 && currentUserData) {
+                        listHTML += renderListItem(currentUserRank, currentUserData, true);
+                    }
+
+                    rankList.innerHTML = listHTML;
+
+                    // 更新底部統計
+                    if (currentUserRank > 0) {
+                        document.getElementById('my-rank').textContent = `#${currentUserRank}`;
+                        document.getElementById('my-level').textContent = `Lv.${currentUserData.actualLevel}`;
+                        if (currentUserData.isCapped) {
+                            document.getElementById('my-level').classList.add('capped-shimmer');
+                        }
+                    } else {
+                        document.getElementById('my-rank').textContent = '--';
+                        document.getElementById('my-level').textContent = '--';
+                    }
+
+                } catch (error) {
+                    console.error('排行榜載入錯誤:', error);
+                    rankList.innerHTML = `<p class="text-center text-red-500 py-8">載入失敗：${error.message}</p>`;
+                } finally {
+                    loadingOverlay.classList.add('hidden');
                 }
+            });
 
-            } catch (error) {
-                console.error('排行榜載入錯誤:', error);
-                rankList.innerHTML = `<p class="text-center text-red-500 py-8">載入失敗：${error.message}</p>`;
-            } finally {
-                loadingOverlay.classList.add('hidden');
+            /**
+             * 渲染頒獎台用戶
+             */
+            function renderPodiumUser(rank, user, currentUserId) {
+                const isCurrentUser = user.id === currentUserId;
+                const avatar = user.avatar_url || DEFAULT_AVATAR;
+                const name = isCurrentUser ? `${user.username} (你)` : user.username;
+
+                document.getElementById(`rank-${rank}-avatar`).querySelector('img').src = avatar;
+                document.getElementById(`rank-${rank}-name`).textContent = name;
+                document.getElementById(`rank-${rank}-level`).textContent = user.actualLevel;
+
+                // 如果是當前用戶，加上閃爍效果
+                if (isCurrentUser) {
+                    // 特殊處理：如果是第一名 (黃色背景)，改用黑色閃爍，否則用金色閃爍
+                    const shimmerClass = (rank === 1) ? 'black-shimmer' : 'capped-shimmer';
+
+                    document.getElementById(`rank-${rank}-name`).classList.add(shimmerClass);
+                    // 移除 Level 的閃爍
+                    document.getElementById(`rank-${rank}-level`).classList.remove('capped-shimmer', 'black-shimmer');
+                    // 卡片框高亮
+                    document.getElementById(`rank-${rank}-card`).classList.add('ring-4', 'ring-primary');
+
+                    // 移除另一個 class 以防萬一
+                    const otherClass = (rank === 1) ? 'capped-shimmer' : 'black-shimmer';
+                    document.getElementById(`rank-${rank}-name`).classList.remove(otherClass);
+                } else {
+                    document.getElementById(`rank-${rank}-name`).classList.remove('capped-shimmer', 'black-shimmer');
+                    document.getElementById(`rank-${rank}-card`).classList.remove('ring-4', 'ring-primary');
+                }
             }
-        });
 
-        /**
-         * 渲染頒獎台用戶
-         */
-        function renderPodiumUser(rank, user, currentUserId) {
-            const isCurrentUser = user.id === currentUserId;
-            const avatar = user.avatar_url || DEFAULT_AVATAR;
-            const name = isCurrentUser ? `${user.username} (你)` : user.username;
+            /**
+             * 渲染列表項目
+             */
+            function renderListItem(rank, user, isCurrentUser) {
+                const avatar = user.avatar_url || DEFAULT_AVATAR;
+                const name = isCurrentUser ? '你 (You)' : user.username;
+                const cardClass = isCurrentUser
+                    ? 'neo-card-user bg-yellow-50 ring-2 ring-primary ring-inset'
+                    : 'neo-card bg-white';
 
-            document.getElementById(`rank-${rank}-avatar`).querySelector('img').src = avatar;
-            document.getElementById(`rank-${rank}-name`).textContent = name;
-            document.getElementById(`rank-${rank}-level`).textContent = user.actualLevel;
+                // 是否有特效：改為當前用戶
+                const shimmerClass = isCurrentUser ? 'capped-shimmer' : '';
+                // 卡片文字顏色：如果有特效則跟隨特效，否則灰色
+                const cardsColorClass = isCurrentUser ? '' : 'text-gray-500';
 
-            // 如果是當前用戶，加上閃爍效果
-            if (isCurrentUser) {
-                // 特殊處理：如果是第一名 (黃色背景)，改用黑色閃爍，否則用金色閃爍
-                const shimmerClass = (rank === 1) ? 'black-shimmer' : 'capped-shimmer';
-
-                document.getElementById(`rank-${rank}-name`).classList.add(shimmerClass);
-                // 移除 Level 的閃爍
-                document.getElementById(`rank-${rank}-level`).classList.remove('capped-shimmer', 'black-shimmer');
-                // 卡片框高亮
-                document.getElementById(`rank-${rank}-card`).classList.add('ring-4', 'ring-primary');
-
-                // 移除另一個 class 以防萬一
-                const otherClass = (rank === 1) ? 'capped-shimmer' : 'black-shimmer';
-                document.getElementById(`rank-${rank}-name`).classList.remove(otherClass);
-            } else {
-                document.getElementById(`rank-${rank}-name`).classList.remove('capped-shimmer', 'black-shimmer');
-                document.getElementById(`rank-${rank}-card`).classList.remove('ring-4', 'ring-primary');
-            }
-        }
-
-        /**
-         * 渲染列表項目
-         */
-        function renderListItem(rank, user, isCurrentUser) {
-            const avatar = user.avatar_url || DEFAULT_AVATAR;
-            const name = isCurrentUser ? '你 (You)' : user.username;
-            const cardClass = isCurrentUser
-                ? 'neo-card-user bg-yellow-50 ring-2 ring-primary ring-inset'
-                : 'neo-card bg-white';
-
-            // 是否有特效：改為當前用戶
-            const shimmerClass = isCurrentUser ? 'capped-shimmer' : '';
-            // 卡片文字顏色：如果有特效則跟隨特效，否則灰色
-            const cardsColorClass = isCurrentUser ? '' : 'text-gray-500';
-
-            return `
+                return `
                 <div class="${cardClass} p-4 flex items-center gap-4" onclick="window.location.href='profile.html'">
                     <span class="font-black text-xl w-8 text-center">${isCurrentUser ? '#' + rank : rank}</span>
                     <div class="w-12 h-12 neo-border rounded-full overflow-hidden bg-zinc-100">
@@ -292,16 +298,17 @@
                     <div class="text-4xl font-black italic pr-2">${user.actualLevel}</div>
                 </div>
             `;
-        }
-    </script>
-    <!-- Service Worker Registration -->
-    <script>
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/sw.js").catch(() => {});
-            });
-        }
-    </script>
+            }
+        </script>
+        <!-- Service Worker Registration -->
+        <script>
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker.register("/sw.js").catch(() => { });
+                });
+            }
+        </script>
+    </div> <!-- /vibe-app-shell -->
 </body>
 
 </html>

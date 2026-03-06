@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python refactor-html.py:*)",
       "Bash(del \"c:\\\\Users\\\\USER\\\\Desktop\\\\text\\\\sandys-exam-card-system\\\\refactor-html.py\")",
-      "Bash(python refactor-classes.py:*)"
+      "Bash(python refactor-classes.py:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
