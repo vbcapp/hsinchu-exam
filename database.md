@@ -12,13 +12,17 @@
 
 ## 關聯結構 (Relations)
 
-- `users` 為核心使用者資料表。
+- `users` 為核心使用者資料表（含 `role` 角色欄位與 `tags` 標籤）。
 - `questions` 儲存所有的題庫。
 - 每個 `user` 對應每個 `question` 會有特定的存取進度 (`user_question_progress`)。
 - 每次答題都會紀錄一筆 `answer_records`。
 - 隨機抽題後的清單，會儲存於 `random_test_sessions` 以供後續查找覆盤。
 - `chapter_access` 控制哪些標籤的學員可以存取哪些章節。
 - `tags` 管理所有可用的標籤（梯次、付費等級等）。
+- `organization_settings` 儲存組織品牌設定（名稱、顏色、Logo 等）。
+- `user_ai_analyses` 儲存學員的 AI 學習分析歷史記錄。
+- `user_badges` 儲存學員解鎖的徽章成就。
+- `user_records` 儲存學員的個人最佳紀錄。
 
 ## 1. 使用者: `users`
 儲存使用者的基本資訊與目前的綜合等級數據。
@@ -36,7 +40,8 @@
 | `total_questions` | `integer` | DEFAULT 0 | 已作答的題目總數 |
 | `created_at` | `timestamptz` | DEFAULT now() | 帳號建立時間 |
 | `updated_at` | `timestamptz` | DEFAULT now() | 最後更新時間 |
-| `tags` | `jsonb` | DEFAULT '[]' | 學員標籤，如 `["第1梯", "VIP"]` |
+| `tags` | `jsonb` | DEFAULT '["預設"]' | 學員標籤，如 `["第1梯", "VIP"]`（新用戶預設帶「預設」標籤） |
+| `role` | `varchar` | DEFAULT 'user', CHECK 約束 | 用戶角色，限定為 `master_admin` / `super_admin` / `sub_admin` / `user` |
 | `exam_name` | `text` | NULLABLE | 考試項目名稱（用戶手動設定，如「甲級技術士」） |
 | `exam_date` | `date` | NULLABLE | 考試日期（用戶手動設定） |
 | `daily_goal` | `integer` | DEFAULT 20 | 每日目標題數（用戶手動設定） |
@@ -159,6 +164,27 @@
 | `color` | `varchar` | DEFAULT '#FFD600' | 標籤顯示顏色（UI 用） |
 | `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
 
+## 8. 組織設定: `organization_settings`
+
+儲存組織的品牌設定，用於全站 UI 顯示（名稱、顏色、Logo 等）。
+
+| 欄位名稱 (Column) | 資料型別 (Type) | 屬性與預設值 (Attributes & Default) | 說明 (Description) |
+| --- | --- | --- | --- |
+| `id` | `uuid` | PK, DEFAULT gen_random_uuid() | 唯一識別碼 |
+| `org_name` | `text` | NOT NULL | 組織全名 |
+| `short_name` | `text` | NOT NULL | 組織簡稱（用於標題等短空間） |
+| `description` | `text` | DEFAULT '' | 組織描述 |
+| `footer_text` | `text` | DEFAULT '' | 頁尾顯示文字 |
+| `app_version` | `text` | DEFAULT 'v1.0.0' | 應用版本號 |
+| `primary_color` | `text` | DEFAULT '#FFD600' | 主題色（Hex） |
+| `logo_url` | `text` | DEFAULT '' | Logo 圖片 URL |
+| `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
+| `updated_at` | `timestamptz` | DEFAULT now() | 更新時間 |
+
+**使用方式：**
+- `config.js` 中的 `OrgBranding.fetch()` 會在頁面載入時讀取此表
+- 全站所有頁面透過 `js/init.js` 自動套用品牌設定
+
 ---
 
 ## 📋 執行 SQL 腳本
@@ -262,25 +288,34 @@ async getAccessibleQuestions(userId) {
 ## 📊 關聯結構圖
 
 ```
-┌─────────────┐       ┌──────────────────┐       ┌─────────────┐
-│   users     │       │  chapter_access  │       │    tags     │
-├─────────────┤       ├──────────────────┤       ├─────────────┤
-│ id          │       │ id               │       │ id          │
-│ username    │       │ subject ─────────┼───┐   │ name        │
-│ tags[]  ◄───┼───────┼─► allowed_tags[] │   │   │ color       │
-│ ...         │       │ is_public        │   │   └─────────────┘
-└─────────────┘       └──────────────────┘   │
-                                             │
-                      ┌──────────────────────┘
-                      ▼
-              ┌─────────────────┐
-              │    questions    │
-              ├─────────────────┤
-              │ subject         │
-              │ chapter         │
-              │ question        │
-              │ ...             │
-              └─────────────────┘
+┌──────────────────┐     ┌──────────────────┐     ┌─────────────┐
+│      users       │     │  chapter_access  │     │    tags     │
+├──────────────────┤     ├──────────────────┤     ├─────────────┤
+│ id               │     │ id               │     │ id          │
+│ username         │     │ subject ─────────┼──┐  │ name        │
+│ role             │     │ allowed_tags[]   │  │  │ color       │
+│ tags[]  ◄────────┼─────┼─►               │  │  └─────────────┘
+│ exam_name        │     │ is_public        │  │
+│ exam_date        │     └──────────────────┘  │  ┌─────────────────────┐
+│ daily_goal       │                           │  │organization_settings│
+└──────────────────┘     ┌─────────────────────┘  ├─────────────────────┤
+         │               ▼                        │ org_name            │
+         │       ┌─────────────────┐              │ primary_color       │
+         │       │    questions    │              │ logo_url            │
+         │       ├─────────────────┤              └─────────────────────┘
+         │       │ subject         │
+         │       │ chapter         │
+         │       │ question        │
+         │       └─────────────────┘
+         │
+    ┌────┼────────────┐
+    ▼    ▼            ▼
+┌────────────┐  ┌───────────────┐
+│user_badges │  │user_ai_analyses│
+├────────────┤  ├───────────────┤
+│badge_key   │  │analysis_content│
+│unlocked_at │  │stats_snapshot │
+└────────────┘  └───────────────┘
 ```
 
 ---
@@ -354,11 +389,11 @@ async getAccessibleQuestions(userId) {
 
 | 項目 | 狀態 | 說明 |
 |------|------|------|
-| 資料庫結構 | ⏳ 待執行 | SQL 腳本已準備，需在 Supabase 執行 |
-| API 函式 | ⏳ 待實作 | `api-service.js` 需新增相關函式 |
-| 前端整合 | ⏳ 待實作 | `weakness.html` 需整合儲存邏輯 |
+| 資料庫結構 | ✅ 已完成 | SQL 腳本已在 Supabase 執行，RLS 已啟用 |
+| API 函式 | ✅ 已完成 | `api-service.js` 已新增 `checkTodayAnalysisExists`、`saveAIAnalysis`、`getUserAnalysisHistory` |
+| 前端整合 | ✅ 已完成 | `weakness.html` 已整合儲存與歷史查看邏輯 |
 
-## 8. AI 分析歷史: `user_ai_analyses`
+## 9. AI 分析歷史: `user_ai_analyses`
 
 儲存學員的 AI 學習分析記錄，包含生成時的數據快照。
 
@@ -526,12 +561,12 @@ async getUserAnalysisHistory(userId, limit = 10) {
 | 項目 | 狀態 | 說明 |
 |------|------|------|
 | 資料庫結構 | ✅ 已完成 | 已在 Supabase 執行 SQL 腳本 |
-| API 函式 | ⏳ 待實作 | `api-service.js` 需新增相關函式 |
-| 前端整合 | ⏳ 待實作 | `weakness.html` 需整合新數據顯示 |
+| API 函式 | ✅ 已完成 | `api-service.js` 已新增 `checkAndUnlockBadges`、`getUserBadges`、`getAvailableBadges`、`updateUserRecords`、`getUserRecords` |
+| 前端整合 | ✅ 已完成 | `weakness.html` 已整合徽章顯示與個人紀錄 |
 
 ---
 
-## 9. 徽章系統: `user_badges`
+## 10. 徽章系統: `user_badges`
 
 儲存學員解鎖的徽章記錄，用於成就展示與遊戲化激勵。
 
@@ -584,7 +619,7 @@ async getUserAnalysisHistory(userId, limit = 10) {
 
 ---
 
-## 10. 個人紀錄: `user_records`
+## 11. 個人紀錄: `user_records`
 
 儲存學員的個人最佳紀錄，用於「超越自己」的激勵機制。
 
@@ -617,7 +652,7 @@ async getUserAnalysisHistory(userId, limit = 10) {
 
 ---
 
-## 11. 考試倒數設定: `users` 表擴充
+## 12. 考試倒數設定: `users` 表擴充
 
 為了支援「進度條與倒數計時」功能，需擴充 users 表，讓用戶可在個人頁手動設定考試資訊。
 
@@ -818,6 +853,58 @@ ON CONFLICT (user_id) DO NOTHING;
 
 ---
 
+# RPC 函式 (Remote Procedure Calls)
+
+> [!NOTE]
+> 系統使用 PostgreSQL 函式（透過 Supabase RPC 呼叫）處理複雜查詢與原子性操作。
+> 這些函式以 `SECURITY DEFINER` 執行，確保權限安全。
+
+## 核心函式
+
+| 函式名稱 | 參數 | 說明 |
+|----------|------|------|
+| `update_user_xp(p_user_id, p_xp_to_add, p_perfect_cards_to_add)` | uuid, int, int | 原子性更新用戶經驗值與答對題數 |
+| `get_my_role()` | 無 | 取得當前登入用戶的角色（回傳 `master_admin` / `super_admin` / `sub_admin` / `user`） |
+| `get_master_admin_id()` | 無 | 取得主管理員的 user ID |
+| `get_user_daily_streak(p_user_id)` | uuid | 計算用戶的連續答題天數 |
+
+## 排行榜函式
+
+| 函式名稱 | 參數 | 說明 |
+|----------|------|------|
+| `get_leaderboard_answer_counts(start_date)` | date | 取得指定日期後的答題數排行榜 |
+
+## 管理員分析函式
+
+| 函式名稱 | 參數 | 說明 |
+|----------|------|------|
+| `get_admin_top_incorrect_cards(top_n)` | int | 取得最常答錯的題目 Top N |
+| `get_admin_daily_answers(days_limit)` | int | 取得近 N 天每日答題數統計 |
+| `get_admin_daily_active_users(days_limit)` | int | 取得近 N 天每日活躍用戶數 |
+| `get_admin_learning_trends(period_type)` | text | 學習趨勢分析（按日/週/月） |
+| `get_admin_answer_time_distribution(days_limit)` | int | 答題時間分佈統計 |
+| `get_admin_overall_accuracy_trend(period_type)` | text | 整體正確率趨勢 |
+| `get_admin_chapter_accuracy_trend(p_chapter, period_type)` | varchar, text | 特定章節正確率趨勢 |
+| `get_admin_first_vs_review_accuracy()` | 無 | 首次作答 vs 複習正確率比較 |
+| `get_admin_attempt_accuracy_by_round()` | 無 | 各輪次（第1次、第2次...）正確率統計 |
+| `get_admin_average_reviews_to_mastery()` | 無 | 平均複習幾次達到熟練 |
+
+---
+
+# Storage Buckets
+
+> [!NOTE]
+> 系統使用 Supabase Storage 儲存檔案。
+
+## `avatars` Bucket
+
+- **用途**：儲存用戶大頭貼
+- **上傳方式**：`api-service.js` 中的 `uploadAvatar()` 函式
+- **路徑格式**：`{userId}/{timestamp}.{ext}`
+- **存取方式**：上傳後取得公開 URL，寫入 `users.avatar_url`
+
+---
+
 ## 💡 現有資料支援度分析
 
 ### ✅ 完全支援（不需新增資料）
@@ -830,28 +917,32 @@ ON CONFLICT (user_id) DO NOTHING;
 | 錯誤選項分析 | `answer_records` | `user_answer`, `is_correct` |
 | 錯題二刷正確率 | `answer_records` | `question_id`, `is_correct`, `created_at` |
 
-### ⚠️ 需新增資料表
+### ✅ 已新增資料表（均已完成）
 
-| 功能 | 需新增表 | 理由 |
-|------|---------|------|
-| 徽章與里程碑系統 | `user_badges` | 需記錄解鎖狀態與時間 |
-| 超越自己的數據 | `user_records` | 需儲存個人最佳紀錄 |
-| 進度條與倒數計時 | `users` 擴充 | 需 `exam_name`, `exam_date`, `daily_goal`（用戶手動設定） |
+| 功能 | 資料表 | 狀態 |
+|------|--------|------|
+| 徽章與里程碑系統 | `user_badges` | ✅ 已完成 |
+| 超越自己的數據 | `user_records` | ✅ 已完成 |
+| 進度條與倒數計時 | `users` 擴充（`exam_name`, `exam_date`, `daily_goal`） | ✅ 已完成 |
+| AI 分析歷史 | `user_ai_analyses` | ✅ 已完成 |
+| 組織品牌設定 | `organization_settings` | ✅ 已完成 |
 
 ---
 
-## 🎯 實作優先級建議
+## 🎯 實作進度總覽
 
-### Phase 1: 無需新增資料（立即可實作）
+### ✅ Phase 1: 基礎數據分析（已完成）
 1. ✅ 今日新增熟練題數
 2. ✅ 本次 vs 歷史正確率
 3. ✅ 錯誤選項分析
 4. ✅ 答題時段效率分析
 
-### Phase 2: 執行 SQL 後可實作
-1. ✅ 進度條與倒數計時（需擴充 `users` 表）
-2. ✅ 徽章與里程碑系統（需 `user_badges` 表）
-3. ✅ 超越自己的數據（需 `user_records` 表）
+### ✅ Phase 2: 遊戲化系統（已完成）
+1. ✅ 進度條與倒數計時（`users` 表擴充）
+2. ✅ 徽章與里程碑系統（`user_badges` 表）
+3. ✅ 超越自己的數據（`user_records` 表）
 
-### Phase 3: 複雜邏輯（後續優化）
-1. 🔄 錯題二刷正確率（需時間序列分析）
+### ✅ Phase 3: AI 分析與品牌化（已完成）
+1. ✅ AI 學習分析歷史記錄（`user_ai_analyses` 表）
+2. ✅ 組織品牌設定（`organization_settings` 表）
+3. ✅ 角色權限管理（`users.role` 欄位 + RPC 函式）
