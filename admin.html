@@ -43,14 +43,14 @@
                 <span class="material-symbols-outlined text-xl block mx-auto mb-1">sell</span>
                 標籤
             </button>
+            <button id="tab-btn-users" onclick="switchTab('users')" class="flex-1 py-3 font-black text-sm border-r-2 border-black bg-white">
+                <span class="material-symbols-outlined text-xl block mx-auto mb-1">group</span>
+                學員
+            </button>
             <button id="tab-btn-chapters" onclick="switchTab('chapters')"
                 class="flex-1 py-3 font-black text-sm border-r-2 border-black bg-white">
                 <span class="material-symbols-outlined text-xl block mx-auto mb-1">folder_managed</span>
                 章節
-            </button>
-            <button id="tab-btn-users" onclick="switchTab('users')" class="flex-1 py-3 font-black text-sm border-r-2 border-black bg-white">
-                <span class="material-symbols-outlined text-xl block mx-auto mb-1">group</span>
-                學員
             </button>
             <button id="tab-btn-questions" onclick="switchTab('questions')" class="flex-1 py-3 font-black text-sm bg-white">
                 <span class="material-symbols-outlined text-xl block mx-auto mb-1">quiz</span>
@@ -1230,8 +1230,12 @@
                 return matchesTag && matchesSearch;
             });
 
-            // Ensure sorting by date descending is maintained (it already comes from the API this way, 
-            // but if we were adding items or modifying the array, we would sort it here. The array `allUsers` is already sorted).
+            // 依 email 字母 A-Z 排序
+            filteredUsers.sort((a, b) => {
+                const emailA = (a.email || '').toLowerCase();
+                const emailB = (b.email || '').toLowerCase();
+                return emailA.localeCompare(emailB);
+            });
 
             renderUsersList();
             updateUserCounts();
