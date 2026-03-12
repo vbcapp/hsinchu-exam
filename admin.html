@@ -48,9 +48,13 @@
                 <span class="material-symbols-outlined text-xl block mx-auto mb-1">folder_managed</span>
                 章節
             </button>
-            <button id="tab-btn-users" onclick="switchTab('users')" class="flex-1 py-3 font-black text-sm bg-white">
+            <button id="tab-btn-users" onclick="switchTab('users')" class="flex-1 py-3 font-black text-sm border-r-2 border-black bg-white">
                 <span class="material-symbols-outlined text-xl block mx-auto mb-1">group</span>
                 學員
+            </button>
+            <button id="tab-btn-questions" onclick="switchTab('questions')" class="flex-1 py-3 font-black text-sm bg-white">
+                <span class="material-symbols-outlined text-xl block mx-auto mb-1">quiz</span>
+                題庫
             </button>
         </nav>
 
@@ -167,6 +171,51 @@
                     <p class="text-sm font-bold mt-2">載入中...</p>
                 </div>
                 <div id="users-list" class="space-y-2 max-h-[50vh] overflow-y-auto hidden">
+                </div>
+            </section>
+
+            <!-- ==================== 題庫管理分頁 ==================== -->
+            <section id="tab-questions" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-2xl">quiz</span>
+                        <h2 class="text-lg font-black italic uppercase">題庫管理</h2>
+                    </div>
+                    <button onclick="confirmDeleteSelectedQuestions()" id="q-delete-btn" disabled
+                        class="vibe-btn text-sm px-3 py-2 w-auto flex items-center gap-1 bg-red-500 text-white border-4 border-black neo-shadow-sm disabled:opacity-40">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                        刪除 (<span id="q-delete-count">0</span>)
+                    </button>
+                </div>
+
+                <!-- 搜尋與篩選列 -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <input id="q-search-input" type="text" oninput="filterQuestions()"
+                            class="w-full border-4 border-black p-3 pl-12 font-bold focus:outline-none focus:ring-2 focus:ring-primary h-full"
+                            placeholder="搜尋題目內容...">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                    </div>
+                    <select id="q-subject-filter" onchange="onQuestionSubjectFilterChange()"
+                        class="border-4 border-black p-3 font-bold focus:outline-none focus:ring-2 focus:ring-primary bg-white h-full sm:w-48 cursor-pointer">
+                        <option value="all">所有科目</option>
+                    </select>
+                </div>
+
+                <!-- 全選列 -->
+                <div class="flex items-center gap-3 p-2 bg-gray-100 border-2 border-black">
+                    <input type="checkbox" id="q-select-all" onchange="toggleSelectAllQuestions()"
+                        class="w-5 h-5 border-2 border-black accent-primary">
+                    <label for="q-select-all" class="font-bold text-sm">全選 (<span
+                            id="q-selected-count">0</span> /
+                        <span id="q-total-count">0</span>)</label>
+                </div>
+
+                <div id="q-loading" class="text-center py-8">
+                    <span class="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
+                    <p class="text-sm font-bold mt-2">載入中...</p>
+                </div>
+                <div id="q-list" class="space-y-4 hidden">
                 </div>
             </section>
         </main>
@@ -399,6 +448,12 @@
         // 學員列表狀態
         let currentTagFilter = 'all';
 
+        // 題庫管理狀態
+        let allQuestions = [];
+        let filteredQuestions = [];
+        let selectedQuestionIds = new Set();
+        let questionSubjects = [];  // 所有科目列表
+
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -423,7 +478,7 @@
 
         // ==================== Tab 切換 ====================
         function switchTab(tabName) {
-            ['tags', 'chapters', 'users'].forEach(tab => {
+            ['tags', 'chapters', 'users', 'questions'].forEach(tab => {
                 const btn = document.getElementById(`tab-btn-${tab}`);
                 const section = document.getElementById(`tab-${tab}`);
 
@@ -445,6 +500,8 @@
                 loadChapterAccess();
             } else if (tabName === 'users' && allUsers.length === 0) {
                 loadUsers();
+            } else if (tabName === 'questions' && allQuestions.length === 0) {
+                loadQuestions();
             }
         }
 
@@ -1378,6 +1435,333 @@
             } else {
                 ModalSystem.alert('操作失敗', result.error?.message);
             }
+        }
+
+        // ==================== 題庫管理 ====================
+        async function loadQuestions() {
+            const loading = document.getElementById('q-loading');
+            const list = document.getElementById('q-list');
+
+            list.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            // 權限檢查：僅 super_admin 以上可操作
+            if (!RoleManager.isSuperAdmin()) {
+                loading.classList.add('hidden');
+                list.classList.remove('hidden');
+                list.innerHTML = `
+                    <div class="text-center py-8">
+                        <span class="material-symbols-outlined text-6xl text-zinc-300">lock</span>
+                        <p class="mt-2 text-sm font-bold text-zinc-500">權限不足</p>
+                        <p class="text-xs text-zinc-400 mt-1">僅高級管理員可管理題庫</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const result = await apiService.getAdminQuestions();
+
+            loading.classList.add('hidden');
+
+            if (!result.success) {
+                ModalSystem.alert('載入失敗', result.error?.message);
+                return;
+            }
+
+            allQuestions = result.data;
+            selectedQuestionIds.clear();
+
+            // 提取不重複科目
+            questionSubjects = [...new Set(allQuestions.map(q => q.subject).filter(Boolean))];
+            const collator = new Intl.Collator('zh-TW', { numeric: true });
+            questionSubjects.sort(collator.compare);
+            populateQuestionSubjectFilter();
+
+            filterQuestions();
+        }
+
+        function populateQuestionSubjectFilter() {
+            const select = document.getElementById('q-subject-filter');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">所有科目</option>';
+
+            questionSubjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                select.appendChild(option);
+            });
+
+            select.value = currentVal;
+            if (!select.value) select.value = 'all';
+        }
+
+        function onQuestionSubjectFilterChange() {
+            selectedQuestionIds.clear();
+            filterQuestions();
+        }
+
+        let qSearchTimer;
+        function filterQuestions() {
+            clearTimeout(qSearchTimer);
+            qSearchTimer = setTimeout(() => {
+                const searchQuery = (document.getElementById('q-search-input')?.value || '').toLowerCase().trim();
+                const subjectFilter = document.getElementById('q-subject-filter')?.value || 'all';
+
+                filteredQuestions = allQuestions.filter(q => {
+                    let matchesSubject = true;
+                    if (subjectFilter !== 'all') {
+                        matchesSubject = q.subject === subjectFilter;
+                    }
+
+                    let matchesSearch = true;
+                    if (searchQuery) {
+                        matchesSearch = (q.question && q.question.toLowerCase().includes(searchQuery));
+                    }
+
+                    return matchesSubject && matchesSearch;
+                });
+
+                renderQuestionsList();
+                updateQuestionCounts();
+            }, 200);
+        }
+
+        function renderQuestionsList() {
+            const list = document.getElementById('q-list');
+            const loading = document.getElementById('q-loading');
+
+            loading.classList.add('hidden');
+            list.classList.remove('hidden');
+
+            if (filteredQuestions.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-8">
+                        <span class="material-symbols-outlined text-6xl text-zinc-300">help_center</span>
+                        <p class="mt-2 text-sm font-bold text-zinc-500">沒有找到題目</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按科目 > 章節分組
+            const grouped = {};
+            filteredQuestions.forEach(q => {
+                const subject = q.subject || '未分類';
+                const chapter = q.chapter || '未分類';
+                const key = `${subject}|||${chapter}`;
+                if (!grouped[key]) {
+                    grouped[key] = { subject, chapter, questions: [] };
+                }
+                grouped[key].questions.push(q);
+            });
+
+            list.innerHTML = Object.values(grouped).map(group => {
+                const groupQuestionIds = group.questions.map(q => q.id);
+                const allSelected = groupQuestionIds.every(id => selectedQuestionIds.has(id));
+
+                return `
+                <div class="question-group" data-subject="${escapeHtml(group.subject)}" data-chapter="${escapeHtml(group.chapter)}">
+                    <div class="bg-black text-white p-3 flex items-center justify-between cursor-pointer"
+                         onclick="toggleQuestionGroup(this)">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" ${allSelected ? 'checked' : ''}
+                                   class="w-5 h-5 border-2 border-white accent-primary flex-shrink-0 q-group-check"
+                                   onclick="event.stopPropagation(); toggleQuestionGroupCheck(this, '${escapeHtml(group.subject)}', '${escapeHtml(group.chapter)}')">
+                            <span class="material-symbols-outlined q-group-chevron transition-transform">expand_more</span>
+                            <div>
+                                <span class="font-black">${escapeHtml(group.chapter)}</span>
+                                <span class="text-xs text-gray-300 ml-2">${escapeHtml(group.subject)}</span>
+                            </div>
+                        </div>
+                        <span class="bg-primary text-black px-2 py-1 text-xs font-black">${group.questions.length} 題</span>
+                    </div>
+                    <div class="q-group-items space-y-1 p-2 bg-gray-50 border-x-4 border-b-4 border-black">
+                        ${group.questions.map(q => renderQuestionItem(q)).join('')}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function renderQuestionItem(q) {
+            const isSelected = selectedQuestionIds.has(q.id);
+            const truncatedQ = q.question && q.question.length > 60
+                ? q.question.substring(0, 60) + '...'
+                : (q.question || '');
+            const typeLabel = q.question_type === 'multiple' ? '複選' : '單選';
+
+            return `
+                <div class="q-item border-2 border-black p-3 ${isSelected ? 'bg-red-50' : 'bg-white'} cursor-pointer"
+                     data-question-id="${q.id}"
+                     onclick="toggleQuestionSelection('${q.id}')">
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''}
+                               class="w-5 h-5 border-2 border-black accent-primary mt-0.5 flex-shrink-0"
+                               onclick="event.stopPropagation(); toggleQuestionSelection('${q.id}')">
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-gray-200 px-2 py-0.5 text-xs font-bold">${q.question_no || '-'}</span>
+                                <span class="bg-gray-200 px-2 py-0.5 text-xs font-bold">${typeLabel}</span>
+                            </div>
+                            <p class="text-sm font-bold leading-snug break-words">${escapeHtml(truncatedQ)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleQuestionGroup(headerEl) {
+            const itemsEl = headerEl.nextElementSibling;
+            const chevron = headerEl.querySelector('.q-group-chevron');
+
+            if (itemsEl.classList.contains('hidden')) {
+                itemsEl.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                itemsEl.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        function toggleQuestionGroupCheck(checkboxEl, subject, chapter) {
+            const isChecked = checkboxEl.checked;
+            const groupQuestions = filteredQuestions.filter(q => q.subject === subject && q.chapter === chapter);
+
+            groupQuestions.forEach(q => {
+                if (isChecked) {
+                    selectedQuestionIds.add(q.id);
+                } else {
+                    selectedQuestionIds.delete(q.id);
+                }
+            });
+
+            // 更新該群組內的 checkbox 和背景
+            const group = checkboxEl.closest('.question-group');
+            if (group) {
+                group.querySelectorAll('.q-item').forEach(item => {
+                    const qId = item.dataset.questionId;
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    if (isChecked) {
+                        item.classList.add('bg-red-50');
+                        item.classList.remove('bg-white');
+                        if (cb) cb.checked = true;
+                    } else {
+                        item.classList.remove('bg-red-50');
+                        item.classList.add('bg-white');
+                        if (cb) cb.checked = false;
+                    }
+                });
+            }
+
+            updateQuestionCounts();
+            updateDeleteButton();
+        }
+
+        function toggleQuestionSelection(questionId) {
+            if (selectedQuestionIds.has(questionId)) {
+                selectedQuestionIds.delete(questionId);
+            } else {
+                selectedQuestionIds.add(questionId);
+            }
+
+            // 更新該項目的 UI
+            const item = document.querySelector(`.q-item[data-question-id="${questionId}"]`);
+            if (item) {
+                const cb = item.querySelector('input[type="checkbox"]');
+                if (selectedQuestionIds.has(questionId)) {
+                    item.classList.add('bg-red-50');
+                    item.classList.remove('bg-white');
+                    if (cb) cb.checked = true;
+                } else {
+                    item.classList.remove('bg-red-50');
+                    item.classList.add('bg-white');
+                    if (cb) cb.checked = false;
+                }
+
+                // 更新群組 checkbox 狀態
+                const group = item.closest('.question-group');
+                if (group) {
+                    updateGroupCheckState(group);
+                }
+            }
+
+            updateQuestionCounts();
+            updateDeleteButton();
+        }
+
+        function updateGroupCheckState(group) {
+            const groupCheck = group.querySelector('.q-group-check');
+            if (!groupCheck) return;
+
+            const items = group.querySelectorAll('.q-item');
+            let allChecked = true;
+            let someChecked = false;
+
+            items.forEach(item => {
+                if (selectedQuestionIds.has(item.dataset.questionId)) {
+                    someChecked = true;
+                } else {
+                    allChecked = false;
+                }
+            });
+
+            groupCheck.checked = allChecked;
+            groupCheck.indeterminate = someChecked && !allChecked;
+        }
+
+        function toggleSelectAllQuestions() {
+            const selectAllCheckbox = document.getElementById('q-select-all');
+
+            if (selectAllCheckbox.checked) {
+                filteredQuestions.forEach(q => selectedQuestionIds.add(q.id));
+            } else {
+                selectedQuestionIds.clear();
+            }
+
+            renderQuestionsList();
+            updateQuestionCounts();
+            updateDeleteButton();
+        }
+
+        function updateQuestionCounts() {
+            document.getElementById('q-selected-count').textContent = selectedQuestionIds.size;
+            document.getElementById('q-total-count').textContent = filteredQuestions.length;
+
+            const selectAllCheckbox = document.getElementById('q-select-all');
+            selectAllCheckbox.checked = filteredQuestions.length > 0 && selectedQuestionIds.size === filteredQuestions.length;
+        }
+
+        function updateDeleteButton() {
+            const btn = document.getElementById('q-delete-btn');
+            const count = document.getElementById('q-delete-count');
+            btn.disabled = selectedQuestionIds.size === 0;
+            count.textContent = selectedQuestionIds.size;
+        }
+
+        function confirmDeleteSelectedQuestions() {
+            const count = selectedQuestionIds.size;
+            if (count === 0) return;
+
+            ModalSystem.confirm(
+                '確定刪除題目？',
+                `即將刪除 ${count} 題，此操作無法復原！\n相關的作答紀錄與進度也會一併刪除。`,
+                async () => {
+                    const ids = Array.from(selectedQuestionIds);
+                    const result = await apiService.deleteQuestions(ids);
+
+                    if (result.success) {
+                        ModalSystem.toast(`已刪除 ${result.deletedCount} 題`, 'success');
+                        selectedQuestionIds.clear();
+                        // 重新載入題庫
+                        allQuestions = [];
+                        await loadQuestions();
+                    } else {
+                        ModalSystem.alert('刪除失敗', result.error?.message || '請稍後再試');
+                    }
+                },
+                null,
+                { confirmText: '確認刪除', isDestructive: true }
+            );
         }
     </script>
     <!-- Service Worker Registration -->

@@ -230,6 +230,7 @@
         let subjectChapterStats = [];  // 所有類別/章節統計
         let selectedSources = [];      // 已選擇的來源 [{subject, chapter, count}, ...]
         let previewQuestions = [];     // 預覽的題目列表
+        let allPoolQuestions = [];     // 所有可用題目池（用於替換）
 
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', async () => {
@@ -533,6 +534,10 @@
             }
 
             previewQuestions = result.data;
+            // 儲存完整題庫，用於單題替換
+            if (result.allQuestions) {
+                allPoolQuestions = result.allQuestions;
+            }
             renderPreview();
         }
 
@@ -549,9 +554,13 @@
             document.getElementById('preview-chapter').textContent = newChapter;
             document.getElementById('preview-count').textContent = `${previewQuestions.length} 題`;
 
+            // 計算可替換的剩餘題目數
+            const usedIds = new Set(previewQuestions.map(q => q.id));
+            const remainingCount = allPoolQuestions.filter(q => !usedIds.has(q.id)).length;
+
             const list = document.getElementById('preview-questions-list');
             list.innerHTML = previewQuestions.map((q, index) => `
-                <div class="bg-gray-50 border-2 border-black p-3">
+                <div class="bg-gray-50 border-2 border-black p-3" id="preview-q-${index}">
                     <div class="flex items-start gap-2">
                         <span class="bg-black text-white px-2 py-1 text-xs font-black shrink-0">${index + 1}</span>
                         <div class="flex-grow overflow-hidden">
@@ -561,9 +570,49 @@
                                 <span class="bg-gray-200 px-2 py-0.5 border border-black">${escapeHtml(q.chapter || '通用')}</span>
                             </div>
                         </div>
+                        <div class="flex gap-1 shrink-0">
+                            <button onclick="replaceQuestion(${index})" title="替換此題"
+                                class="p-1 border-2 border-black bg-yellow-100 hover:bg-yellow-200 transition-colors ${remainingCount === 0 ? 'opacity-30 pointer-events-none' : ''}">
+                                <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                            </button>
+                            <button onclick="deleteQuestion(${index})" title="刪除此題"
+                                class="p-1 border-2 border-black bg-red-100 hover:bg-red-200 transition-colors ${previewQuestions.length <= 1 ? 'opacity-30 pointer-events-none' : ''}">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');
+        }
+
+        // ==================== 替換 / 刪除題目 ====================
+        function replaceQuestion(index) {
+            const usedIds = new Set(previewQuestions.map(q => q.id));
+            const available = allPoolQuestions.filter(q => !usedIds.has(q.id));
+
+            if (available.length === 0) {
+                ModalSystem.alert('無法替換', '題庫中已沒有其他可用題目');
+                return;
+            }
+
+            // 從可用題目中隨機挑一題
+            const randomIndex = Math.floor(Math.random() * available.length);
+            const replacement = available[randomIndex];
+
+            previewQuestions[index] = replacement;
+            renderPreview();
+            ModalSystem.toast('已替換第 ' + (index + 1) + ' 題', 'success');
+        }
+
+        function deleteQuestion(index) {
+            if (previewQuestions.length <= 1) {
+                ModalSystem.alert('無法刪除', '至少需要保留一題');
+                return;
+            }
+
+            previewQuestions.splice(index, 1);
+            renderPreview();
+            ModalSystem.toast('已刪除，目前剩餘 ' + previewQuestions.length + ' 題', 'success');
         }
 
         // ==================== 建立考卷 ====================

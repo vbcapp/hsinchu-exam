@@ -4364,7 +4364,7 @@ class ApiService {
             // 取出指定數量
             const selected = shuffled.slice(0, Math.min(count, shuffled.length));
 
-            return { success: true, data: selected, totalAvailable: data.length };
+            return { success: true, data: selected, totalAvailable: data.length, allQuestions: data };
         } catch (error) {
             return this._handleError(error);
         }
