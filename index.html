@@ -164,6 +164,33 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
+            // === 練習完成 Toast ===
+            const practiceData = sessionStorage.getItem('practiceSession');
+            if (practiceData) {
+                try {
+                    const session = JSON.parse(practiceData);
+                    const toast = document.getElementById('success-toast');
+                    const toastMsg = document.getElementById('toast-message');
+                    const toastXp = document.getElementById('toast-xp');
+
+                    if (toast && toastMsg && toastXp && session.questionsCompleted > 0) {
+                        const correct = session.correctCount || 0;
+                        const incorrect = session.incorrectCount || 0;
+                        toastMsg.textContent = `完成 ${session.questionsCompleted} 題，對 ${correct} 錯 ${incorrect}`;
+                        toastXp.textContent = `+${session.totalXP} XP`;
+
+                        toast.classList.remove('hidden');
+                        setTimeout(() => {
+                            toast.classList.add('hidden');
+                        }, 4000);
+                    }
+                } catch (e) {
+                    console.error('Practice Toast Error:', e);
+                }
+                sessionStorage.removeItem('practiceSession');
+            }
+
+            // === 新增卡片 Toast ===
             if (toastData) {
                 try {
                     const data = JSON.parse(toastData);
@@ -177,7 +204,7 @@
                         } else {
                             toastMsg.textContent = `已批量生成 ${data.count} 張卡片`;
                         }
-                        toastXp.textContent = `+${data.xp} XP`; // XP Badge Text
+                        toastXp.textContent = `+${data.xp} XP`;
 
                         toast.classList.remove('hidden');
 

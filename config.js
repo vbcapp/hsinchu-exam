@@ -146,12 +146,22 @@ const OrgBranding = {
     }
 };
 
+// ==================== 共享 Supabase Client ====================
+// 全域共享單一 client，避免產生多個 GoTrueClient 實例
+window._sharedSupabaseClient = null;
+
+function getSharedSupabaseClient() {
+    if (!window._sharedSupabaseClient && typeof supabase !== 'undefined') {
+        window._sharedSupabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    }
+    return window._sharedSupabaseClient;
+}
+
 // ==================== 頁面載入時自動讀取品牌 ====================
-// 用 anon key 建立輕量 client，不需要登入就能讀 organization_settings（RLS 允許公開讀取）
 document.addEventListener('DOMContentLoaded', async () => {
-    if (typeof supabase !== 'undefined') {
-        const anonClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-        await OrgBranding.fetch(anonClient);
+    const client = getSharedSupabaseClient();
+    if (client) {
+        await OrgBranding.fetch(client);
     }
 });
 
@@ -159,7 +169,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 const XP_REWARDS = {
     CORRECT: 100,      // 單題答對
     INCORRECT: 0,      // 單題答錯 (不扣分)
-    PIONEER: 50,       // 開拓者獎勵（首次答對該題）
     DAILY_LOGIN: 50    // 每日登入
 };
 

@@ -19,10 +19,12 @@ class ApiService {
                 return { success: false, error: 'SDK Not Loaded' };
             }
 
-            this.supabase = supabase.createClient(
-                SUPABASE_CONFIG.url,
-                SUPABASE_CONFIG.anonKey
-            );
+            // 使用共享 client，避免產生多個 GoTrueClient 實例
+            if (!this.supabase) {
+                this.supabase = (typeof getSharedSupabaseClient === 'function')
+                    ? getSharedSupabaseClient()
+                    : supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+            }
 
             // 取得當前使用者
             const { data: { user } } = await this.supabase.auth.getUser();
@@ -1659,7 +1661,7 @@ class ApiService {
      */
     async submitAnswer(answerData) {
         try {
-            const { userId, questionId, userAnswer, isCorrect, responseTimeMs = null } = answerData;
+            const { userId, questionId, userAnswer, isCorrect, responseTimeMs = null, bonusXP } = answerData;
             const now = new Date().toISOString();
 
             // 1. 檢查是否為首次答對該題
@@ -1673,22 +1675,14 @@ class ApiService {
             const isFirstTime = !existingProgress;
             const wasCorrectBefore = (existingProgress?.times_correct > 0);
 
-            // 2. 計算 XP 獎勵
+            // 2. 計算 XP 獎勵（優先使用前端傳入的 bonusXP，含爆擊加成）
             let xpToAdd = 0;
-            const bonuses = [];
 
-            if (isCorrect) {
-                // 答對: +100 XP
-                xpToAdd += XP_REWARDS.CORRECT;
-                bonuses.push({ name: '答對題目', xp: XP_REWARDS.CORRECT });
-
-                // 首次答對該題: 額外 +50 XP (開拓者獎勵)
-                if (!wasCorrectBefore) {
-                    xpToAdd += XP_REWARDS.PIONEER;
-                    bonuses.push({ name: '開拓者獎勵', xp: XP_REWARDS.PIONEER });
-                }
+            if (bonusXP !== undefined && bonusXP !== null) {
+                xpToAdd = bonusXP;
+            } else if (isCorrect) {
+                xpToAdd = XP_REWARDS.CORRECT;
             } else {
-                // 答錯: +0 XP
                 xpToAdd = XP_REWARDS.INCORRECT;
             }
 
@@ -1757,8 +1751,6 @@ class ApiService {
             return {
                 success: true,
                 xpEarned: xpToAdd,
-                bonuses: bonuses,
-                isFirstTimeCorrect: isCorrect && !wasCorrectBefore,
                 newUserData: userUpdateResult.data.user,
                 leveledUp: userUpdateResult.data.leveledUp,
                 newLevel: userUpdateResult.data.levelState ? userUpdateResult.data.levelState.actualLevel : null,

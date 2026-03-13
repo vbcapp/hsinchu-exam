@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exam-system-v1';
+const CACHE_NAME = 'exam-system-v2';
 
 // Only cache essential app shell files
 const APP_SHELL = [

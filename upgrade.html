@@ -165,8 +165,8 @@
                                 class="bg-primary border-2 border-black w-10 h-10 flex items-center justify-center shrink-0">
                                 <span class="material-symbols-outlined font-bold">workspace_premium</span>
                             </div>
-                            <span class="text-lg font-bold italic">
-                                需達成 <span id="cards-needed" class="text-primary">--</span> 張藍色勾勾卡片
+                            <span id="cards-text" class="text-lg font-bold italic">
+                                還需 <span id="cards-needed" class="text-primary">--</span> 張藍色勾勾卡片
                             </span>
                         </div>
                     </div>
@@ -258,21 +258,29 @@
                 }
 
                 const user = userData.data;
-                const currentLevelXp = user.current_level_xp || 0; // 當前等級已累積的 XP
 
-                // 計算升到下一級需要的 XP（當前等級的升級門檻）
-                const nextLevel = newLevel + 1;
-                const xpNeededForNextLevel = LevelSystem.getLevelRequirement(newLevel);
+                // 用 LevelSystem 正確計算當前等級狀態
+                const levelState = LevelSystem.calculateState(
+                    user.current_xp || 0,
+                    user.correct_answer_count || 0
+                );
 
                 // 還需要多少 XP = 升級門檻 - 當前等級已累積的 XP
-                // 如果溢出（current_level_xp >= 門檻），則為 0
-                const xpRemaining = Math.max(0, xpNeededForNextLevel - currentLevelXp);
+                const xpRemaining = Math.max(0, levelState.xpForNextLevel - levelState.progressInLevel);
 
-                const nextLevelCardsRequired = newLevel; // 升到下一級需要的滿分卡片數 = 當前等級
+                // 還需要多少張藍色勾勾卡片 = (newLevel + 1 所需) - 目前擁有的
+                // 升到 newLevel+1 需要 perfectCards >= newLevel (因為 maxLevel = perfectCards + 1)
+                const currentCards = user.correct_answer_count || 0;
+                const cardsNeeded = Math.max(0, newLevel - currentCards);
 
                 // 更新畫面
                 document.getElementById('xp-needed').textContent = xpRemaining.toLocaleString();
-                document.getElementById('cards-needed').textContent = nextLevelCardsRequired;
+                if (cardsNeeded > 0) {
+                    document.getElementById('cards-needed').textContent = cardsNeeded;
+                } else {
+                    document.getElementById('cards-text').innerHTML =
+                        '藍色勾勾卡片 <span class="text-green-600">已達成 ✓</span>';
+                }
 
             } catch (error) {
                 console.error('載入下一等級需求失敗:', error);

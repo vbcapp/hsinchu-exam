@@ -189,7 +189,6 @@
                 currentCardData = data;
 
                 if (data) {
-                    // 儲存題目名稱供 result.html 使用
                     if (data.question) {
                         sessionStorage.setItem('currentCardName', data.question);
                     }
@@ -275,8 +274,6 @@
 
             // 清除上次的結果，避免返回時顯示舊資料
             sessionStorage.removeItem('quizApiResult');
-            sessionStorage.removeItem('levelUpProcessed');
-            sessionStorage.removeItem('bonusCelebrationProcessed');
 
             if (cardId) {
                 // 儲存 cardId 供之後使用（結果頁、重測）
@@ -436,41 +433,51 @@
 
             userAnswers[currentQuestionIndex] = { selectedIndex, isCorrect };
 
-            // 如果答對，檢查爆擊並顯示 XP 動畫
+            // 如果答對，檢查爆擊並計算實際 XP
+            let actualXP = 0;
             if (isCorrect) {
                 const criticalResult = checkCriticalHit();
                 if (criticalResult) {
+                    actualXP = criticalResult.xpList.reduce((sum, xp) => sum + xp, 0);
                     showCriticalAnimation(criticalResult);
                 } else {
+                    actualXP = 100;
                     showXPAnimation(100);
                 }
             }
 
             renderQuestion();
 
-            // 立即呼叫 API 儲存結果（不等待「下一題」按鈕）
+            // 先立即寫入 practiceSession（題數、對錯、預估 XP），不等 API 回傳
+            // 這樣即使頁面跳走，統計也不會丟失
+            const session = JSON.parse(sessionStorage.getItem('practiceSession') || '{"questionsCompleted":0,"totalXP":0,"correctCount":0,"incorrectCount":0}');
+            session.questionsCompleted += 1;
+            session.correctCount += (isCorrect ? 1 : 0);
+            session.incorrectCount += (isCorrect ? 0 : 1);
+            session.totalXP += actualXP;
+            sessionStorage.setItem('practiceSession', JSON.stringify(session));
+            console.log('practiceSession 已更新:', session);
+
+            // 非同步呼叫 API 儲存結果（不阻塞頁面跳轉）
             const cardId = sessionStorage.getItem('currentCardId');
             if (apiService.currentUser && cardId) {
                 const userAnswer = String.fromCharCode(64 + selectedIndex); // 1 -> A, 2 -> B, etc.
-                try {
-                    const apiResult = await apiService.submitAnswer({
-                        userId: apiService.currentUser.id,
-                        questionId: cardId,
-                        userAnswer: userAnswer,
-                        isCorrect: isCorrect
-                    });
-
+                apiService.submitAnswer({
+                    userId: apiService.currentUser.id,
+                    questionId: cardId,
+                    userAnswer: userAnswer,
+                    isCorrect: isCorrect,
+                    bonusXP: actualXP
+                }).then(apiResult => {
                     if (apiResult.success) {
                         console.log('答題結果已儲存:', apiResult);
                         if (apiResult.newUserData) {
                             sessionStorage.setItem('userData', JSON.stringify(apiResult.newUserData));
                         }
-                        // 儲存結果供 result.html 使用
-                        sessionStorage.setItem('quizApiResult', JSON.stringify(apiResult));
                     }
-                } catch (err) {
+                }).catch(err => {
                     console.error('儲存答題結果失敗:', err);
-                }
+                });
             }
 
             if (currentQuestionIndex < quizQuestions.length - 1) {
@@ -636,30 +643,15 @@
             if (autoNextTimeout) clearTimeout(autoNextTimeout);
 
             if (currentQuestionIndex === quizQuestions.length - 1) {
-                // 先儲存當前題目的結果到資料庫
-                await saveCurrentQuestionResult();
-
-                // 檢查是否有下一張卡片
                 const nextCardId = await getNextCardId();
-
                 if (nextCardId) {
-                    // 跳轉到下一張卡片的測驗
                     window.location.href = `test.html?id=${nextCardId}`;
                 } else {
-                    // 沒有下一張卡片時才跳轉到結果頁
-                    saveResultsAndRedirect();
+                    window.location.href = 'index.html';
                 }
             } else {
                 goToNextQuestion();
             }
-        }
-
-        // 儲存當前題目的結果（已在 handleOptionClick 中完成，此函式僅作為備援）
-        async function saveCurrentQuestionResult() {
-            // 結果已在點擊選項時儲存，這裡不需要重複呼叫
-            return sessionStorage.getItem('quizApiResult')
-                ? JSON.parse(sessionStorage.getItem('quizApiResult'))
-                : null;
         }
 
         // 取得下一張卡片 ID（從 sessionStorage 的卡片列表中按順序取得）
@@ -710,44 +702,6 @@
             }
         }
 
-        // 儲存結果並跳轉
-        async function saveResultsAndRedirect() {
-            const answer = userAnswers[0]; // 單題制
-            const isCorrect = answer ? answer.isCorrect : false;
-            const timestamp = new Date().toISOString();
-
-            // 準備基礎結果
-            const resultData = {
-                results: [isCorrect],
-                isPerfect: isCorrect,
-                correctCount: isCorrect ? 1 : 0,
-                totalQuestions: 1,
-                timestamp: timestamp
-            };
-            localStorage.setItem('quizResults', JSON.stringify(resultData));
-
-            // 呼叫 API 紀錄分數與獎勵
-            const urlParams = new URLSearchParams(window.location.search);
-            const cardId = urlParams.get('id');
-
-            // 存儲 cardId 供 result.html 和重測使用
-            if (cardId) {
-                sessionStorage.setItem('currentCardId', cardId);
-            }
-
-            // API 已在 handleOptionClick 中呼叫，這裡只需確認結果已儲存
-            const existingResult = sessionStorage.getItem('quizApiResult');
-            if (existingResult) {
-                console.log('使用已儲存的 API 結果:', JSON.parse(existingResult));
-            }
-
-            // Ensure flags are cleared for result page to process them fresh
-            sessionStorage.removeItem('levelUpProcessed');
-            sessionStorage.removeItem('bonusCelebrationProcessed');
-
-            console.log('Redirecting to result.html...');
-            window.location.href = 'result.html';
-        }
         // 頁面載入時初始化
         document.addEventListener('DOMContentLoaded', init);
     </script>

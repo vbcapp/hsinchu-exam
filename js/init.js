@@ -661,11 +661,10 @@ function bindCardActions(cards) {
 
 
 /**
- * [Admin] 綁定長按事件 - 移除 Publish to Daily 功能
+ * [Admin] 綁定長按事件 - 已廢棄
  */
 function bindAdminLongPress() {
     // 移除發布到每日卡片的功能，因為已經廢棄
-    console.log('Admin long press actions disabled');
 }
 
 /**
