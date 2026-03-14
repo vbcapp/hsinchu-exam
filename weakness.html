@@ -2181,10 +2181,10 @@
             }
         }
 
-        // ==================== 雷達圖 ====================
+        // ==================== 極座標長條圖 ====================
 
         /**
-         * 渲染章節正確率雷達圖
+         * 渲染章節正確率極座標長條圖（錐形堆疊）
          */
         function renderRadarChart(data) {
             const svg = document.getElementById('radar-chart-svg');
@@ -2195,7 +2195,7 @@
             }
             wrapper.classList.remove('hidden');
 
-            // 合併同名章節（跨難度）取平均正確率
+            // 合併同名章節（跨難度）
             const chapterMap = new Map();
             data.forEach(ch => {
                 const key = ch.chapter;
@@ -2216,105 +2216,146 @@
             }));
 
             const n = chapters.length;
-            if (n < 3) {
-                // 少於 3 個章節無法畫有意義的雷達圖
+            if (n < 2) {
                 wrapper.classList.add('hidden');
                 return;
             }
 
-            const size = 300;
+            const size = 320;
             const cx = size / 2;
             const cy = size / 2;
-            const maxR = 110;
-            const levels = 4; // 同心圓層數 (25%, 50%, 75%, 100%)
+            const maxR = 120;
+            const innerR = 6; // 中心點半徑（錐形尖端寬度基準）
             const angleStep = (2 * Math.PI) / n;
-            const startAngle = -Math.PI / 2; // 12 點鐘方向開始
+            const startAngle = -Math.PI / 2;
+            const gapAngle = angleStep * 0.08; // 錐形間隙
 
-            // 座標計算
-            function polarToXY(angle, r) {
-                return {
-                    x: cx + r * Math.cos(angle),
-                    y: cy + r * Math.sin(angle)
-                };
+            svg.setAttribute('width', size);
+            svg.setAttribute('height', size);
+            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+
+            function polar(angle, r) {
+                return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
             }
 
             let svgContent = '';
 
-            // 繪製同心圓網格
-            for (let lv = 1; lv <= levels; lv++) {
-                const r = (maxR / levels) * lv;
-                const points = [];
-                for (let i = 0; i < n; i++) {
-                    const angle = startAngle + i * angleStep;
-                    const p = polarToXY(angle, r);
-                    points.push(`${p.x},${p.y}`);
+            // 同心圓參考線
+            const levels = [25, 50, 75, 100];
+            levels.forEach(lv => {
+                const r = (lv / 100) * maxR;
+                svgContent += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E2E8F0" stroke-width="0.8"/>`;
+            });
+
+            // 繪製每個章節的錐形堆疊長條
+            chapters.forEach((ch, i) => {
+                const midAngle = startAngle + i * angleStep;
+                const a1 = midAngle - angleStep / 2 + gapAngle;
+                const a2 = midAngle + angleStep / 2 - gapAngle;
+
+                // 錐形：尖端在中心（窄），外端寬
+                // 堆疊三層：精通(綠) → 正確(藍) → 剩餘已答(橘)
+                const total = ch.totalQuestions;
+                if (total === 0) return;
+
+                const masteryPct = ch.masteredCount / total;
+                const correctPct = ch.correctCount / total;
+                // answeredPct = 已作答比例（含對含錯）
+                const answeredPct = ch.answeredCount > 0 ? Math.min(ch.answeredCount / total, 1) : 0;
+
+                // 各層的外半徑（堆疊：從中心往外依序是精通→正確→已答）
+                // 精通 ⊂ 正確 ⊂ 已答，所以用各自佔比 * maxR
+                const rAnswered = Math.max(answeredPct * maxR, answeredPct > 0 ? 8 : 0);
+                const rCorrect = Math.max(correctPct * maxR, correctPct > 0 ? 6 : 0);
+                const rMastery = Math.max(masteryPct * maxR, masteryPct > 0 ? 4 : 0);
+
+                // 錐形路徑生成：從中心窄端到外端寬弧
+                function taperPath(outerR) {
+                    if (outerR <= 0) return '';
+                    // 尖端（中心附近）：用 innerR 的窄角度
+                    const tipHalf = angleStep * 0.05; // 尖端非常窄
+                    const t1 = polar(midAngle - tipHalf, innerR);
+                    const t2 = polar(midAngle + tipHalf, innerR);
+                    // 外端：完整弧寬
+                    const o1 = polar(a1, outerR);
+                    const o2 = polar(a2, outerR);
+                    // 外弧的 large-arc-flag
+                    const largeArc = (a2 - a1) > Math.PI ? 1 : 0;
+                    return `M${t1.x},${t1.y} L${o1.x},${o1.y} A${outerR},${outerR} 0 ${largeArc} 1 ${o2.x},${o2.y} L${t2.x},${t2.y} Z`;
                 }
-                svgContent += `<polygon points="${points.join(' ')}" fill="none" stroke="#CBD5E1" stroke-width="1" opacity="0.6"/>`;
-            }
 
-            // 繪製從中心到頂點的軸線
-            for (let i = 0; i < n; i++) {
-                const angle = startAngle + i * angleStep;
-                const p = polarToXY(angle, maxR);
-                svgContent += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#CBD5E1" stroke-width="1" opacity="0.4"/>`;
-            }
+                // 底層：已答題（橘色）
+                if (rAnswered > 0) {
+                    svgContent += `<path d="${taperPath(rAnswered)}" fill="#F59E0B" opacity="0.7"
+                        style="cursor:pointer;" class="radar-wedge" data-radar-idx="${i}"/>`;
+                }
+                // 中層：正確題（藍色）
+                if (rCorrect > 0) {
+                    svgContent += `<path d="${taperPath(rCorrect)}" fill="#3B82F6" opacity="0.8"
+                        style="cursor:pointer;" class="radar-wedge" data-radar-idx="${i}"/>`;
+                }
+                // 頂層：精通題（綠色）
+                if (rMastery > 0) {
+                    svgContent += `<path d="${taperPath(rMastery)}" fill="#22C55E" opacity="0.9"
+                        style="cursor:pointer;" class="radar-wedge" data-radar-idx="${i}"/>`;
+                }
 
-            // 繪製數據多邊形
-            const dataPoints = [];
-            chapters.forEach((ch, i) => {
-                const angle = startAngle + i * angleStep;
-                const val = ch.answeredCount > 0 ? ch.correctRate / 100 : 0;
-                const r = Math.max(val * maxR, 4); // 至少 4px 以便看到
-                const p = polarToXY(angle, r);
-                dataPoints.push({ x: p.x, y: p.y, chapter: ch, index: i });
+                // 未作答：畫一個灰色細線錐形
+                if (ch.answeredCount === 0) {
+                    const ghostR = maxR * 0.15;
+                    svgContent += `<path d="${taperPath(ghostR)}" fill="#D1D5DB" opacity="0.5"
+                        style="cursor:pointer;" class="radar-wedge" data-radar-idx="${i}"/>`;
+                }
+
+                // 外側標籤編號
+                const labelR = maxR + 16;
+                const lp = polar(midAngle, labelR);
+                const anchor = Math.abs(lp.x - cx) < 5 ? 'middle' : (lp.x > cx ? 'start' : 'end');
+                const dy = lp.y < cy - 5 ? '-1' : (lp.y > cy + 5 ? '10' : '4');
+                svgContent += `<text x="${lp.x}" y="${lp.y}" dy="${dy}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#64748B">${i + 1}</text>`;
             });
 
-            const polyPoints = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
-            svgContent += `<polygon points="${polyPoints}" fill="rgba(99,102,241,0.2)" stroke="#6366F1" stroke-width="2.5"/>`;
+            // 中心圓點
+            svgContent += `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="white" stroke="#CBD5E1" stroke-width="1"/>`;
 
-            // 繪製軸標籤（縮短編號）
-            chapters.forEach((ch, i) => {
-                const angle = startAngle + i * angleStep;
-                const labelR = maxR + 18;
-                const p = polarToXY(angle, labelR);
-                const anchor = Math.abs(p.x - cx) < 5 ? 'middle' : (p.x > cx ? 'start' : 'end');
-                const dy = p.y < cy ? '-2' : (p.y > cy + 5 ? '12' : '4');
-                svgContent += `<text x="${p.x}" y="${p.y}" dy="${dy}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#64748B">${i + 1}</text>`;
-            });
-
-            // 繪製數據點 (可點擊的圓形)
-            dataPoints.forEach((p, i) => {
-                const ch = p.chapter;
-                const color = ch.answeredCount === 0 ? '#9CA3AF' : (ch.correctRate >= 80 ? '#22C55E' : ch.correctRate >= 60 ? '#3B82F6' : ch.correctRate >= 40 ? '#F59E0B' : '#EF4444');
-                svgContent += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="white" stroke-width="2"
-                    style="cursor:pointer;" data-radar-idx="${i}" class="radar-dot"/>`;
-            });
+            // 圖例
+            const legendY = size - 12;
+            svgContent += `
+                <g font-size="9" font-weight="600">
+                    <rect x="${cx - 72}" y="${legendY}" width="8" height="8" rx="1" fill="#22C55E" opacity="0.9"/>
+                    <text x="${cx - 62}" y="${legendY + 7}" fill="#64748B">精通</text>
+                    <rect x="${cx - 28}" y="${legendY}" width="8" height="8" rx="1" fill="#3B82F6" opacity="0.8"/>
+                    <text x="${cx - 18}" y="${legendY + 7}" fill="#64748B">正確</text>
+                    <rect x="${cx + 16}" y="${legendY}" width="8" height="8" rx="1" fill="#F59E0B" opacity="0.7"/>
+                    <text x="${cx + 26}" y="${legendY + 7}" fill="#64748B">已答</text>
+                    <rect x="${cx + 56}" y="${legendY}" width="8" height="8" rx="1" fill="#D1D5DB" opacity="0.5"/>
+                    <text x="${cx + 66}" y="${legendY + 7}" fill="#64748B">未答</text>
+                </g>`;
 
             svg.innerHTML = svgContent;
 
-            // 綁定點擊事件
-            svg.querySelectorAll('.radar-dot').forEach(dot => {
-                dot.addEventListener('click', function (e) {
+            // 高亮 + 點擊事件
+            let selectedIdx = -1;
+            svg.querySelectorAll('.radar-wedge').forEach(wedge => {
+                wedge.addEventListener('click', function (e) {
                     e.stopPropagation();
                     const idx = parseInt(this.getAttribute('data-radar-idx'));
+                    selectedIdx = idx;
                     showRadarSelectedCard(chapters[idx], idx);
-                    // 高亮選中的點
-                    svg.querySelectorAll('.radar-dot').forEach(d => {
-                        d.setAttribute('r', '6');
-                        d.setAttribute('stroke-width', '2');
+                    // 高亮效果
+                    svg.querySelectorAll('.radar-wedge').forEach(w => {
+                        const wIdx = parseInt(w.getAttribute('data-radar-idx'));
+                        w.style.filter = wIdx === idx ? 'brightness(1.15)' : 'brightness(0.6)';
                     });
-                    this.setAttribute('r', '9');
-                    this.setAttribute('stroke-width', '3');
                 });
             });
 
-            // 點擊空白處隱藏卡片
             svg.addEventListener('click', function (e) {
-                if (!e.target.classList.contains('radar-dot')) {
+                if (!e.target.classList.contains('radar-wedge')) {
+                    selectedIdx = -1;
                     hideRadarSelectedCard();
-                    svg.querySelectorAll('.radar-dot').forEach(d => {
-                        d.setAttribute('r', '6');
-                        d.setAttribute('stroke-width', '2');
+                    svg.querySelectorAll('.radar-wedge').forEach(w => {
+                        w.style.filter = '';
                     });
                 }
             });
