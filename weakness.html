@@ -2383,8 +2383,12 @@
 
             if (!data || data.length === 0) {
                 container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">尚無章節資料</div>';
+                renderRadarChart(null);
                 return;
             }
+
+            // 渲染雷達圖（用完整資料，不受展開/收合影響）
+            renderRadarChart(data);
 
             // 根據排序模式排序
             let sortedData = [...data];
