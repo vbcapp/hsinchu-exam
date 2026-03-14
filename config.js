@@ -28,6 +28,15 @@ const OrgBranding = {
     appVersion: '',
     primaryColor: '#FFD600',
     logoUrl: '',
+
+    // 計分設定（從 DB 讀取，預設值與原本硬編碼一致）
+    baseScore: 100,
+    incorrectScore: 0,
+    dailyLoginScore: 50,
+    criticalHitEnabled: true,
+    criticalHitMultipliers: [2, 3, 4, 5, 10],
+    levelRequirements: null,
+
     _loaded: false,
     _fetchPromise: null,
 
@@ -55,6 +64,15 @@ const OrgBranding = {
                     this.footerText = data.footer_text || '';
                     this.primaryColor = data.primary_color || this.primaryColor;
                     this.logoUrl = data.logo_url || '';
+
+                    // 計分設定（注意：0 和 false 是合法值，不能用 || fallback）
+                    this.baseScore = (data.base_score != null) ? data.base_score : 100;
+                    this.incorrectScore = (data.incorrect_score != null) ? data.incorrect_score : 0;
+                    this.dailyLoginScore = (data.daily_login_score != null) ? data.daily_login_score : 50;
+                    this.criticalHitEnabled = (data.critical_hit_enabled != null) ? data.critical_hit_enabled : true;
+                    this.criticalHitMultipliers = Array.isArray(data.critical_hit_multipliers) ? data.critical_hit_multipliers : [2, 3, 4, 5, 10];
+                    this.levelRequirements = data.level_requirements || null;
+
                     this._loaded = true;
                 }
             } catch (e) {
@@ -165,11 +183,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// ==================== XP 系統常數 ====================
+// ==================== XP 系統（從資料庫動態讀取） ====================
+// 透過 getter 自動從 OrgBranding 取值，OrgBranding 載入前使用預設值
 const XP_REWARDS = {
-    CORRECT: 100,      // 單題答對
-    INCORRECT: 0,      // 單題答錯 (不扣分)
-    DAILY_LOGIN: 50    // 每日登入
+    get CORRECT() { return OrgBranding.baseScore; },       // 單題答對
+    get INCORRECT() { return OrgBranding.incorrectScore; }, // 單題答錯
+    get DAILY_LOGIN() { return OrgBranding.dailyLoginScore; } // 每日登入
 };
 
 // ==================== 錯誤代碼 ====================
@@ -275,7 +294,5 @@ const STUDENT_EMAILS_OFF = [
 ];
 
 // ==================== 等級計算公式 ====================
-// 計算下一等級所需 XP
-function calculateNextLevelXp(currentLevel) {
-    return Math.floor(100 * currentLevel * 1.5);
-}
+// 實際等級計算由 js/level-system.js 的 LevelSystem.getLevelRequirement() 負責
+// 未來可透過 organization_settings.level_requirements 自訂等級門檻

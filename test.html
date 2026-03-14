@@ -441,8 +441,8 @@
                     actualXP = criticalResult.xpList.reduce((sum, xp) => sum + xp, 0);
                     showCriticalAnimation(criticalResult);
                 } else {
-                    actualXP = 100;
-                    showXPAnimation(100);
+                    actualXP = XP_REWARDS.CORRECT;
+                    showXPAnimation(XP_REWARDS.CORRECT);
                 }
             }
 
@@ -506,29 +506,32 @@
             }, 1000);
         }
 
-        // 爆擊機率檢查
+        // 爆擊機率檢查（倍數從 organization_settings 讀取）
+        // critical_hit_multipliers 陣列長度決定啟用幾階爆擊：
+        //   5 個元素 = 1~5 階全開，4 個 = 只有 1~4 階，依此類推
         function checkCriticalHit() {
-            const roll = Math.random() * 100; // 0-100 的隨機數
+            if (!OrgBranding.criticalHitEnabled) return null;
 
-            // 按照機率從低到高檢查（先檢查稀有的）
-            if (roll < 1) {
-                // 1% - 5階爆擊
-                return { level: 5, xpList: [1000] };
-            } else if (roll < 3) {
-                // 2% - 4階爆擊
-                return { level: 4, xpList: [500] };
-            } else if (roll < 8) {
-                // 5% - 3階爆擊
-                return { level: 3, xpList: [100, 100, 100, 100] };
-            } else if (roll < 18) {
-                // 10% - 2階爆擊
-                return { level: 2, xpList: [100, 100, 100] };
-            } else if (roll < 38) {
-                // 20% - 1階爆擊
-                return { level: 1, xpList: [100, 100] };
+            const roll = Math.random() * 100;
+            const base = OrgBranding.baseScore;
+            const m = OrgBranding.criticalHitMultipliers;
+            if (!Array.isArray(m) || m.length === 0) return null;
+
+            // 機率固定：5階=1% / 4階=2% / 3階=5% / 2階=10% / 1階=20%
+            // 只有陣列有對應元素時才啟用該階
+            if (m.length >= 5 && roll < 1) {
+                return { level: 5, xpList: [base * m[4]] };       // 5階爆擊
+            } else if (m.length >= 4 && roll < 3) {
+                return { level: 4, xpList: [base * m[3]] };       // 4階爆擊
+            } else if (m.length >= 3 && roll < 8) {
+                return { level: 3, xpList: [base * m[2]] };       // 3階爆擊
+            } else if (m.length >= 2 && roll < 18) {
+                return { level: 2, xpList: [base * m[1]] };       // 2階爆擊
+            } else if (m.length >= 1 && roll < 38) {
+                return { level: 1, xpList: [base * m[0]] };       // 1階爆擊
             }
 
-            return null; // 沒有觸發爆擊
+            return null;
         }
 
         // 顯示爆擊動畫

@@ -178,8 +178,20 @@
 | `app_version` | `text` | DEFAULT 'v1.0.0' | 應用版本號 |
 | `primary_color` | `text` | DEFAULT '#FFD600' | 主題色（Hex） |
 | `logo_url` | `text` | DEFAULT '' | Logo 圖片 URL |
+| `base_score` | `integer` | DEFAULT 100 | 答對基礎分（企業可自訂，如 1, 10, 100） |
+| `incorrect_score` | `integer` | DEFAULT 0 | 答錯分數（可設負數實現扣分機制） |
+| `daily_login_score` | `integer` | DEFAULT 50 | 每日登入獎勵分數 |
+| `critical_hit_enabled` | `boolean` | DEFAULT true | 是否啟用爆擊系統（false = 關閉隨機爆擊） |
+| `critical_hit_multipliers` | `jsonb` | DEFAULT `[2,3,4,5,10]` | 1~5 階爆擊倍數陣列（基礎分 × 倍數） |
+| `level_requirements` | `jsonb` | DEFAULT NULL | 預留：未來自訂等級門檻（NULL = 使用預設公式） |
 | `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
 | `updated_at` | `timestamptz` | DEFAULT now() | 更新時間 |
+
+**計分設定說明：**
+- `base_score` = 100 時，答對得 100 分；爆擊 1 階 = 100 × 2 = 200 分，5 階 = 100 × 10 = 1000 分
+- `base_score` = 1 時，答對得 1 分；爆擊 1 階 = 1 × 2 = 2 分，5 階 = 1 × 10 = 10 分
+- 爆擊機率固定為 1% / 2% / 5% / 10% / 20%，不可調整
+- `critical_hit_multipliers` 陣列順序：`[1階倍數, 2階倍數, 3階倍數, 4階倍數, 5階倍數]`
 
 **使用方式：**
 - `config.js` 中的 `OrgBranding.fetch()` 會在頁面載入時讀取此表
