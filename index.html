@@ -34,7 +34,9 @@
     <script src="js/theme-config.js"></script>
     <script src="js/components.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
@@ -100,7 +102,7 @@
                     <div class="relative flex-1">
                         <input id="search-input"
                             class="w-full h-12 neo-border-thick px-10 bg-white dark:bg-zinc-800 focus:outline-none text-sm font-bold"
-                            placeholder="搜尋術語..." type="text" />
+                            placeholder="搜尋題目..." type="text" />
                         <span
                             class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-xl">search</span>
                     </div>
@@ -231,65 +233,18 @@
             const applyFilterBtn = document.getElementById('apply-filter');
             const clearFilterBtn = document.getElementById('clear-filter');
 
-            // 狀態
-            let selectedCategories = new Set();
-            let allCategories = [];
+            // 狀態 — key 格式為 "subject|||chapter"，確保不同 subject 下同名 chapter 不會衝突
+            let selectedPairs = new Set();      // 儲存選取的 subject+chapter 組合
+            let expandedSubjects = new Set();   // 記錄哪些 subject 是展開的
+            let groupedData = [];               // [{ subject, chapters: [...] }, ...]
             let currentSearchQuery = '';
 
-            // === 工具函式：注音排序 ===
-            // 建立注音對照表 (簡化版，涵蓋常見首字)
-            const bopomofoMap = {
-                'ㄅ': 1, 'ㄆ': 2, 'ㄇ': 3, 'ㄈ': 4, 'ㄉ': 5, 'ㄊ': 6, 'ㄋ': 7, 'ㄌ': 8,
-                'ㄍ': 9, 'ㄎ': 10, 'ㄏ': 11, 'ㄐ': 12, 'ㄑ': 13, 'ㄒ': 14,
-                'ㄓ': 15, 'ㄔ': 16, 'ㄕ': 17, 'ㄖ': 18, 'ㄗ': 19, 'ㄘ': 20, 'ㄙ': 21,
-                'ㄧ': 22, 'ㄨ': 23, 'ㄩ': 24, 'ㄚ': 25, 'ㄛ': 26, 'ㄜ': 27, 'ㄝ': 28,
-                'ㄞ': 29, 'ㄟ': 30, 'ㄠ': 31, 'ㄡ': 32, 'ㄢ': 33, 'ㄣ': 34, 'ㄤ': 35, 'ㄥ': 36, 'ㄦ': 37
-            };
-
-            function getBopomofoScore(char) {
-                // 這裡是一個簡單的模擬，實際中文轉注音需要龐大字典。
-                // 由於瀏覽器支援 Intl.Collator，我們優先使用它。
-                return 0;
-            }
-
-            function sortCategories(categories) {
-                // 分離中文和英文/其他
-                const chineseRegex = /[\u4e00-\u9fa5]/;
-                const enCategories = [];
-                const zhCategories = [];
-                const otherCategories = [];
-
-                categories.forEach(cat => {
-                    if (!cat) return;
-                    // 判斷首字
-                    const firstChar = cat.charAt(0);
-                    if (chineseRegex.test(firstChar)) {
-                        zhCategories.push(cat);
-                    } else if (/[a-zA-Z]/.test(firstChar)) {
-                        enCategories.push(cat);
-                    } else {
-                        otherCategories.push(cat);
-                    }
-                });
-
-                // 英文：A-Z (不分大小寫)
-                enCategories.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-                // 中文：使用 Intl.Collator 進行注音排序 (zh-TW 通常預設筆劃或注音，但在現代瀏覽器 zh-Hant-TW-u-co-zhuyin 可強制注音)
-                const zhCollator = new Intl.Collator('zh-Hant-TW-u-co-zhuyin');
-                zhCategories.sort(zhCollator.compare);
-
-                // 其他：預設排序
-                otherCategories.sort();
-
-                // 合併：英文 -> 中文 -> 其他
-                return [...enCategories, ...zhCategories, ...otherCategories];
-            }
+            function pairKey(subject, chapter) { return subject + '|||' + chapter; }
+            function parsePairKey(key) { const [s, c] = key.split('|||'); return { subject: s, chapter: c }; }
 
             // === Modal 操作 ===
             function openModal() {
                 filterModal.classList.remove('hidden');
-                // 動畫 (簡單處理)
                 setTimeout(() => {
                     filterContent.classList.remove('translate-y-full');
                 }, 10);
@@ -308,11 +263,10 @@
                 const userId = apiService.currentUser?.id;
                 if (!userId) return;
 
-                // 避免重複載入閃爍，如果已有資料只重新渲染選取狀態
-                if (allCategories.length === 0) {
-                    const result = await apiService.getUniqueCategories(userId);
+                if (groupedData.length === 0) {
+                    const result = await apiService.getGroupedCategories(userId);
                     if (result.success) {
-                        allCategories = sortCategories(result.data);
+                        groupedData = result.data;
                     } else {
                         categoryList.innerHTML = '<div class="text-red-500 text-center">載入失敗</div>';
                         return;
@@ -322,36 +276,96 @@
                 renderCategoryList();
             }
 
+            function isSubjectFullySelected(group) {
+                return group.chapters.every(ch => selectedPairs.has(pairKey(group.subject, ch)));
+            }
+
+            function isSubjectPartiallySelected(group) {
+                return group.chapters.some(ch => selectedPairs.has(pairKey(group.subject, ch))) && !isSubjectFullySelected(group);
+            }
+
             function renderCategoryList() {
                 categoryList.innerHTML = '';
-                if (allCategories.length === 0) {
+                if (groupedData.length === 0) {
                     categoryList.innerHTML = '<div class="text-center text-gray-500">目前沒有分類</div>';
                     return;
                 }
 
-                allCategories.forEach(cat => {
-                    const isSelected = selectedCategories.has(cat);
-                    const div = document.createElement('div');
-                    div.className = `flex items-center justify-between p-3 mb-2 rounded border-2 cursor-pointer transition-all ${isSelected ? 'border-primary bg-yellow-50' : 'border-gray-200 bg-white dark:bg-zinc-800 dark:border-zinc-700'}`;
-                    div.onclick = () => toggleCategory(cat);
+                groupedData.forEach(group => {
+                    const isExpanded = expandedSubjects.has(group.subject);
+                    const isFullSelected = isSubjectFullySelected(group);
+                    const isPartial = isSubjectPartiallySelected(group);
 
-                    div.innerHTML = `
-                        <span class="font-bold text-sm ${isSelected ? 'text-black' : 'text-gray-600 dark:text-gray-300'}">${cat}</span>
-                        <div class="w-5 h-5 border-2 border-border-main flex items-center justify-center ${isSelected ? 'bg-primary' : 'bg-white'}">
-                            ${isSelected ? '<span class="material-symbols-outlined text-sm font-bold">check</span>' : ''}
+                    // === 大分類標頭 ===
+                    const header = document.createElement('div');
+                    header.className = `flex items-center justify-between p-3 mb-1 rounded-lg border-2 cursor-pointer transition-all ${isFullSelected ? 'border-primary bg-yellow-50 dark:bg-yellow-900/20' : isPartial ? 'border-primary/50 bg-yellow-50/50 dark:bg-yellow-900/10' : 'border-gray-200 bg-white dark:bg-zinc-800 dark:border-zinc-700'}`;
+
+                    header.innerHTML = `
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <span class="material-symbols-outlined text-base transition-transform ${isExpanded ? 'rotate-90' : ''}" style="font-size:18px">chevron_right</span>
+                            <span class="font-black text-sm truncate ${isFullSelected || isPartial ? 'text-black dark:text-white' : 'text-gray-700 dark:text-gray-300'}">${group.subject}</span>
+                            <span class="text-xs text-gray-400 whitespace-nowrap">(${group.chapters.length})</span>
+                        </div>
+                        <div data-role="checkbox" class="w-5 h-5 border-2 border-border-main flex items-center justify-center flex-shrink-0 ${isFullSelected ? 'bg-primary' : 'bg-white dark:bg-zinc-700'}">
+                            ${isFullSelected ? '<span class="material-symbols-outlined text-sm font-bold">check</span>' : isPartial ? '<span class="block w-2.5 h-0.5 bg-primary"></span>' : ''}
                         </div>
                     `;
-                    categoryList.appendChild(div);
-                });
-            }
 
-            function toggleCategory(cat) {
-                if (selectedCategories.has(cat)) {
-                    selectedCategories.delete(cat);
-                } else {
-                    selectedCategories.add(cat);
-                }
-                renderCategoryList();
+                    // 點整列：展開/收合
+                    header.onclick = (e) => {
+                        if (isExpanded) {
+                            expandedSubjects.delete(group.subject);
+                        } else {
+                            expandedSubjects.add(group.subject);
+                        }
+                        renderCategoryList();
+                    };
+
+                    // 點 checkbox 區域：全選/全取消
+                    const checkbox = header.querySelector('[data-role="checkbox"]');
+                    checkbox.onclick = (e) => {
+                        e.stopPropagation();
+                        if (isFullSelected) {
+                            group.chapters.forEach(ch => selectedPairs.delete(pairKey(group.subject, ch)));
+                        } else {
+                            group.chapters.forEach(ch => selectedPairs.add(pairKey(group.subject, ch)));
+                        }
+                        renderCategoryList();
+                    };
+
+                    categoryList.appendChild(header);
+
+                    // === 次分類列表（展開時顯示）===
+                    if (isExpanded) {
+                        const subList = document.createElement('div');
+                        subList.className = 'ml-6 mb-2';
+
+                        group.chapters.forEach(ch => {
+                            const key = pairKey(group.subject, ch);
+                            const isChSelected = selectedPairs.has(key);
+                            const item = document.createElement('div');
+                            item.className = `flex items-center justify-between p-2.5 mb-1 rounded border-2 cursor-pointer transition-all ${isChSelected ? 'border-primary bg-yellow-50 dark:bg-yellow-900/20' : 'border-gray-100 bg-gray-50 dark:bg-zinc-700/50 dark:border-zinc-600'}`;
+                            item.onclick = () => {
+                                if (selectedPairs.has(key)) {
+                                    selectedPairs.delete(key);
+                                } else {
+                                    selectedPairs.add(key);
+                                }
+                                renderCategoryList();
+                            };
+
+                            item.innerHTML = `
+                                <span class="text-sm ${isChSelected ? 'font-bold text-black dark:text-white' : 'text-gray-600 dark:text-gray-300'}">${ch}</span>
+                                <div class="w-4 h-4 border-2 border-border-main flex items-center justify-center flex-shrink-0 ${isChSelected ? 'bg-primary' : 'bg-white dark:bg-zinc-600'}">
+                                    ${isChSelected ? '<span class="material-symbols-outlined font-bold" style="font-size:12px">check</span>' : ''}
+                                </div>
+                            `;
+                            subList.appendChild(item);
+                        });
+
+                        categoryList.appendChild(subList);
+                    }
+                });
             }
 
             // === 搜尋與篩選邏輯 ===
@@ -368,12 +382,18 @@
                     </div>
                 `;
 
+                // 將 selectedPairs 轉為 subject+chapter 組合
+                let subjectChapterPairs = null;
+                if (selectedPairs.size > 0) {
+                    subjectChapterPairs = Array.from(selectedPairs).map(parsePairKey);
+                }
+
                 const options = {
                     userId: userId,
                     page: 1, // 篩選後重置為第一頁
                     limit: 100, // 增加數量
                     searchQuery: currentSearchQuery || null,
-                    subject: selectedCategories.size > 0 ? Array.from(selectedCategories) : null
+                    subjectChapterPairs: subjectChapterPairs
                 };
 
                 const result = await apiService.getAccessibleQuestions(userId, options);
@@ -433,11 +453,9 @@
 
             // 4. Clear
             clearFilterBtn.onclick = () => {
-                selectedCategories.clear();
-                renderCategoryList(); // 重新渲染 modal
-                applyFilter(); // 重新載入列表
-                // 不關閉 modal，方便使用者看結果? 或者關閉? 依照需求選好點擊正確或取消 -> 所以是需要 Confirm 才會生效
-                // 如果是 Clear，通常是清空選擇。
+                selectedPairs.clear();
+                renderCategoryList();
+                applyFilter();
             };
 
             // 5. Search Input (Debounce)
@@ -505,7 +523,7 @@
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/sw.js").catch(() => {});
+                navigator.serviceWorker.register("/sw.js").catch(() => { });
             });
         }
     </script>

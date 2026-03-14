@@ -854,17 +854,25 @@ class ApiService {
                 page = 1,
                 limit = 20,
                 subject = null,
-                chapter = null
+                chapter = null,
+                subjectChapterPairs = null
             } = options;
 
-            // 如果前端有傳 subject 或 chapter 進行篩選，進一步過濾 accessibleChapters
-            if (subject) {
-                const subjectFilters = Array.isArray(subject) ? subject : [subject];
-                accessibleChapters = accessibleChapters.filter(ch => subjectFilters.includes(ch.subject));
-            }
-            if (chapter) {
-                const chapterFilters = Array.isArray(chapter) ? chapter : [chapter];
-                accessibleChapters = accessibleChapters.filter(ch => chapterFilters.includes(ch.chapter));
+            // 精確的 subject+chapter 組合篩選（優先使用）
+            if (subjectChapterPairs) {
+                accessibleChapters = accessibleChapters.filter(ch =>
+                    subjectChapterPairs.some(p => p.subject === ch.subject && p.chapter === ch.chapter)
+                );
+            } else {
+                // 向下相容：分別用 subject / chapter 篩選
+                if (subject) {
+                    const subjectFilters = Array.isArray(subject) ? subject : [subject];
+                    accessibleChapters = accessibleChapters.filter(ch => subjectFilters.includes(ch.subject));
+                }
+                if (chapter) {
+                    const chapterFilters = Array.isArray(chapter) ? chapter : [chapter];
+                    accessibleChapters = accessibleChapters.filter(ch => chapterFilters.includes(ch.chapter));
+                }
             }
 
             // 如果過濾後沒有章節了，一樣回傳空陣列
@@ -1207,6 +1215,66 @@ class ApiService {
             uniqueSubjects.sort(collator.compare);
 
             return { success: true, data: uniqueSubjects };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得分組的大分類→次分類資料（用於首頁篩選 Modal 的階層式篩選）
+     * 回傳格式：[{ subject, chapters: [chapter1, chapter2, ...] }, ...]
+     * 依 subject_no、chapter_no 排序
+     */
+    async getGroupedCategories(userId) {
+        if (!userId) return { success: false, error: 'User ID is required' };
+        try {
+            const accessResult = await this._getUserAccessibleChapters(userId);
+            if (!accessResult.success) return accessResult;
+
+            // 取得排序資訊
+            const chapterNames = [...new Set(accessResult.data.map(ch => ch.chapter).filter(Boolean))];
+            let chapterOrderMap = new Map();
+            let subjectOrderMap = new Map();
+
+            if (chapterNames.length > 0) {
+                const { data: orderData, error } = await this.supabase
+                    .from('questions')
+                    .select('subject, chapter, subject_no, chapter_no')
+                    .in('chapter', chapterNames);
+                if (!error && orderData) {
+                    orderData.forEach(item => {
+                        if (item.chapter && !chapterOrderMap.has(item.chapter)) {
+                            chapterOrderMap.set(item.chapter, item.chapter_no || 999);
+                        }
+                        if (item.subject && !subjectOrderMap.has(item.subject)) {
+                            subjectOrderMap.set(item.subject, item.subject_no || 999);
+                        }
+                    });
+                }
+            }
+
+            // 以 subject 分組
+            const groupMap = new Map();
+            accessResult.data.forEach(ch => {
+                if (!ch.subject || !ch.chapter) return;
+                if (!groupMap.has(ch.subject)) {
+                    groupMap.set(ch.subject, new Set());
+                }
+                groupMap.get(ch.subject).add(ch.chapter);
+            });
+
+            // 轉成陣列並排序
+            const grouped = [...groupMap.entries()]
+                .map(([subject, chaptersSet]) => ({
+                    subject,
+                    subjectOrder: subjectOrderMap.get(subject) || 999,
+                    chapters: [...chaptersSet].sort((a, b) =>
+                        (chapterOrderMap.get(a) || 999) - (chapterOrderMap.get(b) || 999)
+                    )
+                }))
+                .sort((a, b) => a.subjectOrder - b.subjectOrder);
+
+            return { success: true, data: grouped };
         } catch (error) {
             return this._handleError(error);
         }
