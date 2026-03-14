@@ -769,6 +769,42 @@
                     <span class="section-subtitle">— 精準定位你的盲區</span>
                 </div>
 
+                <!-- 章節正確率儀表板 -->
+                <div class="neo-brutalism-card bg-gradient-to-br from-indigo-50 to-blue-50 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-indigo-600 text-xl">dashboard</span>
+                            <span class="text-sm font-black uppercase">章節正確率總覽</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button id="dashboard-sort-rate" onclick="sortChapterDashboard('rate')"
+                                class="px-2 py-0.5 text-sm font-bold neo-border bg-primary">正確率</button>
+                            <button id="dashboard-sort-chapter" onclick="sortChapterDashboard('chapter')"
+                                class="px-2 py-0.5 text-sm font-bold neo-border bg-white">章節序</button>
+                        </div>
+                    </div>
+                    <!-- 雷達圖 -->
+                    <div id="radar-chart-wrapper" class="mb-3">
+                        <div id="radar-chart-container" class="flex justify-center">
+                            <svg id="radar-chart-svg" width="300" height="300"></svg>
+                        </div>
+                        <!-- 點擊後顯示的章節卡片 -->
+                        <div id="radar-selected-card" class="hidden mt-2"></div>
+                    </div>
+                    <div id="chapter-dashboard" class="space-y-2">
+                        <!-- 章節儀表板由 JS 填入 -->
+                        <div class="text-center text-gray-400 text-sm py-4">載入中...</div>
+                    </div>
+                    <!-- 展開/收合按鈕 -->
+                    <div id="chapter-dashboard-toggle" class="hidden mt-3 text-center">
+                        <button onclick="toggleChapterDashboard()"
+                            class="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1 mx-auto">
+                            <span id="chapter-dashboard-toggle-text">展開全部</span>
+                            <span id="chapter-dashboard-toggle-icon" class="material-symbols-outlined text-sm">expand_more</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 6. 最常錯的選項（Top 3~5） -->
                 <div class="neo-brutalism-card bg-gradient-to-br from-red-50 to-orange-50 p-4">
                     <div class="flex items-center justify-between mb-3">
@@ -859,6 +895,9 @@
         let globalAIAnalysis = null; // 儲存 AI 分析結果
         let isAIAnalysisLoading = false; // AI 分析載入狀態
         window.globalWrongPatternsData = null; // 儲存錯誤選項數據（使用 window 確保在 onclick 中可存取）
+        let globalChapterDashboardData = null; // 章節儀表板數據
+        let chapterDashboardExpanded = false; // 章節儀表板是否展開
+        let chapterDashboardSortMode = 'rate'; // 排序模式：rate（正確率低→高）/ chapter（章節序）
 
         /**
          * 顯示通知 Toast
@@ -925,7 +964,7 @@
                 const userId = apiService.currentUser.id;
 
                 // 並行載入所有數據
-                const [statsResult, weaknessResult, analysisState, todayMasteredResult, todayAnsweredResult, recentAccuracyResult, wrongPatternsResult, examSettings, attemptAccuracyResult] = await Promise.all([
+                const [statsResult, weaknessResult, analysisState, todayMasteredResult, todayAnsweredResult, recentAccuracyResult, wrongPatternsResult, examSettings, attemptAccuracyResult, chapterDashboardResult] = await Promise.all([
                     apiService.getWeaknessStats(userId),
                     apiService.getWeaknessList(userId, 30),
                     apiService.checkTodayAnalysisExists(userId),
@@ -934,7 +973,8 @@
                     apiService.getRecentVsHistoricalAccuracy(userId, 10),
                     apiService.getWrongAnswerPatterns(userId, 5),
                     loadExamSettings(userId),
-                    apiService.getAttemptAccuracyByRound(userId)
+                    apiService.getAttemptAccuracyByRound(userId),
+                    apiService.getChapterDashboardStats(userId)
                 ]);
 
                 // 渲染考試倒數
@@ -997,6 +1037,12 @@
                 // 渲染刷題正確率趨勢圖
                 if (attemptAccuracyResult.success) {
                     renderAttemptAccuracyChart(attemptAccuracyResult.data);
+                }
+
+                // 渲染章節儀表板
+                if (chapterDashboardResult.success) {
+                    globalChapterDashboardData = chapterDashboardResult.data;
+                    renderChapterDashboard(chapterDashboardResult.data);
                 }
 
                 // 渲染弱點列表
@@ -2133,6 +2179,340 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
+        }
+
+        // ==================== 雷達圖 ====================
+
+        /**
+         * 渲染章節正確率雷達圖
+         */
+        function renderRadarChart(data) {
+            const svg = document.getElementById('radar-chart-svg');
+            const wrapper = document.getElementById('radar-chart-wrapper');
+            if (!data || data.length === 0) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+            wrapper.classList.remove('hidden');
+
+            // 合併同名章節（跨難度）取平均正確率
+            const chapterMap = new Map();
+            data.forEach(ch => {
+                const key = ch.chapter;
+                if (!chapterMap.has(key)) {
+                    chapterMap.set(key, { chapter: key, totalRate: 0, count: 0, answeredCount: 0, totalQuestions: 0, correctCount: 0, masteredCount: 0, subject: ch.subject });
+                }
+                const m = chapterMap.get(key);
+                m.totalRate += ch.correctRate * ch.answeredCount;
+                m.count += ch.answeredCount;
+                m.answeredCount += ch.answeredCount;
+                m.totalQuestions += ch.totalQuestions;
+                m.correctCount += ch.correctCount;
+                m.masteredCount += ch.masteredCount;
+            });
+            const chapters = Array.from(chapterMap.values()).map(m => ({
+                ...m,
+                correctRate: m.count > 0 ? Math.round(m.totalRate / m.count) : 0
+            }));
+
+            const n = chapters.length;
+            if (n < 3) {
+                // 少於 3 個章節無法畫有意義的雷達圖
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            const size = 300;
+            const cx = size / 2;
+            const cy = size / 2;
+            const maxR = 110;
+            const levels = 4; // 同心圓層數 (25%, 50%, 75%, 100%)
+            const angleStep = (2 * Math.PI) / n;
+            const startAngle = -Math.PI / 2; // 12 點鐘方向開始
+
+            // 座標計算
+            function polarToXY(angle, r) {
+                return {
+                    x: cx + r * Math.cos(angle),
+                    y: cy + r * Math.sin(angle)
+                };
+            }
+
+            let svgContent = '';
+
+            // 繪製同心圓網格
+            for (let lv = 1; lv <= levels; lv++) {
+                const r = (maxR / levels) * lv;
+                const points = [];
+                for (let i = 0; i < n; i++) {
+                    const angle = startAngle + i * angleStep;
+                    const p = polarToXY(angle, r);
+                    points.push(`${p.x},${p.y}`);
+                }
+                svgContent += `<polygon points="${points.join(' ')}" fill="none" stroke="#CBD5E1" stroke-width="1" opacity="0.6"/>`;
+            }
+
+            // 繪製從中心到頂點的軸線
+            for (let i = 0; i < n; i++) {
+                const angle = startAngle + i * angleStep;
+                const p = polarToXY(angle, maxR);
+                svgContent += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#CBD5E1" stroke-width="1" opacity="0.4"/>`;
+            }
+
+            // 繪製數據多邊形
+            const dataPoints = [];
+            chapters.forEach((ch, i) => {
+                const angle = startAngle + i * angleStep;
+                const val = ch.answeredCount > 0 ? ch.correctRate / 100 : 0;
+                const r = Math.max(val * maxR, 4); // 至少 4px 以便看到
+                const p = polarToXY(angle, r);
+                dataPoints.push({ x: p.x, y: p.y, chapter: ch, index: i });
+            });
+
+            const polyPoints = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
+            svgContent += `<polygon points="${polyPoints}" fill="rgba(99,102,241,0.2)" stroke="#6366F1" stroke-width="2.5"/>`;
+
+            // 繪製軸標籤（縮短編號）
+            chapters.forEach((ch, i) => {
+                const angle = startAngle + i * angleStep;
+                const labelR = maxR + 18;
+                const p = polarToXY(angle, labelR);
+                const anchor = Math.abs(p.x - cx) < 5 ? 'middle' : (p.x > cx ? 'start' : 'end');
+                const dy = p.y < cy ? '-2' : (p.y > cy + 5 ? '12' : '4');
+                svgContent += `<text x="${p.x}" y="${p.y}" dy="${dy}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#64748B">${i + 1}</text>`;
+            });
+
+            // 繪製數據點 (可點擊的圓形)
+            dataPoints.forEach((p, i) => {
+                const ch = p.chapter;
+                const color = ch.answeredCount === 0 ? '#9CA3AF' : (ch.correctRate >= 80 ? '#22C55E' : ch.correctRate >= 60 ? '#3B82F6' : ch.correctRate >= 40 ? '#F59E0B' : '#EF4444');
+                svgContent += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${color}" stroke="white" stroke-width="2"
+                    style="cursor:pointer;" data-radar-idx="${i}" class="radar-dot"/>`;
+            });
+
+            svg.innerHTML = svgContent;
+
+            // 綁定點擊事件
+            svg.querySelectorAll('.radar-dot').forEach(dot => {
+                dot.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const idx = parseInt(this.getAttribute('data-radar-idx'));
+                    showRadarSelectedCard(chapters[idx], idx);
+                    // 高亮選中的點
+                    svg.querySelectorAll('.radar-dot').forEach(d => {
+                        d.setAttribute('r', '6');
+                        d.setAttribute('stroke-width', '2');
+                    });
+                    this.setAttribute('r', '9');
+                    this.setAttribute('stroke-width', '3');
+                });
+            });
+
+            // 點擊空白處隱藏卡片
+            svg.addEventListener('click', function (e) {
+                if (!e.target.classList.contains('radar-dot')) {
+                    hideRadarSelectedCard();
+                    svg.querySelectorAll('.radar-dot').forEach(d => {
+                        d.setAttribute('r', '6');
+                        d.setAttribute('stroke-width', '2');
+                    });
+                }
+            });
+        }
+
+        /**
+         * 顯示雷達圖選中章節的卡片
+         */
+        function showRadarSelectedCard(ch, idx) {
+            const container = document.getElementById('radar-selected-card');
+            const barColor = getBarColor(ch.correctRate, ch.answeredCount);
+            const masteryBarWidth = ch.totalQuestions > 0 ? Math.round((ch.masteredCount / ch.totalQuestions) * 100) : 0;
+            const correctBarWidth = ch.totalQuestions > 0 ? Math.round((ch.correctCount / ch.totalQuestions) * 100) : 0;
+
+            container.innerHTML = `
+                <div class="neo-border bg-white p-2.5 mb-1.5 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="text-sm font-bold text-gray-800 flex-1 truncate" title="${ch.chapter}">
+                            <span class="inline-flex items-center justify-center w-5 h-5 neo-border bg-indigo-100 text-indigo-700 text-xs font-black mr-1">${idx + 1}</span>
+                            ${ch.chapter}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-2">
+                            ${ch.answeredCount === 0
+                                ? '<span class="text-sm font-bold text-gray-400">未作答</span>'
+                                : `<span class="text-lg font-black ${barColor.textClass}">${ch.correctRate}%</span>`
+                            }
+                        </div>
+                    </div>
+                    <div class="h-3 neo-border bg-gray-100 overflow-hidden relative">
+                        <div class="h-full ${barColor.bgClass} transition-all duration-500 absolute inset-y-0 left-0"
+                             style="width: ${correctBarWidth}%; opacity: 0.4;"></div>
+                        <div class="h-full bg-green-500 transition-all duration-500 absolute inset-y-0 left-0"
+                             style="width: ${masteryBarWidth}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between mt-1 text-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="text-green-600 font-bold" title="精通題數（答對 3 次以上）">
+                                <span class="text-green-500">&#9632;</span> 精通 ${ch.masteredCount}
+                            </span>
+                            <span class="text-blue-500 font-bold" title="至少答對一次的題數">
+                                <span class="text-blue-300">&#9632;</span> 正確 ${ch.correctCount}
+                            </span>
+                        </div>
+                        <span class="text-gray-400 font-bold">共 ${ch.totalQuestions} 題</span>
+                    </div>
+                </div>`;
+            container.classList.remove('hidden');
+        }
+
+        /**
+         * 隱藏雷達圖選中章節的卡片
+         */
+        function hideRadarSelectedCard() {
+            const container = document.getElementById('radar-selected-card');
+            container.classList.add('hidden');
+        }
+
+        // ==================== 章節儀表板 ====================
+
+        /**
+         * 渲染章節儀表板
+         */
+        function renderChapterDashboard(data) {
+            const container = document.getElementById('chapter-dashboard');
+            const toggleBtn = document.getElementById('chapter-dashboard-toggle');
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">尚無章節資料</div>';
+                return;
+            }
+
+            // 根據排序模式排序
+            let sortedData = [...data];
+            if (chapterDashboardSortMode === 'rate') {
+                // 正確率高→低，未作答的排最後
+                sortedData.sort((a, b) => {
+                    if (a.answeredCount === 0 && b.answeredCount === 0) return 0;
+                    if (a.answeredCount === 0) return 1;
+                    if (b.answeredCount === 0) return -1;
+                    return b.correctRate - a.correctRate;
+                });
+            }
+            // chapter 模式保持原排序（已按 subject_no, chapter_no 排好）
+
+            // 預設只顯示 6 項
+            const displayData = chapterDashboardExpanded ? sortedData : sortedData.slice(0, 6);
+
+            // 按大分類分組
+            const grouped = new Map();
+            displayData.forEach(ch => {
+                if (!grouped.has(ch.subject)) {
+                    grouped.set(ch.subject, []);
+                }
+                grouped.get(ch.subject).push(ch);
+            });
+
+            let html = '';
+            grouped.forEach((chapters, subject) => {
+                html += `<div class="mb-2">
+                    <div class="text-sm font-black text-indigo-700 mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">folder</span>
+                        ${subject}
+                    </div>`;
+
+                chapters.forEach(ch => {
+                    const barColor = getBarColor(ch.correctRate, ch.answeredCount);
+                    const masteryBarWidth = ch.totalQuestions > 0
+                        ? Math.round((ch.masteredCount / ch.totalQuestions) * 100)
+                        : 0;
+                    const correctBarWidth = ch.totalQuestions > 0
+                        ? Math.round((ch.correctCount / ch.totalQuestions) * 100)
+                        : 0;
+
+                    html += `
+                    <div class="neo-border bg-white p-2.5 mb-1.5 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <div class="text-sm font-bold text-gray-800 flex-1 truncate" title="${ch.chapter}">${ch.chapter}</div>
+                            <div class="flex items-center gap-2 shrink-0 ml-2">
+                                ${ch.answeredCount === 0
+                                    ? '<span class="text-sm font-bold text-gray-400">未作答</span>'
+                                    : `<span class="text-lg font-black ${barColor.textClass}">${ch.correctRate}%</span>`
+                                }
+                            </div>
+                        </div>
+                        <!-- 進度條 -->
+                        <div class="h-3 neo-border bg-gray-100 overflow-hidden relative">
+                            <div class="h-full ${barColor.bgClass} transition-all duration-500 absolute inset-y-0 left-0"
+                                 style="width: ${correctBarWidth}%; opacity: 0.4;"></div>
+                            <div class="h-full bg-green-500 transition-all duration-500 absolute inset-y-0 left-0"
+                                 style="width: ${masteryBarWidth}%"></div>
+                        </div>
+                        <!-- 數據標籤 -->
+                        <div class="flex items-center justify-between mt-1 text-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="text-green-600 font-bold" title="精通題數（答對 3 次以上）">
+                                    <span class="text-green-500">&#9632;</span> 精通 ${ch.masteredCount}
+                                </span>
+                                <span class="text-blue-500 font-bold" title="至少答對一次的題數">
+                                    <span class="text-blue-300">&#9632;</span> 正確 ${ch.correctCount}
+                                </span>
+                            </div>
+                            <span class="text-gray-400 font-bold">共 ${ch.totalQuestions} 題</span>
+                        </div>
+                    </div>`;
+                });
+
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+
+            // 顯示/隱藏展開按鈕
+            if (sortedData.length > 6) {
+                toggleBtn.classList.remove('hidden');
+                document.getElementById('chapter-dashboard-toggle-text').textContent =
+                    chapterDashboardExpanded ? '收合' : `展開全部（共 ${sortedData.length} 章）`;
+                document.getElementById('chapter-dashboard-toggle-icon').textContent =
+                    chapterDashboardExpanded ? 'expand_less' : 'expand_more';
+            } else {
+                toggleBtn.classList.add('hidden');
+            }
+        }
+
+        /**
+         * 根據正確率返回對應顏色
+         */
+        function getBarColor(rate, answeredCount) {
+            if (answeredCount === 0) return { bgClass: 'bg-gray-300', textClass: 'text-gray-400' };
+            if (rate >= 80) return { bgClass: 'bg-green-500', textClass: 'text-green-600' };
+            if (rate >= 60) return { bgClass: 'bg-blue-500', textClass: 'text-blue-600' };
+            if (rate >= 40) return { bgClass: 'bg-amber-500', textClass: 'text-amber-600' };
+            return { bgClass: 'bg-red-500', textClass: 'text-red-600' };
+        }
+
+        /**
+         * 切換章節儀表板展開/收合
+         */
+        function toggleChapterDashboard() {
+            chapterDashboardExpanded = !chapterDashboardExpanded;
+            renderChapterDashboard(globalChapterDashboardData);
+        }
+
+        /**
+         * 切換章節儀表板排序模式
+         */
+        function sortChapterDashboard(mode) {
+            chapterDashboardSortMode = mode;
+            // 更新按鈕樣式
+            const rateBtn = document.getElementById('dashboard-sort-rate');
+            const chapterBtn = document.getElementById('dashboard-sort-chapter');
+            if (mode === 'rate') {
+                rateBtn.className = 'px-2 py-0.5 text-sm font-bold neo-border bg-primary';
+                chapterBtn.className = 'px-2 py-0.5 text-sm font-bold neo-border bg-white';
+            } else {
+                rateBtn.className = 'px-2 py-0.5 text-sm font-bold neo-border bg-white';
+                chapterBtn.className = 'px-2 py-0.5 text-sm font-bold neo-border bg-primary';
+            }
+            renderChapterDashboard(globalChapterDashboardData);
         }
 
         // ESC 鍵關閉 Modal

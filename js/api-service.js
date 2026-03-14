@@ -1732,6 +1732,52 @@ class ApiService {
                 console.warn('寫入答題記錄失敗:', recordError);
             }
 
+            // 4.5 若為複製題，同步回寫原始題目的 progress
+            try {
+                const { data: questionData } = await this.supabase
+                    .from('questions')
+                    .select('source_question_id')
+                    .eq('id', questionId)
+                    .maybeSingle();
+
+                if (questionData?.source_question_id) {
+                    const sourceId = questionData.source_question_id;
+
+                    // 取得原始題目的現有 progress
+                    const { data: sourceProgress } = await this.supabase
+                        .from('user_question_progress')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .eq('question_id', sourceId)
+                        .maybeSingle();
+
+                    const srcReviewed = (sourceProgress?.times_reviewed || 0) + 1;
+                    const srcCorrect = (sourceProgress?.times_correct || 0) + (isCorrect ? 1 : 0);
+                    const srcIncorrect = (sourceProgress?.times_incorrect || 0) + (isCorrect ? 0 : 1);
+
+                    const sourceProgressData = {
+                        user_id: userId,
+                        question_id: sourceId,
+                        is_correct: isCorrect,
+                        times_reviewed: srcReviewed,
+                        times_correct: srcCorrect,
+                        times_incorrect: srcIncorrect,
+                        last_reviewed_at: now,
+                        updated_at: now
+                    };
+
+                    if (!sourceProgress) {
+                        sourceProgressData.created_at = now;
+                    }
+
+                    await this.supabase
+                        .from('user_question_progress')
+                        .upsert(sourceProgressData, { onConflict: 'user_id,question_id' });
+                }
+            } catch (syncError) {
+                console.warn('同步原始題目進度失敗（不影響主流程）:', syncError);
+            }
+
             // 5. 取得當前用戶資料（記錄升級前等級）
             const userProfileResult = await this.getUserProfile(userId);
             const oldLevel = userProfileResult.success ? userProfileResult.data.current_level : 1;
@@ -2487,6 +2533,95 @@ class ApiService {
             const { data, error } = await this.supabase.rpc('get_admin_average_reviews_to_mastery');
             if (error) throw error;
             return { success: true, data };
+        } catch (error) {
+            return this._handleError(error);
+        }
+    }
+
+    /**
+     * 取得章節儀表板統計數據（按原始大分類/章節分組）
+     * 用於弱點診斷儀表板，顯示每個章節的精通數/正確數/總題數
+     * @param {string} userId - 用戶 ID
+     * @returns {Promise<{success: boolean, data?: Array}>}
+     */
+    async getChapterDashboardStats(userId) {
+        try {
+            if (!userId) {
+                return { success: false, error: 'User ID is required' };
+            }
+
+            // 1. 取得所有題目的 original_subject, original_chapter（用原始分類統計）
+            const { data: questionsData, error: qError } = await this.supabase
+                .from('questions')
+                .select('id, original_subject, original_chapter, subject_no, chapter_no');
+
+            if (qError) throw qError;
+
+            // 2. 取得該用戶所有作答進度
+            const { data: progressData, error: pError } = await this.supabase
+                .from('user_question_progress')
+                .select('question_id, times_correct, times_incorrect, times_reviewed, is_correct')
+                .eq('user_id', userId);
+
+            if (pError) throw pError;
+
+            // 建立 question_id -> progress 的查找表
+            const progressMap = new Map();
+            progressData?.forEach(p => progressMap.set(p.question_id, p));
+
+            // 3. 按 original_subject + original_chapter 分組統計
+            const chapterMap = new Map();
+
+            questionsData?.forEach(q => {
+                // 使用原始分類（fallback 到當前分類）
+                const subject = q.original_subject || '未分類';
+                const chapter = q.original_chapter || '未分類';
+                const key = `${subject}|||${chapter}`;
+
+                if (!chapterMap.has(key)) {
+                    chapterMap.set(key, {
+                        subject,
+                        chapter,
+                        subject_no: q.subject_no || 999,
+                        chapter_no: q.chapter_no || 999,
+                        totalQuestions: 0,
+                        answeredCount: 0,
+                        correctCount: 0,    // 至少答對一次的題數
+                        masteredCount: 0,    // times_correct >= 3
+                        wrongCount: 0,       // 有答錯過的題數
+                    });
+                }
+
+                const stats = chapterMap.get(key);
+                stats.totalQuestions++;
+
+                const progress = progressMap.get(q.id);
+                if (progress) {
+                    stats.answeredCount++;
+                    if (progress.times_correct > 0) stats.correctCount++;
+                    if (progress.times_correct >= 3) stats.masteredCount++;
+                    if (progress.times_incorrect > 0) stats.wrongCount++;
+                }
+            });
+
+            // 4. 轉為陣列並排序（按 subject_no, chapter_no）
+            const result = [...chapterMap.values()]
+                .map(ch => ({
+                    ...ch,
+                    correctRate: ch.totalQuestions > 0
+                        ? Math.round((ch.correctCount / ch.totalQuestions) * 100)
+                        : 0,
+                    masteryRate: ch.totalQuestions > 0
+                        ? Math.round((ch.masteredCount / ch.totalQuestions) * 100)
+                        : 0,
+                }))
+                .sort((a, b) => {
+                    if (a.subject_no !== b.subject_no) return a.subject_no - b.subject_no;
+                    return a.chapter_no - b.chapter_no;
+                });
+
+            return { success: true, data: result };
+
         } catch (error) {
             return this._handleError(error);
         }
@@ -4381,7 +4516,7 @@ class ApiService {
 
             const now = new Date().toISOString();
 
-            // 準備新題目資料（移除 id，更換 subject/chapter）
+            // 準備新題目資料（移除 id，更換 subject/chapter，保留原始分類與來源 ID）
             const newQuestions = questions.map((q, index) => {
                 // 解構移除不需要的欄位
                 const { id, user_id, created_at, updated_at, ...questionData } = q;
@@ -4390,6 +4525,11 @@ class ApiService {
                     ...questionData,
                     subject: newSubject,
                     chapter: newChapter,
+                    // 保留原始分類：若已有 original 則沿用，否則用當前值
+                    original_subject: q.original_subject || q.subject,
+                    original_chapter: q.original_chapter || q.chapter,
+                    // 追溯原始題目 ID：若已是複製題則沿用其 source，否則用自身 ID
+                    source_question_id: q.source_question_id || id,
                     question_no: index + 1,
                     subject_no: 999,  // 自訂考卷排序靠後
                     chapter_no: 999,
