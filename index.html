@@ -424,9 +424,17 @@
                         }
                     }
 
-                    // 更新上方計數 (init.js 裡的邏輯可能需要連動，這裡先簡單更新文字)
+                    // 更新上方計數（總題數 + 答對題數）
                     const countEl = document.getElementById('user-card-count');
                     if (countEl) countEl.textContent = result.data.pagination.totalItems;
+
+                    // 計算篩選後的答對題數
+                    const correctCount = result.data.cards.filter(card => {
+                        const progress = card.progress;
+                        return progress && (progress.is_correct === true || (progress.times_correct || 0) > 0);
+                    }).length;
+                    const correctEl = document.getElementById('user-correct-count');
+                    if (correctEl) correctEl.textContent = correctCount;
                 } else {
                     cardsContainer.innerHTML = '<div class="col-span-2 text-center text-red-500">載入失敗</div>';
                 }
