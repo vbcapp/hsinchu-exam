@@ -3372,12 +3372,30 @@ class ApiService {
                 questionStats[qid].wrongAnswerCounts[answerKey].count++;
             });
 
-            // 4. 排序：答錯次數最多的題目
+            // 4. 過濾掉已精通的題目（答對 3 次以上 = 金色皮膚卡）
+            const allQuestionIds = Object.keys(questionStats);
+            let masteredQuestionIds = new Set();
+
+            if (allQuestionIds.length > 0) {
+                const { data: masteredProgress, error: masteredError } = await this.supabase
+                    .from('user_question_progress')
+                    .select('question_id')
+                    .eq('user_id', userId)
+                    .in('question_id', allQuestionIds)
+                    .gte('times_correct', 3);
+
+                if (!masteredError && masteredProgress) {
+                    masteredQuestionIds = new Set(masteredProgress.map(p => p.question_id));
+                }
+            }
+
+            // 5. 排序：答錯次數最多的題目（排除已精通）
             const sortedQuestions = Object.values(questionStats)
+                .filter(q => !masteredQuestionIds.has(q.questionId))
                 .sort((a, b) => b.timesWrong - a.timesWrong)
                 .slice(0, limit);
 
-            // 5. 查詢這些題目的詳細資訊
+            // 6. 查詢這些題目的詳細資訊
             const questionIds = sortedQuestions.map(q => q.questionId);
 
             if (questionIds.length === 0) {
@@ -3394,7 +3412,7 @@ class ApiService {
 
             if (questionsError) throw questionsError;
 
-            // 6. 合併統計數據與題目詳情
+            // 7. 合併統計數據與題目詳情
             const result = sortedQuestions.map(stat => {
                 const questionData = questions.find(q => q.id === stat.questionId);
 
