@@ -7,12 +7,23 @@ class ApiService {
     constructor() {
         this.supabase = null;
         this.currentUser = null;
+        this._initPromise = null; // 防止並行初始化造成 auth lock 競爭
     }
 
     /**
      * 初始化 Supabase 客戶端
      */
     async initialize() {
+        // 如果已經在初始化中，直接返回同一個 Promise，避免多個 getUser() 競爭 auth lock
+        if (this._initPromise) {
+            return this._initPromise;
+        }
+
+        this._initPromise = this._doInitialize();
+        return this._initPromise;
+    }
+
+    async _doInitialize() {
         try {
             if (typeof supabase === 'undefined') {
                 console.error('Supabase SDK 未載入');
@@ -43,6 +54,8 @@ class ApiService {
             return { success: true, user };
         } catch (error) {
             console.error('初始化失敗:', error);
+            // 初始化失敗時重置，允許下次重試
+            this._initPromise = null;
             return this._handleError(error);
         }
     }
