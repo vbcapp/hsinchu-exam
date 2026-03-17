@@ -184,6 +184,7 @@
 | `critical_hit_enabled` | `boolean` | DEFAULT true | 是否啟用爆擊系統（false = 關閉隨機爆擊） |
 | `critical_hit_multipliers` | `jsonb` | DEFAULT `[2,3,4,5,10]` | 1~5 階爆擊倍數陣列（基礎分 × 倍數） |
 | `level_requirements` | `jsonb` | DEFAULT NULL | 預留：未來自訂等級門檻（NULL = 使用預設公式） |
+| `social_links` | `jsonb` | DEFAULT '[]' | 社群連結陣列（最多 4 筆，格式見下方說明） |
 | `created_at` | `timestamptz` | DEFAULT now() | 建立時間 |
 | `updated_at` | `timestamptz` | DEFAULT now() | 更新時間 |
 
@@ -192,6 +193,19 @@
 - `base_score` = 1 時，答對得 1 分；爆擊 1 階 = 1 × 2 = 2 分，5 階 = 1 × 10 = 10 分
 - 爆擊機率固定為 1% / 2% / 5% / 10% / 20%，不可調整
 - `critical_hit_multipliers` 陣列順序：`[1階倍數, 2階倍數, 3階倍數, 4階倍數, 5階倍數]`
+
+**social_links 格式說明：**
+```json
+[
+  {"platform": "threads",  "url": "https://...", "sort_order": 1},
+  {"platform": "facebook", "url": "https://...", "sort_order": 2},
+  {"platform": "linkedin", "url": "https://...", "sort_order": 3},
+  {"platform": "line",     "url": "https://...", "sort_order": 4}
+]
+```
+- `platform` 支援：`threads`、`facebook`、`linkedin`、`line`、`instagram`、`website`
+- `sort_order` 控制顯示順序（1 = 最左，數字越小越前面）
+- 最多顯示 4 個，最少 1 個；空陣列 `[]` = 隱藏社群區塊
 
 **使用方式：**
 - `config.js` 中的 `OrgBranding.fetch()` 會在頁面載入時讀取此表

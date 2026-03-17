@@ -28,6 +28,7 @@ const OrgBranding = {
     appVersion: '',
     primaryColor: '#FFD600',
     logoUrl: '',
+    socialLinks: [], // 社群連結陣列 [{platform, url}, ...]
 
     // 計分設定（從 DB 讀取，預設值與原本硬編碼一致）
     baseScore: 100,
@@ -72,6 +73,7 @@ const OrgBranding = {
                     this.criticalHitEnabled = (data.critical_hit_enabled != null) ? data.critical_hit_enabled : true;
                     this.criticalHitMultipliers = Array.isArray(data.critical_hit_multipliers) ? data.critical_hit_multipliers : [2, 3, 4, 5, 10];
                     this.levelRequirements = data.level_requirements || null;
+                    this.socialLinks = Array.isArray(data.social_links) ? data.social_links : [];
 
                     this._loaded = true;
                 }
@@ -127,10 +129,57 @@ const OrgBranding = {
             appleMeta.setAttribute('content', this.shortName);
         }
 
+        // 社群連結
+        this.renderSocialLinks();
+
         // 重新渲染 Header（因為 AppHeader.init() 可能在品牌載入前就執行了）
         if (typeof AppHeader !== 'undefined') {
             AppHeader.init();
         }
+    },
+
+    // 社群連結 platform 對應的 icon 與顏色
+    SOCIAL_PLATFORM_MAP: {
+        threads:   { bg: '#000000', icon: '<span class="text-white font-black text-xl">@</span>' },
+        facebook:  { bg: '#1877F2', icon: '<span class="text-white font-black text-xl">f</span>' },
+        linkedin:  { bg: '#0077B5', icon: '<span class="text-white font-black text-xl">in</span>' },
+        line:      { bg: '#06C755', icon: '<span class="material-symbols-outlined text-white">chat_bubble</span>' },
+        instagram: { bg: '#E4405F', icon: '<span class="material-symbols-outlined text-white">photo_camera</span>' },
+        website:   { bg: '#333333', icon: '<span class="material-symbols-outlined text-white">language</span>' },
+    },
+
+    renderSocialLinks() {
+        const container = document.getElementById('social-links-section');
+        if (!container) return;
+
+        const links = [...this.socialLinks]
+            .sort((a, b) => (a.sort_order || 99) - (b.sort_order || 99))
+            .slice(0, 4); // 最多 4 個
+        if (links.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = '';
+        const grid = container.querySelector('#social-links-grid');
+        if (!grid) return;
+
+        // 動態調整 grid 欄數
+        grid.className = `grid grid-cols-${links.length} gap-3`;
+        grid.innerHTML = '';
+
+        links.forEach(item => {
+            const config = this.SOCIAL_PLATFORM_MAP[item.platform];
+            if (!config || !item.url) return;
+
+            const a = document.createElement('a');
+            a.href = item.url;
+            a.target = '_blank';
+            a.className = 'aspect-square border-4 border-black flex items-center justify-center neo-brutalism-button shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]';
+            a.style.backgroundColor = config.bg;
+            a.innerHTML = config.icon;
+            grid.appendChild(a);
+        });
     },
 
     // 動態產生 PWA Manifest
